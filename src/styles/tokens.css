@@ -1,0 +1,9 @@
+:root{
+--color-background:#F7F7F4;--color-surface:#EDEEE9;--color-text:#171918;--color-muted:#6B706C;--color-border:#DDDFDA;
+--color-primary:#24543F;--color-primary-dark:#193B2D;--color-primary-soft:#E6EEE9;--color-negative:#A23B2F;--color-warning:#A8741A;--color-positive:#24543F;
+--color-field:#fff;--font:'IBM Plex Sans',system-ui,sans-serif;
+--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;
+--radius-sm:4px;--radius-md:6px;--radius-lg:8px;
+--sidebar-w:232px;--header-h:64px;--page-margin:40px;--row-h:56px;--input-h:48px;--button-h:44px;--content-w:1128px;
+}
+[data-theme=dark]{--color-background:#141815;--color-surface:#1E2420;--color-text:#EDEFEA;--color-muted:#9AA29C;--color-border:#2E3630;--color-primary:#3E8C69;--color-primary-dark:#2F7A59;--color-primary-soft:#1F3128;--color-negative:#E08A7E;--color-warning:#D9A441;--color-positive:#6FC49B;--color-field:#1A201C}

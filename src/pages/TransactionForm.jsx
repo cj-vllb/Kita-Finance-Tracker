@@ -1,0 +1,43 @@
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useApp } from '../context/AppContext.jsx'
+import { TODAY } from '../utils/dates.js'
+import { formatDate, signed } from '../utils/format.js'
+import { PageHeader, Field, Segmented, ConfirmDialog, ErrorState } from '../components/ui.jsx'
+export default function TransactionForm() {
+  const { id } = useParams(), nav = useNavigate(), { transactions, categories, saveTransaction, deleteTransaction, notify } = useApp()
+  const existing = id ? transactions.find((t) => t.id === id) : null
+  const [f, setF] = useState(() => (existing ? { ...existing, amount: String(existing.amount) } : { type: 'expense', amount: '', categoryId: '', description: '', date: TODAY, notes: '' }))
+  const [err, setErr] = useState({}), [saving, setSaving] = useState(false), [confirm, setConfirm] = useState(false)
+  if (id && !existing) return <ErrorState title="Transaction not found" text="It may have been deleted." />
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const submit = async (e) => {
+    e.preventDefault(); const er = {}, amt = Number(f.amount)
+    if (!f.amount || Number.isNaN(amt)) er.amount = 'Enter an amount.'; else if (amt <= 0) er.amount = 'Enter an amount above zero.'
+    if (!f.categoryId) er.categoryId = 'Choose a category so this appears in your reports.'
+    if (!f.description.trim()) er.description = 'Add a short description.'
+    if (!f.date) er.date = 'Choose a date.'
+    setErr(er); if (Object.keys(er).length) return
+    setSaving(true)
+    const error = await saveTransaction({ ...f, id: existing?.id || 'new', amount: amt, description: f.description.trim() })
+    if (error) { setSaving(false); setErr({ form: error }); return }
+    notify(existing ? 'Transaction updated successfully.' : 'Transaction saved successfully.'); nav(existing ? `/transactions/${existing.id}` : '/transactions')
+  }
+  const bad = (k) => !!err[k]
+  return (<>
+    <PageHeader title={existing ? 'Edit transaction' : 'New transaction'} subtitle={existing ? 'Changes apply to your records and reports straight away.' : 'Record money coming in or going out.'} />
+    <form className="form" onSubmit={submit} noValidate>
+      <Field label="Type"><Segmented label="Type" value={f.type} onChange={(type) => setF({ ...f, type, categoryId: '' })} options={[['expense', 'Expense'], ['income', 'Income']]} /></Field>
+      <Field label="Amount" error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
+      <Field label="Category" error={err.categoryId}><select className="input" value={f.categoryId} onChange={set('categoryId')} aria-invalid={bad('categoryId')}><option value="">Choose a category</option>{categories.filter((c) => c.type === f.type).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+      <Field label="Description" error={err.description}><input className="input" value={f.description} onChange={set('description')} aria-invalid={bad('description')} /></Field>
+      <Field label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={bad('date')} /></Field>
+      <Field label="Notes (optional)"><textarea className="input" value={f.notes} onChange={set('notes')} placeholder="Add a note" /></Field>
+      {err.form && <p className="field-error" role="alert">{err.form}</p>}
+      <div className="form-actions"><button className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : existing ? 'Save changes' : 'Save transaction'}</button>
+        <button type="button" className="btn" onClick={() => nav(-1)}>Cancel</button>
+        {existing && <button type="button" className="btn btn-danger push" onClick={() => setConfirm(true)}>Delete transaction</button>}</div></form>
+    {confirm && <ConfirmDialog title="Delete transaction?" confirmLabel="Delete transaction" onCancel={() => setConfirm(false)} onConfirm={async () => { const e = await deleteTransaction(existing.id); if (e) { setConfirm(false); setErr({ form: e }); return } notify('Transaction deleted.'); nav('/transactions') }}>
+      <p className="muted">{existing.description}, {signed(existing.amount, existing.type)}, {formatDate(existing.date)}.</p><p>This action cannot be undone.</p></ConfirmDialog>}
+  </>)
+}

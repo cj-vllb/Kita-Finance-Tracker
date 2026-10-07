@@ -1,0 +1,1 @@
+-- No seed data. Real accounts start empty; create test accounts through the sign-up form.

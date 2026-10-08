@@ -1,23 +1,28 @@
-// Newest first. Keep entries short and user-facing.
+// Newest first. User-facing only: meaningful features, improvements and fixes. No implementation detail.
+// `date` is shown beside the version. Older entries only carry the year because exact release dates are not recorded.
 export const CHANGELOG = [
-  { version: '1.12', title: 'Routing and sign-in link fixes', items: ['Fixed direct navigation to application pages on the production website', 'Fixed 404 errors when restoring or refreshing pages such as Dashboard', 'Improved compatibility of sign-in redirects with production pages', 'Improved reliability of email confirmation links'] },
-  { version: '1.11', title: 'Fixes and refinements', items: ['Transactions can be saved and edited with no description or notes', 'Desktop sidebar shows every section in groups; More is for tablet and phone', '12 category colors with simple names and visible swatches'] },
-  {
-    version: '1.1', title: 'Polish and completeness update', items: [
-      'New TrackMyKita branding, logo, favicon and loading screen',
-      'Show or hide your password when signing in or signing up',
-      'Edit and delete transactions, with clearer filtering',
-      'Optional category and notes on every transaction',
-      'Dashboard previews for transactions, budgets and reports',
-      'Easier navigation with a More menu',
-      'Works on phones and tablets: layouts, menus, forms and charts now fit the screen',
-      'Profile pictures, with initials as the fallback',
-      '16 currencies to choose from',
-      'Income and expense categories are listed separately',
-      'Reorganised Settings with a safer Delete account flow',
-      'About page with version and update log',
-      'More reliable CSV export',
-    ],
-  },
-  { version: '1.0', title: 'Initial release', items: ['Track income and expenses', 'Monthly budgets by category', 'Categories and monthly reports', 'Light and dark theme', 'Private, secure account for your records'] },
+  { version: '1.1.3', date: 'October 2026', title: 'Clearer sign-up and a tidier dashboard', items: [
+    'Polished "Check your email" screen after signing up, with a reminder to look in Spam or Junk',
+    'New email confirmation page, so you land on a clear "Email confirmed" screen before continuing',
+    'Dashboard reorganised: charts side by side, with "This month at a glance" as the closing summary',
+    'Page view and performance monitoring added to help keep TrackMyKita fast',
+  ] },
+  { version: '1.1.2', date: '2026', title: 'Sign-in and link reliability', items: [
+    'Fixed pages not loading when opened directly or refreshed',
+    'More reliable email confirmation links',
+  ] },
+  { version: '1.1.1', date: '2026', title: 'Fixes and refinements', items: [
+    'Transactions can be saved with no description or notes',
+    '12 category colors with simple names',
+    'Clearer navigation on desktop, tablet and phone',
+  ] },
+  { version: '1.1', date: '2026', title: 'Polish and completeness update', items: [
+    'New TrackMyKita branding, logo and loading screen',
+    'Edit and delete transactions, with clearer filtering',
+    'Dashboard previews for transactions, budgets and reports',
+    'Layouts that fit phones and tablets',
+    'Profile pictures and 16 currencies',
+    'Safer Delete account flow and a new About page',
+  ] },
+  { version: '1.0', date: '2026', title: 'Initial release', items: ['Track income and expenses', 'Monthly budgets by category', 'Categories and monthly reports', 'Light and dark theme', 'Private, secure account for your records'] },
 ]

@@ -3,6 +3,7 @@ import AppShell from './components/AppShell.jsx'
 import BootScreen from './components/BootScreen.jsx'
 import { ErrorState } from './components/ui.jsx'
 import { useApp } from './context/AppContext.jsx'
+import EmailConfirmed from './pages/EmailConfirmed.jsx'
 import { Login, Signup, ForgotPassword, ResetPassword } from './pages/Auth.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Transactions from './pages/Transactions.jsx'
@@ -22,7 +23,7 @@ export default function App() {
   if (!ready) return <BootScreen /> // session restoration + first data load: no login/dashboard flashing
   return (<><Routes>
     <Route path="/" element={<Navigate to="/dashboard" replace />} />
-    <Route path="/login" element={<Login />} /><Route path="/signup" element={<Signup />} /><Route path="/forgot-password" element={<ForgotPassword />} /><Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/login" element={<Login />} /><Route path="/signup" element={<Signup />} /><Route path="/forgot-password" element={<ForgotPassword />} /><Route path="/reset-password" element={<ResetPassword />} /><Route path="/email-confirmed" element={<EmailConfirmed />} />
     <Route element={<AppShell />}>
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/transactions" element={<Transactions />} /><Route path="/transactions/new" element={<TransactionForm />} /><Route path="/transactions/:id" element={<TransactionDetail />} /><Route path="/transactions/:id/edit" element={<TransactionForm />} />

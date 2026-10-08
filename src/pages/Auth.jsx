@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import { Field, PasswordInput } from '../components/ui.jsx'
 import { Logo } from '../components/Logo.jsx'
+import { MailCheck } from '../components/MailCheck.jsx'
 const validEmail = (s) => /^\S+@\S+\.\S+$/.test(s)
 const Layout = ({ title, text, children }) => (<main className="auth"><div className="auth-brand"><Logo size={36} /></div><div><h1>{title}</h1>{text && <p className="muted" style={{ marginTop: 4 }}>{text}</p>}</div>{children}</main>)
 const plain = { margin: 0, padding: 0 }
@@ -27,7 +28,8 @@ export function Signup() {
   const { signUp } = useApp(), nav = useNavigate(), [sent, setSent] = useState(null)
   const form = useForm({ name: '', email: '', password: '', confirm: '' }, (v) => ({ ...(v.name.trim() ? {} : { name: 'Enter your name.' }), ...(validEmail(v.email.trim()) ? {} : { email: 'Enter a valid email address.' }), ...(v.password.length >= 8 ? {} : { password: 'Use at least 8 characters.' }), ...(v.confirm === v.password ? {} : { confirm: 'The passwords do not match.' }) }),
     async (v) => { const { error, needsConfirmation } = await signUp(v.name.trim(), v.email.trim(), v.password); if (error) return error; if (needsConfirmation) setSent(v.email.trim()); else nav('/dashboard') })
-  if (sent) return <Layout title="Check your email" text={`We sent a confirmation link to ${sent}. Open it to finish creating your account.`}><Link className="btn btn-primary" style={{ justifyContent: 'center' }} to="/login">Back to sign in</Link></Layout>
+  if (sent) return (<main className="auth status-screen"><div className="auth-brand"><Logo size={36} /></div><MailCheck /><div className="status-copy"><h1>Check your email</h1><p className="muted">We sent a confirmation email to <strong>{sent}</strong>. Click the link inside to confirm your account before continuing.</p></div>
+    <p className="status-hint small">Can't find the email? Check your Spam or Junk folder. It may have been filtered there.</p><Link className="btn btn-primary" style={{ justifyContent: 'center' }} to="/login">Back to sign in</Link></main>)
   return (<Layout title="Create your account" text="Your records are private to your account."><form className="auth" style={plain} onSubmit={form.submit} noValidate>
     <Field label="Name" error={form.err.name}><input {...form.bind('name')} autoComplete="name" /></Field><Field label="Email" error={form.err.email}><input {...form.bind('email', 'email')} autoComplete="email" /></Field>
     <Field label="Password" error={form.err.password}><PasswordInput {...form.bind('password', 'password')} autoComplete="new-password" placeholder="At least 8 characters" /></Field>

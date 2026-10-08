@@ -134,7 +134,8 @@ textarea.input{height:auto;min-height:96px;padding:var(--space-3) var(--space-4)
 .sheet button.sheet-item:last-child{justify-content:center;color:var(--color-muted);margin-top:var(--space-1);border-top:1px solid var(--color-border);border-radius:0 0 var(--radius-md) var(--radius-md)}
 @keyframes sheet-in{from{transform:translateY(24px);opacity:0}}
 /* dashboard previews */
-.previews{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:var(--space-6);margin-top:var(--space-12)}
+.previews{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-6);margin-top:var(--space-12)}.previews.charts{margin-top:var(--space-8)}.previews.cards{margin-top:var(--space-6)}
+@media (max-width:760px){.previews{grid-template-columns:minmax(0,1fr)}.preview.tall{grid-row:auto}}
 .preview{display:flex;flex-direction:column;min-width:0;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-field)}
 .preview.tall{grid-row:span 2}.preview-body{flex:1;padding:var(--space-5)}.preview-body h2{font-size:17px}
 .preview-foot{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 var(--space-5);border-top:1px solid var(--color-border);border-radius:0 0 var(--radius-lg) var(--radius-lg);font-weight:500}
@@ -155,7 +156,7 @@ textarea.input{height:auto;min-height:96px;padding:var(--space-3) var(--space-4)
 .more-link:hover{background:var(--color-surface);text-decoration:none}
 .more-link.active{background:var(--color-primary-soft);border-left-color:var(--color-primary);color:var(--color-primary-dark);font-weight:500}
 @media (max-width:1100px){
-  .previews{grid-template-columns:1fr}.preview.tall{grid-row:auto}
+  
   .more-btn .chev{display:none}
   .more-menu{position:absolute;left:calc(100% + 6px);top:0;width:200px;background:var(--color-field);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-1);z-index:8}
   .more-link{border-left:0;border-radius:var(--radius-md);padding:0 var(--space-3)}
@@ -335,3 +336,18 @@ input:focus-visible+.color-box{outline:2px solid var(--color-primary);outline-of
   .nav-section+.nav-section::before{margin:var(--space-2) var(--space-3)}
 }
 @media (max-width:700px){.sidebar .nav-compact{display:flex;width:100%}}
+
+/* about: version dates + older updates toggle */
+.release-date{margin-left:auto;font-size:13px;font-weight:400;color:var(--color-muted)}
+.older-toggle{display:inline-flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);min-height:44px}.older-toggle svg{transition:transform .15s}.older-toggle svg.flip{transform:rotate(180deg)}
+/* signup check-email + email confirmed */
+.status-screen{justify-items:center;text-align:center}.status-screen .auth-brand{justify-self:start}.status-screen>.btn{width:100%}
+.status-copy h1{margin-bottom:var(--space-2)}.status-copy strong{color:var(--color-text);overflow-wrap:anywhere}
+.status-hint{color:var(--color-muted);padding:var(--space-3) var(--space-4);border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface)}
+.mail-art,.check-art{color:var(--color-primary);animation:status-in .45s ease-out both}
+.m-flap{stroke-dasharray:110;animation:draw .7s ease-out .25s both}.m-dot{transform-box:fill-box;transform-origin:center;animation:pop .35s ease-out .9s both}
+.c-ring{stroke-dasharray:215;animation:draw .6s ease-out .2s both}.c-tick{stroke-dasharray:48;animation:draw .4s ease-out .75s both}
+.status-screen .status-copy{animation:status-in .45s ease-out .35s both}.status-screen .status-hint,.status-cta{animation:status-in .45s ease-out .6s both}.status-screen>.btn:not(.status-cta){animation:status-in .45s ease-out .75s both}
+@keyframes status-in{from{opacity:0;transform:translateY(8px)}}@keyframes draw{from{stroke-dashoffset:var(--len,220)}to{stroke-dashoffset:0}}@keyframes pop{from{opacity:0;transform:scale(.4)}}
+.m-flap{--len:110}.c-tick{--len:48}
+@media (prefers-reduced-motion:reduce){.mail-art,.check-art,.m-flap,.m-dot,.c-ring,.c-tick,.status-screen .status-copy,.status-screen .status-hint,.status-cta,.status-screen>.btn{animation:none}}

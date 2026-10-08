@@ -25,3 +25,9 @@ Tests: `supabase/tests/database/04_avatars_currency.test.sql` (run with `supabas
 Apply `supabase/migrations/20261010000000_optional_fields_and_category_colors.sql` with `supabase db push`.
 - **Required to save a transaction with no description.** The original schema had `description NOT NULL`; if `20261008000000_optional_transaction_description.sql` was never applied to your project, Postgres rejects an empty description (error 23502). This migration re-applies the fix and is safe to run again.
 - Widens the category color check. Old values (green, amber, brick, slate, grey) remain valid; the app displays brick/amber/slate as Red/Orange/Blue without rewriting any row.
+
+## Production deployment (Vercel) and sign-in links
+- `vercel.json` rewrites every path to `index.html`, so direct visits and refreshes of client-side routes (`/dashboard`, `/transactions`, `/login`, ...) load the app instead of a Vercel 404. Files that really exist (JS, CSS, favicon, fonts, images) are still served first, as normal on Vercel.
+- The app builds every auth redirect from `window.location.origin` (no hard-coded domains): signup confirmation -> `/login`, password reset -> `/reset-password`, email change -> `/profile`. A signed-in user who lands on `/login` is sent on to `/dashboard`.
+- **Supabase dashboard (not code, set manually):** Authentication > URL Configuration. Site URL `https://trackmykita.online`; Redirect URLs `https://trackmykita.online/login`, `https://trackmykita.online/reset-password`, `https://trackmykita.online/profile`. If Site URL still points somewhere else, confirmation emails will link to the wrong place.
+- `supabase/config.toml` lists `localhost:5173` only for the local CLI stack; it does not affect production.

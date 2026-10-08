@@ -1,8 +1,9 @@
 // Newest first. Keep entries short and user-facing.
 export const CHANGELOG = [
-  { version: '1.1.1', title: 'Fixes and refinements', items: ['Transactions can be saved and edited with no description or notes', 'Desktop sidebar shows every section in groups; More is for tablet and phone', '12 category colors with simple names and visible swatches'] },
+  { version: '1.12', title: 'Routing and sign-in link fixes', items: ['Fixed direct navigation to application pages on the production website', 'Fixed 404 errors when restoring or refreshing pages such as Dashboard', 'Improved compatibility of sign-in redirects with production pages', 'Improved reliability of email confirmation links'] },
+  { version: '1.11', title: 'Fixes and refinements', items: ['Transactions can be saved and edited with no description or notes', 'Desktop sidebar shows every section in groups; More is for tablet and phone', '12 category colors with simple names and visible swatches'] },
   {
-    version: '1.1.0', title: 'Polish and completeness update', items: [
+    version: '1.1', title: 'Polish and completeness update', items: [
       'New TrackMyKita branding, logo, favicon and loading screen',
       'Show or hide your password when signing in or signing up',
       'Edit and delete transactions, with clearer filtering',
@@ -18,5 +19,5 @@ export const CHANGELOG = [
       'More reliable CSV export',
     ],
   },
-  { version: '1.0.0', title: 'Initial release', items: ['Track income and expenses', 'Monthly budgets by category', 'Categories and monthly reports', 'Light and dark theme', 'Private, secure account for your records'] },
+  { version: '1.0', title: 'Initial release', items: ['Track income and expenses', 'Monthly budgets by category', 'Categories and monthly reports', 'Light and dark theme', 'Private, secure account for your records'] },
 ]

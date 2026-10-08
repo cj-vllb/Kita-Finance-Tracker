@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
-import { Field } from '../components/ui.jsx'
+import { Field, PasswordInput } from '../components/ui.jsx'
+import { Logo } from '../components/Logo.jsx'
 const validEmail = (s) => /^\S+@\S+\.\S+$/.test(s)
-const Layout = ({ title, text, children }) => (<main className="auth"><div className="brand" style={{ padding: 0 }}><span className="brand-mark">K</span><span>Kita</span></div><div><h1>{title}</h1>{text && <p className="muted" style={{ marginTop: 4 }}>{text}</p>}</div>{children}</main>)
+const Layout = ({ title, text, children }) => (<main className="auth"><div className="auth-brand"><Logo size={36} /></div><div><h1>{title}</h1>{text && <p className="muted" style={{ marginTop: 4 }}>{text}</p>}</div>{children}</main>)
 const plain = { margin: 0, padding: 0 }
 // onOk may return an error message string, which is shown under the form.
 const useForm = (init, rules, onOk) => {
@@ -19,7 +20,7 @@ export function Login() {
     async (v) => { const e = await signIn(v.email.trim(), v.password); if (e) return e; nav('/dashboard') })
   if (loggedIn) return <Navigate to="/dashboard" replace />
   return (<Layout title="Sign in" text="Welcome back. Enter your details to continue."><form className="auth" style={plain} onSubmit={form.submit} noValidate>
-    <Field label="Email" error={form.err.email}><input {...form.bind('email', 'email')} autoComplete="email" /></Field><Field label="Password" error={form.err.password}><input {...form.bind('password', 'password')} autoComplete="current-password" /></Field>
+    <Field label="Email" error={form.err.email}><input {...form.bind('email', 'email')} autoComplete="email" /></Field><Field label="Password" error={form.err.password}><PasswordInput {...form.bind('password', 'password')} autoComplete="current-password" /></Field>
     <FormError form={form} /><Link to="/forgot-password">Forgot password?</Link><Submit form={form}>Sign in</Submit></form><p className="muted">New here? <Link to="/signup">Create an account</Link></p></Layout>)
 }
 export function Signup() {
@@ -29,8 +30,8 @@ export function Signup() {
   if (sent) return <Layout title="Check your email" text={`We sent a confirmation link to ${sent}. Open it to finish creating your account.`}><Link className="btn btn-primary" style={{ justifyContent: 'center' }} to="/login">Back to sign in</Link></Layout>
   return (<Layout title="Create your account" text="Your records are private to your account."><form className="auth" style={plain} onSubmit={form.submit} noValidate>
     <Field label="Name" error={form.err.name}><input {...form.bind('name')} autoComplete="name" /></Field><Field label="Email" error={form.err.email}><input {...form.bind('email', 'email')} autoComplete="email" /></Field>
-    <Field label="Password" error={form.err.password}><input {...form.bind('password', 'password')} autoComplete="new-password" placeholder="At least 8 characters" /></Field>
-    <Field label="Confirm password" error={form.err.confirm}><input {...form.bind('confirm', 'password')} autoComplete="new-password" /></Field><FormError form={form} /><Submit form={form}>Create account</Submit></form>
+    <Field label="Password" error={form.err.password}><PasswordInput {...form.bind('password', 'password')} autoComplete="new-password" placeholder="At least 8 characters" /></Field>
+    <Field label="Confirm password" error={form.err.confirm}><PasswordInput {...form.bind('confirm', 'password')} autoComplete="new-password" /></Field><FormError form={form} /><Submit form={form}>Create account</Submit></form>
     <p className="muted">Already registered? <Link to="/login">Sign in</Link></p></Layout>)
 }
 export function ForgotPassword() {
@@ -47,6 +48,6 @@ export function ResetPassword() {
     async (v) => { const e = await updatePassword(v.password); if (e) return e; await logout(); notify('Password updated. Sign in with your new password.'); nav('/login') })
   if (!loggedIn) return <Layout title="Link expired" text="This reset link is invalid or has expired."><Link className="btn btn-primary" style={{ justifyContent: 'center' }} to="/forgot-password">Request a new link</Link></Layout>
   return (<Layout title="Choose a new password" text="Use at least 8 characters."><form className="auth" style={plain} onSubmit={form.submit} noValidate>
-    <Field label="New password" error={form.err.password}><input {...form.bind('password', 'password')} autoComplete="new-password" /></Field><Field label="Confirm new password" error={form.err.confirm}><input {...form.bind('confirm', 'password')} autoComplete="new-password" /></Field>
+    <Field label="New password" error={form.err.password}><PasswordInput {...form.bind('password', 'password')} autoComplete="new-password" /></Field><Field label="Confirm new password" error={form.err.confirm}><PasswordInput {...form.bind('confirm', 'password')} autoComplete="new-password" /></Field>
     <FormError form={form} /><Submit form={form}>Update password</Submit></form></Layout>)
 }

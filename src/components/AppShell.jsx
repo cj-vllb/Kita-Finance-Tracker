@@ -1,25 +1,45 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings, User, MoreHorizontal, ChevronDown } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
-import { ErrorState, LoadingState } from './ui.jsx'
-import { initials, firstName } from '../utils/format.js'
+import { ErrorState, LoadingState, Avatar } from './ui.jsx'
+import { Logo } from './Logo.jsx'
+import { firstName } from '../utils/format.js'
+// Desktop shows every section, in groups. Tablet/phone use the compact bar: three main sections plus "More".
 const groups = [
-  ['Overview', [['/dashboard', 'Dashboard', LayoutDashboard]]],
-  ['Money', [['/transactions', 'Transactions', ArrowLeftRight], ['/budgets', 'Budgets', PiggyBank], ['/reports', 'Reports', BarChart3]]],
-  ['Organize', [['/categories', 'Categories', Tags]]],
-  ['Account', [['/settings', 'Settings', Settings]]],
+  [['/dashboard', 'Dashboard', LayoutDashboard]],
+  [['/transactions', 'Transactions', ArrowLeftRight], ['/reports', 'Reports', BarChart3]],
+  [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags]],
+  [['/settings', 'Settings', Settings]],
 ]
+const main = [['/dashboard', 'Dashboard', LayoutDashboard], ['/transactions', 'Transactions', ArrowLeftRight], ['/reports', 'Reports', BarChart3]]
+const more = [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags], ['/settings', 'Settings', Settings], ['/profile', 'Profile', User]]
+// Inline list in the wide sidebar, flyout beside the icon rail on tablets, sheet above the tab bar on phones (see app.css).
+function MoreNav() {
+  const [open, setOpen] = useState(false), box = useRef(), { pathname } = useLocation()
+  const active = more.some(([to]) => pathname === to || pathname.startsWith(to + '/'))
+  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    if (!open) return
+    const out = (e) => !box.current?.contains(e.target) && setOpen(false), esc = (e) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', out); document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', out); document.removeEventListener('keydown', esc) }
+  }, [open])
+  return (<div className="more" ref={box}>
+    <button type="button" className={'nav-link more-btn' + (active ? ' active' : '')} title="More" aria-expanded={open} aria-controls="more-menu" onClick={() => setOpen(!open)}>
+      <MoreHorizontal size={18} strokeWidth={1.75} /><span className="nav-text">More</span><ChevronDown size={16} className={'chev' + (open ? ' up' : '')} aria-hidden="true" /></button>
+    {open && <div className="more-menu" id="more-menu">{more.map(([to, text, Icon]) => <NavLink key={to} to={to} className="more-link"><Icon size={18} strokeWidth={1.75} />{text}</NavLink>)}</div>}</div>)
+}
 function ProfileMenu() {
   const { user, logout } = useApp(); const [open, setOpen] = useState(false); const nav = useNavigate(); const box = useRef(); const { pathname } = useLocation()
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
     const out = (e) => !box.current?.contains(e.target) && setOpen(false), esc = (e) => e.key === 'Escape' && setOpen(false)
-    document.addEventListener('mousedown', out); document.addEventListener('keydown', esc)
-    return () => { document.removeEventListener('mousedown', out); document.removeEventListener('keydown', esc) }
+    document.addEventListener('pointerdown', out); document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', out); document.removeEventListener('keydown', esc) }
   }, [])
   return (<div ref={box}>
-    <button className="profile-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen(!open)}><span className="avatar">{initials(user)}</span><span className="pname">{firstName(user)}</span></button>
+    <button className="profile-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen(!open)}><Avatar user={user} size={32} /><span className="pname">{firstName(user)}</span></button>
     {open && <div className="menu" role="menu"><Link to="/profile" role="menuitem">Profile</Link><Link to="/settings" role="menuitem">Settings</Link>
       <button role="menuitem" onClick={async () => { await logout(); nav('/login') }}>Log out</button></div>}</div>)
 }
@@ -27,9 +47,9 @@ export default function AppShell() {
   const { loggedIn, dataLoading, dataError, reload } = useApp()
   if (!loggedIn) return <Navigate to="/login" replace />
   return (<div className="shell">
-    <aside className="sidebar"><div className="brand"><span className="brand-mark">K</span><span>Kita</span></div>
-      <nav aria-label="Main">{groups.map(([name, items]) => <div className="nav-group" key={name}><div className="label">{name}</div>
-        {items.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link" title={text}><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}</div>)}</nav></aside>
-    <div><header className="header"><Link to="/dashboard" className="header-brand" style={{ color: 'inherit' }}><span className="brand-mark">K</span>Kita</Link><ProfileMenu /></header><main className="page">{dataError ? <ErrorState title="Unable to load your data" text="Check your connection and try again." onRetry={reload} /> : dataLoading ? <LoadingState rows={5} label="Loading your data..." /> : <Outlet />}</main></div>
+    <aside className="sidebar"><Link to="/dashboard" className="brand" aria-label="TrackMyKita home"><Logo size={26} /></Link>
+      <nav className="nav-desktop" aria-label="Main">{groups.map((g, i) => <div className="nav-section" key={i}>{g.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link"><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}</div>)}</nav>
+      <nav className="nav-compact" aria-label="Main">{main.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link" title={text}><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}<MoreNav /></nav></aside>
+    <div className="shell-main"><header className="header"><Link to="/dashboard" className="header-brand" aria-label="TrackMyKita home"><Logo size={24} /></Link><ProfileMenu /></header><main className="page">{dataError ? <ErrorState title="Unable to load your data" text="Check your connection and try again." onRetry={reload} /> : dataLoading ? <LoadingState rows={5} label="Loading your data..." /> : <Outlet />}</main></div>
   </div>)
 }

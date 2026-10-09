@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import { monthLabel } from '../utils/format.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
-import { PageHeader, Field, ErrorState } from '../components/ui.jsx'
+import { PageHeader, Field, ErrorState, focusFirstInvalid } from '../components/ui.jsx'
 import { budgetMonths } from './Budgets.jsx'
 export default function BudgetForm() {
   const { id } = useParams(), nav = useNavigate(), { budgets, categories, transactions, saveBudget, notify, settings } = useApp(), existing = id ? budgets.find((b) => b.id === id) : null
@@ -15,7 +15,7 @@ export default function BudgetForm() {
     if (!f.categoryId) er.categoryId = 'Choose a category for this budget.'
     if (!f.amount) er.amount = 'Enter a monthly amount.'; else if (!(amt > 0)) er.amount = 'Budget amount must be greater than zero.'
     if (f.categoryId && budgets.some((b) => b.id !== existing?.id && b.categoryId === f.categoryId && b.month === f.month)) er.categoryId = 'This category already has a budget for that month. Edit it instead.'
-    setErr(er); if (Object.keys(er).length) return
+    setErr(er); if (Object.keys(er).length) return focusFirstInvalid()
     setSaving(true); const error = await saveBudget({ id: existing?.id || 'new', categoryId: f.categoryId, amount: amt, month: f.month }); if (error) { setSaving(false); setErr({ form: error }); return } notify('Budget saved successfully.'); nav('/budgets')
   }
   return (<>

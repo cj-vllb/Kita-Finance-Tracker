@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useId, isValidElement, cloneElement } from 'react'
 import { useApp } from '../context/AppContext.jsx'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
@@ -30,9 +30,18 @@ export function Avatar({ user, size = 32, className = '' }) {
 }
 export const PageHeader = ({ title, subtitle, children }) => (
   <div className="page-header"><div><h1>{title}</h1>{subtitle && <p className="muted">{subtitle}</p>}</div>{children && <div className="actions">{children}</div>}</div>)
-export const Field = ({ label, error, hint, children }) => (
-  <label className="field"><span className="field-label">{label}</span>{children}
-    {hint && !error && <span className="muted small">{hint}</span>}{error && <span className="field-error" role="alert">{error}</span>}</label>)
+// Moves keyboard/screen-reader focus to the first field with an error after a failed submit.
+export const focusFirstInvalid = () => requestAnimationFrame(() => document.querySelector('[aria-invalid="true"]')?.focus())
+// Label, control, hint and error. The control is linked to its label and to the hint/error text, and the error is not part of the label.
+// A button group (Segmented) has its own aria-label, so it gets a plain caption instead of a <label>.
+export function Field({ label, error, hint, children }) {
+  const id = useId(), hintId = id + '-hint', errId = id + '-err'
+  const describedBy = [error && errId, hint && !error && hintId].filter(Boolean).join(' ') || undefined
+  const group = isValidElement(children) && children.type === Segmented
+  const control = isValidElement(children) && !group ? cloneElement(children, { id, 'aria-describedby': describedBy }) : children
+  return (<div className="field">{group ? <span className="field-label">{label}</span> : <label className="field-label" htmlFor={id}>{label}</label>}{control}
+    {hint && !error && <span id={hintId} className="muted small">{hint}</span>}{error && <span id={errId} className="field-error" role="alert">{error}</span>}</div>)
+}
 export const Segmented = ({ label, value, onChange, options, disabled }) => (
   <div role="group" aria-label={label} className="seg">{options.map(([v, text]) => <button type="button" key={v} disabled={disabled} aria-pressed={value === v} onClick={() => onChange(v)}>{text}</button>)}</div>)
 export function ConfirmDialog({ title, children, confirmLabel, onConfirm, onCancel, danger = true, infoOnly, disabled = false }) {
@@ -46,7 +55,7 @@ export function ConfirmDialog({ title, children, confirmLabel, onConfirm, onCanc
 }
 export const EmptyState = ({ title, text, to, action }) => (
   <div className="empty"><h2>{title}</h2><p className="muted" style={{ margin: '4px 0 20px' }}>{text}</p>{to && <Link className="btn btn-primary" to={to}>{action}</Link>}</div>)
-export function ErrorState({ title = 'Something went wrong', text = 'Your records are safe. Try again or go back.', onRetry }) {
+export function ErrorState({ title = 'Something went wrong', text = 'Try again or go back.', onRetry }) {
   const nav = useNavigate()
   return (<div className="empty" role="alert"><h2>{title}</h2><p className="muted" style={{ margin: '4px 0 20px' }}>{text}</p>
     <div className="form-actions" style={{ justifyContent: 'center' }}>{onRetry && <button className="btn btn-primary" onClick={onRetry}>Retry</button>}<button className="btn" onClick={() => nav(-1)}>Go back</button></div></div>)

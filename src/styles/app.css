@@ -351,3 +351,15 @@ input:focus-visible+.color-box{outline:2px solid var(--color-primary);outline-of
 @keyframes status-in{from{opacity:0;transform:translateY(8px)}}@keyframes draw{from{stroke-dashoffset:var(--len,220)}to{stroke-dashoffset:0}}@keyframes pop{from{opacity:0;transform:scale(.4)}}
 .m-flap{--len:110}.c-tick{--len:48}
 @media (prefers-reduced-motion:reduce){.mail-art,.check-art,.m-flap,.m-dot,.c-ring,.c-tick,.status-screen .status-copy,.status-screen .status-hint,.status-cta,.status-screen>.btn{animation:none}}
+
+/* Privacy Policy and Terms (public pages) */
+.legal-shell{min-height:100vh}
+.legal-head{padding:var(--space-3) var(--page-margin);border-bottom:1px solid var(--color-border)}
+.legal-brand{display:inline-flex;align-items:center;min-height:44px}
+.legal{max-width:760px;margin:0 auto;padding:var(--space-10) var(--page-margin) var(--space-16)}
+.legal h2{margin:var(--space-10) 0 var(--space-3);font-size:20px}
+.legal p,.legal li{line-height:1.65}.legal p{margin:var(--space-3) 0}.legal ul{margin:var(--space-3) 0;padding-left:22px}.legal li{margin:var(--space-2) 0}
+.legal-note{border:1px solid var(--color-border);background:var(--color-surface);border-radius:var(--radius-lg);padding:var(--space-4)}
+.legal-foot{display:flex;flex-wrap:wrap;gap:0 var(--space-6);margin-top:var(--space-12);padding-top:var(--space-4);border-top:1px solid var(--color-border)}
+.legal-foot a{display:inline-flex;align-items:center;min-height:44px}
+.legal-links{display:flex;flex-wrap:wrap;gap:0 var(--space-4)}

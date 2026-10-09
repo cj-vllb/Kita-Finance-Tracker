@@ -23,3 +23,15 @@ export async function uploadAvatar(blob) {
   return path
 }
 export const removeAvatarFile = async (path) => { if (!path) return; const { error } = await supabase.storage.from(BUCKET).remove([path]); if (error) throw error }
+// Deletes every file in the signed-in user's own avatar folder (current photo and any leftovers from earlier uploads).
+// Used before account deletion, because storage files are not removed automatically with the account.
+export async function removeAllAvatarFiles() {
+  const uid = await currentUserId(); if (!uid) return
+  for (let round = 0; round < 10; round++) {
+    const { data, error } = await supabase.storage.from(BUCKET).list(uid, { limit: 100 })
+    if (error) throw error
+    if (!data?.length) return
+    const { error: rmError } = await supabase.storage.from(BUCKET).remove(data.map((f) => `${uid}/${f.name}`))
+    if (rmError) throw rmError
+  }
+}

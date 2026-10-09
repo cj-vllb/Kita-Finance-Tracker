@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import { TODAY } from '../utils/dates.js'
 import { formatDate, signed, txLabel } from '../utils/format.js'
-import { PageHeader, Field, Segmented, DeleteTransactionDialog, ErrorState } from '../components/ui.jsx'
+import { PageHeader, Field, Segmented, DeleteTransactionDialog, ErrorState, focusFirstInvalid } from '../components/ui.jsx'
 export default function TransactionForm() {
   const { id } = useParams(), nav = useNavigate(), { transactions, categories, saveTransaction, deleteTransaction, notify, settings } = useApp()
   const existing = id ? transactions.find((t) => t.id === id) : null
@@ -15,7 +15,7 @@ export default function TransactionForm() {
     e.preventDefault(); const er = {}, amt = Number(f.amount)
     if (!f.amount || Number.isNaN(amt)) er.amount = 'Enter an amount.'; else if (amt <= 0) er.amount = 'Enter an amount above zero.'
     if (!f.date) er.date = 'Choose a date.'
-    setErr(er); if (Object.keys(er).length) return
+    setErr(er); if (Object.keys(er).length) return focusFirstInvalid()
     setSaving(true)
     const error = await saveTransaction({ ...f, id: existing?.id || 'new', amount: amt, description: f.description.trim() })
     if (error) { setSaving(false); setErr({ form: error }); return }

@@ -1,16 +1,13 @@
-// Turns Supabase/network errors into plain messages. Technical details stay in the console.
+// Turns Supabase/network errors into plain messages. Technical details are only logged during development.
+import { logError } from './log.js'
 export function friendlyError(e, fallback = "We couldn't save this. Please try again.") {
-  console.error(e)
+  logError(e)
   if (!e) return fallback
   if (e.wrongPassword) return 'Current password is incorrect.'
   if (e.userMessage) return e.userMessage
-  // Specific database refusals get specific messages, so a missing optional field is never reported as a vague "required details" problem.
-  if (e.code === '23502' && /"description"/.test(e.message || '')) return 'Your database still requires a description. Apply the latest database update (supabase db push), then try again.'
-  if (/categories_color_check|color_check/.test(e.message || '')) return 'This color needs the latest database update (supabase db push). Pick an older color or apply the update.'
-  if (/bucket not found/i.test(e.message || '')) return 'Profile pictures are not set up yet. Ask the app owner to apply the latest database update.'
   if (/mime type|not supported/i.test(e.message || '')) return 'Use a JPG, PNG or WebP image.'
   if (/exceeded the maximum allowed size|too large|payload/i.test(e.message || '')) return 'That photo is too large. Choose a smaller one.'
-  if (e.code === 'PGRST204' || /avatar_path/i.test(e.message || '')) return 'Profile pictures are not set up yet. Ask the app owner to apply the latest database update.'
+  if (e.code === 'PGRST204' || /avatar_path|bucket not found/i.test(e.message || '')) return 'Profile pictures are unavailable right now. Please try again later.'
   if (e instanceof TypeError || /failed to fetch|network/i.test(e.message || '')) return 'Check your connection and try again.'
   if (/invalid login credentials/i.test(e.message || '')) return 'Incorrect email or password.'
   if (/email not confirmed/i.test(e.message || '')) return 'Confirm your email first. Check your inbox for the link.'

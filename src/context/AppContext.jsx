@@ -5,6 +5,7 @@ import * as txService from '../services/transactionService.js'
 import * as budgetService from '../services/budgetService.js'
 import * as categoryService from '../services/categoryService.js'
 import { friendlyError } from '../lib/errors.js'
+import { logError } from '../lib/log.js'
 import { setCurrency } from '../utils/format.js'
 import { CURRENCIES, safeCurrency } from '../utils/currency.js'
 import { prepareAvatar } from '../utils/image.js'
@@ -23,7 +24,7 @@ export function AppProvider({ children }) {
   const uid = session?.user?.id
   useEffect(() => {
     let live = true
-    auth.getSession().then((s) => live && setSession(s)).catch(console.error).finally(() => live && setAuthLoading(false))
+    auth.getSession().then((s) => live && setSession(s)).catch(logError).finally(() => live && setAuthLoading(false))
     const sub = auth.onAuthChange((_event, s) => setSession(s))
     return () => { live = false; sub.unsubscribe() }
   }, [])
@@ -33,7 +34,7 @@ export function AppProvider({ children }) {
     try {
       const [p, t, b, c] = await Promise.all([profiles.getProfile(), txService.getTransactions(), budgetService.getBudgets(), categoryService.getCategories()])
       setProfile(p); setTransactions(t); setBudgets(b); setCategories(c)
-    } catch (e) { console.error(e); setDataError(true) } finally { setDataLoading(false); setLoadedUid(uid) }
+    } catch (e) { logError(e); setDataError(true) } finally { setDataLoading(false); setLoadedUid(uid) }
   }, [uid])
   useEffect(() => { reload() }, [reload])
   useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
@@ -43,7 +44,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!avatarPath) { setAvatarUrl(null); return }
     let live = true, t
-    const sign = () => profiles.getAvatarUrl(avatarPath).then((u) => { if (live) { setAvatarUrl(u); t = setTimeout(sign, (profiles.AVATAR_URL_TTL - 300) * 1000) } }).catch((e) => { console.error(e); if (live) setAvatarUrl(null) })
+    const sign = () => profiles.getAvatarUrl(avatarPath).then((u) => { if (live) { setAvatarUrl(u); t = setTimeout(sign, (profiles.AVATAR_URL_TTL - 300) * 1000) } }).catch((e) => { logError(e); if (live) setAvatarUrl(null) })
     sign(); return () => { live = false; clearTimeout(t) }
   }, [avatarPath])
   const notify = useCallback((msg) => { setToast(msg); clearTimeout(timer.current); timer.current = setTimeout(() => setToast(null), 2800) }, [])
@@ -78,11 +79,11 @@ export function AppProvider({ children }) {
     saveAvatar: (blob) => attempt(async () => {
       const old = profile?.avatar_path, path = await profiles.uploadAvatar(blob)
       try { setProfile(await profiles.updateProfile({ avatarPath: path })) } catch (e) { await profiles.removeAvatarFile(path).catch(() => {}); throw e }
-      if (old && old !== path) profiles.removeAvatarFile(old).catch(console.error)
+      if (old && old !== path) profiles.removeAvatarFile(old).catch(logError)
     }, "We couldn't save your photo. Please try again."),
     removeAvatar: () => attempt(async () => {
       const old = profile?.avatar_path; if (!old) return
-      setProfile(await profiles.updateProfile({ avatarPath: null })); profiles.removeAvatarFile(old).catch(console.error)
+      setProfile(await profiles.updateProfile({ avatarPath: null })); profiles.removeAvatarFile(old).catch(logError)
     }, "We couldn't remove your photo. Please try again."),
     checkAvatar: prepareAvatar,
     saveTransaction: save(transactions, setTransactions, { create: txService.createTransaction, update: txService.updateTransaction }, 'transaction'),
@@ -92,10 +93,14 @@ export function AppProvider({ children }) {
     saveCategory: save(categories, setCategories, { create: categoryService.createCategory, update: categoryService.updateCategory }, 'category'),
     deleteCategory: remove(setCategories, categoryService.deleteCategory, 'category'),
     resetAll: async () => { // "Delete account" in Settings
-      // Remove the stored photo first: once the account is gone nobody is allowed to delete it. Account deletion removes every database row.
-      await profiles.removeAvatarFile(profile?.avatar_path).catch(console.error)
+      // Remove every stored photo first: once the account is gone nobody is allowed to delete them. Account deletion removes every database row.
+      await profiles.removeAllAvatarFiles().catch(logError)
       const e = await attempt(() => auth.deleteMyAccount(), "We couldn't delete your account. Please try again.")
-      if (e) return notify(e)
+      if (e) {
+        // The photos are already gone, so stop the profile pointing at a missing file (it would only show initials anyway).
+        if (profile?.avatar_path) await profiles.updateProfile({ avatarPath: null }).then(setProfile).catch(logError)
+        return notify(e)
+      }
       await auth.signOut().catch(() => {}); window.location.assign('/login')
     },
   }

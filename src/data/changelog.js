@@ -1,6 +1,14 @@
 // Newest first. User-facing only: meaningful features, improvements and fixes. No implementation detail.
 // `date` is shown beside the version. Older entries only carry the year because exact release dates are not recorded.
 export const CHANGELOG = [
+  { version: '1.2', date: 'October 2026', title: 'Security, privacy and accessibility', items: [
+    'New Privacy Policy and Terms of Service pages, linked from sign-up and Settings',
+    'Fonts now load from TrackMyKita itself instead of Google Fonts',
+    'Page view analytics no longer include record IDs or link parameters',
+    'Clearer error messages and stronger browser security settings',
+    'Deleting your account now removes all of your stored profile pictures',
+    'Accessibility improvements: better text contrast, clearer form errors and keyboard support in the account menu',
+  ] },
   { version: '1.1.3', date: 'October 2026', title: 'Clearer sign-up and a tidier dashboard', items: [
     'Polished "Check your email" screen after signing up, with a reminder to look in Spam or Junk',
     'New email confirmation page, so you land on a clear "Email confirmed" screen before continuing',

@@ -31,16 +31,27 @@ function MoreNav() {
     {open && <div className="more-menu" id="more-menu">{more.map(([to, text, Icon]) => <NavLink key={to} to={to} className="more-link"><Icon size={18} strokeWidth={1.75} />{text}</NavLink>)}</div>}</div>)
 }
 function ProfileMenu() {
-  const { user, logout } = useApp(); const [open, setOpen] = useState(false); const nav = useNavigate(); const box = useRef(); const { pathname } = useLocation()
+  const { user, logout } = useApp(); const [open, setOpen] = useState(false); const nav = useNavigate(); const box = useRef(); const btn = useRef(); const { pathname } = useLocation()
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
     const out = (e) => !box.current?.contains(e.target) && setOpen(false), esc = (e) => e.key === 'Escape' && setOpen(false)
     document.addEventListener('pointerdown', out); document.addEventListener('keydown', esc)
     return () => { document.removeEventListener('pointerdown', out); document.removeEventListener('keydown', esc) }
   }, [])
+  useEffect(() => { if (open) box.current?.querySelector('[role="menuitem"]')?.focus() }, [open]) // keyboard users land on the first item
+  // Menu keyboard pattern: arrows move between items, Home/End jump, Escape closes and returns focus to the button.
+  const onMenuKey = (e) => {
+    const list = [...box.current.querySelectorAll('[role="menuitem"]')], i = list.indexOf(document.activeElement), last = list.length - 1
+    const go = (n) => { e.preventDefault(); list[n]?.focus() }
+    if (e.key === 'ArrowDown') go(i >= last ? 0 : i + 1)
+    else if (e.key === 'ArrowUp') go(i <= 0 ? last : i - 1)
+    else if (e.key === 'Home') go(0)
+    else if (e.key === 'End') go(last)
+    else if (e.key === 'Escape') { setOpen(false); btn.current?.focus() }
+  }
   return (<div ref={box}>
-    <button className="profile-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen(!open)}><Avatar user={user} size={32} /><span className="pname">{firstName(user)}</span></button>
-    {open && <div className="menu" role="menu"><Link to="/profile" role="menuitem">Profile</Link><Link to="/settings" role="menuitem">Settings</Link>
+    <button ref={btn} className="profile-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen(!open)} onKeyDown={(e) => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true) } }}><Avatar user={user} size={32} /><span className="pname">{firstName(user)}</span></button>
+    {open && <div className="menu" role="menu" onKeyDown={onMenuKey}><Link to="/profile" role="menuitem">Profile</Link><Link to="/settings" role="menuitem">Settings</Link>
       <button role="menuitem" onClick={async () => { await logout(); nav('/login') }}>Log out</button></div>}</div>)
 }
 export default function AppShell() {

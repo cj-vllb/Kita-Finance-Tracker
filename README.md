@@ -1,8 +1,10 @@
 # TrackMyKita
 
-TrackMyKita is a personal finance tracker for recording income and expenses, setting monthly budgets and seeing where your money goes, all in one private account.
+TrackMyKita is a personal finance tracker for recording income and expenses, setting monthly budgets and seeing where your money goes, all in one personal account.
 
-**Current version:** 1.1.3
+**Current version:** 1.2
+
+Version 1.2 is a security, privacy and accessibility release: Privacy Policy and Terms pages, self-hosted fonts, sanitised analytics, security headers, clearer errors, fuller cleanup when an account is deleted, and accessibility fixes.
 
 ## Features
 
@@ -14,6 +16,7 @@ TrackMyKita is a personal finance tracker for recording income and expenses, set
 - CSV export
 - Email sign-up with confirmation, password reset and account deletion
 - Responsive layout for desktop, tablet and phone
+- Privacy Policy and Terms of Service pages
 
 ## Tech stack
 
@@ -21,6 +24,7 @@ TrackMyKita is a personal finance tracker for recording income and expenses, set
 - React Router
 - Supabase (Auth, Postgres with row level security, Storage)
 - Vercel (hosting, Web Analytics, Speed Insights)
+- IBM Plex Sans and Poppins, self-hosted through Fontsource
 
 ## Getting started
 
@@ -43,8 +47,8 @@ Never commit `.env.local` or any service-role key. Backend setup is described in
 
 ## Deployment
 
-Deployed on Vercel; `vercel.json` rewrites all routes to `index.html` for client-side routing. Add your site's `/email-confirmed` URL to the Supabase Auth redirect URL allow list so confirmation links work.
+Deployed on Vercel; `vercel.json` rewrites all routes to `index.html` for client-side routing and sets security headers. The Content Security Policy is currently sent in report-only mode; check the browser console on the deployed site before switching it to enforcing. Add your site's `/email-confirmed` URL to the Supabase Auth redirect URL allow list so confirmation links work.
 
 ## Author
 
-Created by CJ, [www.workwithcj.digital](http://www.workwithcj.digital)
+Created by CJ, [www.workwithcj.digital](https://www.workwithcj.digital)

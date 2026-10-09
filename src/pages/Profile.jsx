@@ -14,7 +14,7 @@ export default function Profile() {
     setErr(er); if (Object.keys(er).length) return focusFirstInvalid(); setBusy(true); const error = await updateUser({ fullName: f.fullName.trim(), email: f.email.trim() }); setBusy(false); if (error) return setErr({ form: error }); setMode(null); notify(f.email.trim() !== user.email ? 'Profile saved. Check your email to confirm the new address.' : 'Profile updated successfully.') }
   const savePassword = async (e) => { e.preventDefault(); const er = {}
     if (!p.current) er.current = 'Enter your current password.'; if (p.next.length < 8) er.next = 'Use at least 8 characters.'; if (p.confirm !== p.next) er.confirm = 'The passwords do not match.'
-    setErr(er); if (Object.keys(er).length) return focusFirstInvalid(); setBusy(true); const error = await changePassword(p.current, p.next); setBusy(false); if (error) return setErr(error === 'Current password is incorrect.' ? { current: error } : { form: error }); setP({ current: '', next: '', confirm: '' }); setMode(null); notify('Password updated successfully.') }
+    setErr(er); if (Object.keys(er).length) return focusFirstInvalid(); setBusy(true); const { error, othersKept } = await changePassword(p.current, p.next); setBusy(false); if (error) return setErr(error === 'Current password is incorrect.' ? { current: error } : { form: error }); setP({ current: '', next: '', confirm: '' }); setMode(null); notify(othersKept ? "Password updated. We couldn't sign out your other devices; logging out will do it." : 'Password updated successfully.') }
   // Photo flow: pick -> validate + crop + shrink in the browser -> preview -> Save uploads it.
   const pick = async (e) => {
     const file = e.target.files?.[0]; e.target.value = ''; if (!file) return

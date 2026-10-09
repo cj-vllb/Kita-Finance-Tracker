@@ -62,10 +62,17 @@ export function AppProvider({ children }) {
     logout: async () => { await attempt(() => auth.signOut()); setSession(null) },
     resetPassword: (email) => attempt(() => auth.sendPasswordReset(email), "We couldn't send the reset link. Please try again."),
     updatePassword: (password) => attempt(() => auth.updatePassword(password), "We couldn't update your password. Please try again."),
-    changePassword: (current, next) => attempt(async () => {
-      try { await auth.signIn(user.email, current) } catch (e) { throw Object.assign(new Error('wrong password'), { wrongPassword: true }) }
-      await auth.updatePassword(next)
-    }, "We couldn't update your password. Please try again."),
+    // Resolves { error, othersKept }. error: message or null. othersKept: the password WAS changed, but ending the account's other sessions failed.
+    changePassword: async (current, next) => {
+      let othersKept = false
+      const error = await attempt(async () => {
+        try { await auth.signIn(user.email, current) } catch (e) { throw Object.assign(new Error('wrong password'), { wrongPassword: true }) }
+        await auth.updatePassword(next)
+        // The password is already changed here, so a failure below must not be reported as a failed password change.
+        try { await auth.signOutOtherSessions() } catch (e) { logError(e); othersKept = true }
+      }, "We couldn't update your password. Please try again.")
+      return { error, othersKept }
+    },
     updateUser: ({ fullName, email }) => attempt(async () => {
       if (fullName !== undefined && fullName !== user.fullName) setProfile(await profiles.updateProfile({ fullName }))
       if (email && email !== user.email) await auth.updateEmail(email)

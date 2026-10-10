@@ -1,6 +1,13 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.2.2', date: 'October 10, 2026', title: 'Clarity and polish', items: [
+    'Clearer transaction titles',
+    'A more prominent current balance on the dashboard',
+    'Simpler profile picture controls',
+    'Previous update logs now expand one at a time',
+    'Fixed category menu alignment on phones',
+  ] },
   { version: '1.2.1', date: 'October 10, 2026', title: 'Refinements', items: [
     'More compact category and budget lists on phones',
     'Add categories while creating a transaction or budget',

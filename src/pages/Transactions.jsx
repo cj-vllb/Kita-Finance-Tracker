@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { formatDate, signed, monthLabel, txLabel } from '../utils/format.js'
 import { allMonths } from '../utils/calc.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
-import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet } from '../components/ui.jsx'
+import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet, CategoryLabel } from '../components/ui.jsx'
 const PAGE = 10
 export default function Transactions() {
   const { transactions, categories, deleteTransaction, notify } = useApp(), [sp] = useSearchParams()
@@ -24,7 +24,7 @@ export default function Transactions() {
     <PageHeader title="Transactions" subtitle={`${rows.length} transaction${rows.length === 1 ? '' : 's'}${f.month === 'all' ? '' : ' in ' + monthLabel(f.month)}`}><Link to="/transactions/new" className="btn btn-primary">Add transaction</Link></PageHeader>
     {transactions.length === 0 ? <EmptyState icon={ArrowLeftRight} title="No transactions yet" text="Your transactions will appear here once you add your first one." to="/transactions/new" action="Add transaction" /> : <>
       <div className="toolbar">
-        <input className="input" type="search" placeholder="Search description or category" aria-label="Search transactions" value={f.q} onChange={set('q')} />
+        <input className="input" type="search" placeholder="Search title or category" aria-label="Search transactions" value={f.q} onChange={set('q')} />
         <button type="button" className="btn filter-btn" aria-expanded={fOpen} aria-controls="tx-filters" onClick={() => setFOpen(!fOpen)}><SlidersHorizontal size={16} aria-hidden="true" />Filter{active > 0 && <span className="count" aria-label={`${active} active`}>{active}</span>}</button>
         <div id="tx-filters" className={'filters' + (fOpen ? ' open' : '')}>
           <select className="input" aria-label="Date" value={f.month} onChange={set('month')}><option value="all">All dates</option>{allMonths(transactions, [CURRENT_MONTH]).reverse().map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}</select>
@@ -33,10 +33,10 @@ export default function Transactions() {
           <select className="input sort-m" aria-label="Sort by" value={`${sort.key}:${sort.dir}`} onChange={(e) => { const [key, dir] = e.target.value.split(':'); setSort({ key, dir }); setPage(1) }}><option value="date:desc">Newest first</option><option value="date:asc">Oldest first</option><option value="amount:desc">Highest amount</option><option value="amount:asc">Lowest amount</option></select>
           {(active > 0 || f.q) && <button type="button" className="btn-link reset" onClick={reset}>Reset</button>}</div></div>
       {rows.length === 0 ? <EmptyState title="No transactions found" text="Try adjusting your filters." /> : <>
-        <div className="table-wrap"><table className="table"><caption className="sr-only">Transactions</caption><thead><tr><SortTh k="date" cls="hide-m">Date</SortTh><th className="label">Description</th><th className="label hide-m">Category</th><th className="label hide-m">Type</th><SortTh k="amount" cls="amount">Amount</SortTh><th className="label hide-m">Actions</th><th className="only-m"><span className="sr-only">Actions</span></th></tr></thead>
+        <div className="table-wrap"><table className="table"><caption className="sr-only">Transactions</caption><thead><tr><SortTh k="date" cls="hide-m">Date</SortTh><th className="label">Title</th><th className="label hide-m">Category</th><th className="label hide-m">Type</th><SortTh k="amount" cls="amount">Amount</SortTh><th className="label hide-m">Actions</th><th className="only-m"><span className="sr-only">Actions</span></th></tr></thead>
           <tbody>{view.map((t) => <tr className="row" key={t.id}><td className="hide-m">{formatDate(t.date)}</td>
-            <td><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><div className="muted small show-m">{name(t.categoryId)} · {formatDate(t.date)}</div></td>
-            <td className="hide-m">{name(t.categoryId)}</td><td className="hide-m">{t.type === 'income' ? 'Income' : 'Expense'}</td>
+            <td><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><div className="muted small show-m"><CategoryLabel id={t.categoryId} categories={categories} /> · {formatDate(t.date)}</div></td>
+            <td className="hide-m"><CategoryLabel id={t.categoryId} categories={categories} /></td><td className="hide-m">{t.type === 'income' ? 'Income' : 'Expense'}</td>
             <td className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</td>
             <td className="hide-m"><div className="row-actions"><Link to={`/transactions/${t.id}`} aria-label={`View ${label(t)}`}>View</Link><Link to={`/transactions/${t.id}/edit`} aria-label={`Edit ${label(t)}`}>Edit</Link><button className="btn-link danger" aria-label={`Delete ${label(t)}`} onClick={() => setDel(t)}>Delete</button></div></td>
             <td className="only-m act"><button type="button" className="icon-btn" aria-label={`Actions for ${label(t)}`} aria-haspopup="dialog" onClick={() => setSheet(t)}><MoreVertical size={20} aria-hidden="true" /></button></td></tr>)}</tbody></table></div>

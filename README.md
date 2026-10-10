@@ -2,7 +2,7 @@
 
 TrackMyKita is a personal finance tracker for recording income and expenses, setting monthly budgets and seeing where your money goes, all in one personal account.
 
-**Current version:** 1.2.1
+**Current version:** 1.2.2
 
 Version 1.2 is a security, privacy and accessibility release: Privacy Policy and Terms pages, self-hosted fonts, sanitised analytics, security headers, clearer errors, fuller cleanup when an account is deleted, and accessibility fixes.
 

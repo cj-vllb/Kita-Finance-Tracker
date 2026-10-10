@@ -436,7 +436,7 @@ input:focus-visible+.color-box{outline:2px solid var(--color-primary);outline-of
   /* categories: one line per row, name left, single overflow icon right */
   .cat-table.stack tr.row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);min-height:48px;padding:0 0 0 var(--space-1)}
   .cat-table.stack td.cell-title{flex:1;min-width:0;padding:0}
-  .cat-table.stack td.cell-actions{flex:none;padding:0}
+  .cat-table.stack td.cell-actions{flex:none;width:auto;padding:0;justify-content:flex-end} /* the desktop 150px actions column must not apply to the stacked mobile row */
   /* budgets: title row with the overflow icon, then budget / spent / remaining side by side, then progress */
   .bud-table.stack tr.row{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px var(--space-3);padding:var(--space-1) 0 var(--space-3)}
   .bud-table.stack td{min-width:0}
@@ -445,3 +445,29 @@ input:focus-visible+.color-box{outline:2px solid var(--color-primary);outline-of
   .bud-table.stack td.cell-progress{grid-column:1/-1;padding-top:var(--space-2)}.bud-table.stack td.cell-progress .progress{flex:1;max-width:none}
   .bud-table.stack td.cell-actions{position:absolute;top:0;right:0;min-height:0;padding:0}
 }
+
+/* ===== TrackMyKita 1.2.2 ===== */
+.uncat{font-style:italic}
+/* dashboard: current balance is the focal point; sections below are unchanged */
+.hero-balance{padding:var(--space-6);background:var(--color-primary-soft);border-radius:var(--radius-lg)}
+.balance-label{font-size:14px;font-weight:500;color:var(--color-muted)}
+.hero-balance .balance{margin-top:var(--space-2);font-size:clamp(36px,11vw,52px);line-height:1.1;font-weight:600;letter-spacing:-.01em;color:var(--color-on-soft)}
+.hero-balance .figures{border-top-color:var(--color-border)}
+@media (max-width:700px){.hero-balance{padding:var(--space-5)}}
+/* profile picture: options button in its top-right corner */
+.avatar-wrap{position:relative;flex:none;line-height:0}
+.avatar-menu-btn{position:absolute;top:4px;right:4px;width:32px;height:32px;border-radius:50%;background:var(--color-field);border:1px solid var(--color-border);color:var(--color-text);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.avatar-menu-btn:hover{background:var(--color-surface)}
+.avatar-menu-btn svg{width:16px;height:16px}
+.avatar-menu-btn::after{content:"";position:absolute;inset:-6px} /* tap target of 44px */
+.row-menu-note{width:208px;max-width:100%;margin:var(--space-1) 0 0;padding:var(--space-2) var(--space-3) var(--space-2);border-top:1px solid var(--color-border);font-size:13px;line-height:1.4;color:var(--color-muted)}
+/* about: previous releases open one at a time */
+.release.old{padding:0}
+.old-toggle{display:flex;align-items:center;gap:var(--space-2);width:100%;min-height:48px;padding:0;border:0;background:none;font:inherit;font-size:16px;font-weight:600;color:var(--color-text);text-align:left;cursor:pointer}
+.old-toggle svg{flex:none;color:var(--color-muted);transition:transform .15s}.old-toggle svg.flip{transform:rotate(180deg)}
+.old-toggle:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
+.old-panel{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .18s ease,visibility 0s .18s}
+.old-panel.open{grid-template-rows:1fr;visibility:visible;transition:grid-template-rows .18s ease,visibility 0s}
+.old-panel>div{min-height:0;overflow:hidden}
+.old-panel ul{margin:var(--space-2) 0 0;padding:0 0 var(--space-4) 20px}
+@media (prefers-reduced-motion:reduce){.old-panel,.old-panel.open,.old-toggle svg{transition:none}}

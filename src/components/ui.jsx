@@ -53,6 +53,8 @@ export function Avatar({ user, size = 32, className = '' }) {
   return (<span className={'avatar ' + className} style={{ width: size, height: size, fontSize: Math.max(11, Math.round(size * 0.36)) }}>
     {user.avatarUrl && !broken ? <img src={user.avatarUrl} alt="" onError={() => setBroken(true)} /> : initials(user)}</span>)
 }
+// A category name for display. A missing, empty or deleted category shows "Uncategorized" in italics (display only; no category is created or assigned).
+export const CategoryLabel = ({ id, categories }) => categories.find((c) => c.id === id)?.name ?? <em className="uncat">Uncategorized</em>
 export const PageHeader = ({ title, subtitle, children }) => (
   <div className="page-header"><div><h1>{title}</h1>{subtitle && <p className="muted">{subtitle}</p>}</div>{children && <div className="actions">{children}</div>}</div>)
 // Moves keyboard/screen-reader focus to the first field with an error after a failed submit.
@@ -110,7 +112,7 @@ export function ActionSheet({ title, subtitle, onClose, children }) {
 // The menu is drawn in a portal with fixed positioning, so no scrolling or overflow-hidden parent can clip it, and it is kept inside the viewport
 // (flipped above the button when there is no room below). A transparent backdrop catches an outside tap so it closes the menu without also
 // triggering whatever sits underneath.
-export function RowMenu({ label = 'Options', items }) {
+export function RowMenu({ label = 'Options', items, icon: TriggerIcon = MoreVertical, buttonClassName = '', disabled = false, note }) {
   const [open, setOpen] = useState(false), [pos, setPos] = useState(null), btn = useRef(), menu = useRef(), id = useId()
   const toggle = () => { setPos(null); setOpen((o) => !o) }
   const close = useCallback((focusButton) => { setOpen(false); if (focusButton) btn.current?.focus({ preventScroll: true }) }, [])
@@ -137,11 +139,12 @@ export function RowMenu({ label = 'Options', items }) {
   }
   const pick = (it) => { close(true); it.onSelect?.() } // focus goes back to the button first, so a dialog opened by the action returns focus there
   return (<>
-    <button ref={btn} type="button" className="icon-btn row-menu-btn" aria-label={label} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} onClick={toggle}><MoreVertical size={20} aria-hidden="true" /></button>
+    <button ref={btn} type="button" className={'icon-btn row-menu-btn ' + buttonClassName} disabled={disabled} aria-label={label} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} onClick={toggle}><TriggerIcon size={20} aria-hidden="true" /></button>
     {createPortal(<Presence show={open}>{(state) => (<>
       <div className="row-menu-backdrop" data-state={state} onClick={() => close(true)} />
       <div ref={menu} id={id} role="menu" aria-label={label} className="row-menu" data-state={state} style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: 'hidden' }} onKeyDown={onKey}>
         {items.map((it) => { const Icon = it.icon, cls = 'row-menu-item' + (it.danger ? ' danger' : ''), inner = <>{Icon && <Icon size={18} aria-hidden="true" />}{it.label}</>
           return it.to ? <Link key={it.label} role="menuitem" className={cls} to={it.to} onClick={() => pick(it)}>{inner}</Link>
-            : <button key={it.label} type="button" role="menuitem" className={cls} onClick={() => pick(it)}>{inner}</button> })}</div></>)}</Presence>, document.body)}</>)
+            : <button key={it.label} type="button" role="menuitem" className={cls} onClick={() => pick(it)}>{inner}</button> })}
+        {note && <p className="row-menu-note">{note}</p>}</div></>)}</Presence>, document.body)}</>)
 }

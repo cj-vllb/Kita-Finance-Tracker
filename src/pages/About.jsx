@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ExternalLink } from 'lucide-react'
 import { Logo } from '../components/Logo.jsx'
@@ -10,6 +10,13 @@ export const PORTFOLIO_URL = 'https://www.workwithcj.digital'
 const VISIBLE = 2 // only the two newest versions show by default
 const Release = ({ r }) => <article className="release" aria-label={`Version ${r.version}`}><h3>{r.version}{r.version === APP_VERSION && <span className="tag">Current</span>}<span className="release-date">{r.date}</span></h3><p className="muted small">{r.title}</p>
   <ul>{r.items.map((x) => <li key={x}>{x}</li>)}</ul></article>
+// A previous release: a compact row (version + date) that opens its own description. Each row keeps its own open state.
+function OldRelease({ r }) {
+  const [open, setOpen] = useState(false), id = useId()
+  return (<article className="release old" aria-label={`Version ${r.version}`}>
+    <h3><button type="button" className="old-toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)}><ChevronDown size={16} aria-hidden="true" className={open ? 'flip' : ''} /><span className="old-ver">{r.version}</span><span className="release-date">{r.date}</span></button></h3>
+    <div id={id} role="region" aria-label={`Version ${r.version} update details`} className={'old-panel' + (open ? ' open' : '')}><div><p className="muted small">{r.title}</p><ul>{r.items.map((x) => <li key={x}>{x}</li>)}</ul></div></div></article>)
+}
 export default function About() {
   const [showOld, setShowOld] = useState(false)
   return (<>
@@ -24,7 +31,7 @@ export default function About() {
         {CHANGELOG.slice(0, VISIBLE).map((r) => <Release key={r.version} r={r} />)}
         {CHANGELOG.length > VISIBLE && <>
           <button type="button" className="btn-link older-toggle" aria-expanded={showOld} aria-controls="older-updates" onClick={() => setShowOld((v) => !v)}><ChevronDown size={16} aria-hidden="true" className={showOld ? 'flip' : ''} />{showOld ? 'Hide previous updates' : 'View previous updates'}</button>
-          {showOld && <div id="older-updates">{CHANGELOG.slice(VISIBLE).map((r) => <Release key={r.version} r={r} />)}</div>}</>}
+          {showOld && <div id="older-updates">{CHANGELOG.slice(VISIBLE).map((r) => <OldRelease key={r.version} r={r} />)}</div>}</>}
       </section>
       <section className="section" aria-labelledby="a-by"><h2 id="a-by">Creator</h2>
         <p><strong>Created by Christian Jan Villalba</strong></p><p className="muted">TrackMyKita was designed and developed by Christian Jan Villalba.</p>

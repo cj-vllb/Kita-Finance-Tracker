@@ -20,5 +20,5 @@ export const monthShort = (ym) => d(ym + '-01').toLocaleDateString('en-US', { mo
 export const greeting = (now = new Date()) => { const h = now.getHours(); return h >= 5 && h < 12 ? 'Good morning' : h >= 12 && h < 18 ? 'Good afternoon' : 'Good evening' }
 export const firstName = (user) => user.fullName.trim().split(' ')[0]
 export const initials = (user) => user.fullName.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
-// A transaction may have no description: fall back to its category, then to its type.
-export const txLabel = (t, categories = []) => t.description || categories.find((c) => c.id === t.categoryId)?.name || (t.type === 'income' ? 'Income' : 'Expense')
+// The stored `description` is the transaction's title. Display rule (nothing is ever written back): a non-blank title, else the category name, else "Untitled Income" / "Untitled Expense".
+export const txLabel = (t, categories = []) => t.description?.trim() || categories.find((c) => c.id === t.categoryId)?.name || (t.type === 'income' ? 'Untitled Income' : 'Untitled Expense')

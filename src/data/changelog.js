@@ -1,36 +1,30 @@
-// Newest first. User-facing only: meaningful features, improvements and fixes. No implementation detail.
-// `date` is shown beside the version. Older entries only carry the year because exact release dates are not recorded.
+// Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
+// `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
-  { version: '1.2', date: 'October 2026', title: 'Security, privacy and accessibility', items: [
-    'New Privacy Policy and Terms of Service pages, linked from sign-up and Settings',
-    'Fonts now load from TrackMyKita itself instead of Google Fonts',
-    'Page view analytics no longer include record IDs or link parameters',
-    'Clearer error messages and stronger browser security settings',
-    'Deleting your account now removes all of your stored profile pictures',
-    'Accessibility improvements: better text contrast, clearer form errors and keyboard support in the account menu',
+  { version: '1.2.1', date: 'October 10, 2026', title: 'Refinements', items: [
+    'More compact category and budget lists on phones',
+    'Add categories while creating a transaction or budget',
+    'Shorter dates in transaction lists',
+    'New page not found screen',
+    'Smoother loading, empty pages and animations',
   ] },
-  { version: '1.1.3', date: 'October 2026', title: 'Clearer sign-up and a tidier dashboard', items: [
-    'Polished "Check your email" screen after signing up, with a reminder to look in Spam or Junk',
-    'New email confirmation page, so you land on a clear "Email confirmed" screen before continuing',
-    'Dashboard reorganised: charts side by side, with "This month at a glance" as the closing summary',
-    'Page view and performance monitoring added to help keep TrackMyKita fast',
+  { version: '1.2', date: 'October 9, 2026', title: 'Security and privacy', items: [
+    'Added Privacy Policy and Terms of Service pages',
+    'Improved privacy and security',
+    'Improved accessibility',
   ] },
-  { version: '1.1.2', date: '2026', title: 'Sign-in and link reliability', items: [
-    'Fixed pages not loading when opened directly or refreshed',
-    'More reliable email confirmation links',
+  { version: '1.1.3', date: 'October 8, 2026', title: 'Sign-up and dashboard', items: [
+    'Improved the email verification experience',
+    'Refined the dashboard layout',
   ] },
-  { version: '1.1.1', date: '2026', title: 'Fixes and refinements', items: [
-    'Transactions can be saved with no description or notes',
-    '12 category colors with simple names',
-    'Clearer navigation on desktop, tablet and phone',
+  { version: '1.1.2', date: 'October 7, 2026', title: 'Reliability', items: ['Improved page loading and email link reliability'] },
+  { version: '1.1.1', date: 'October 7, 2026', title: 'Refinements', items: ['Improved transaction management', 'Refined category management', 'Improved navigation'] },
+  { version: '1.1', date: 'October 7, 2026', title: 'Polish and completeness', items: [
+    'New TrackMyKita branding',
+    'Improved transaction management',
+    'Improved the mobile experience',
+    'Added profile pictures and more currencies',
+    'Added the About page',
   ] },
-  { version: '1.1', date: '2026', title: 'Polish and completeness update', items: [
-    'New TrackMyKita branding, logo and loading screen',
-    'Edit and delete transactions, with clearer filtering',
-    'Dashboard previews for transactions, budgets and reports',
-    'Layouts that fit phones and tablets',
-    'Profile pictures and 16 currencies',
-    'Safer Delete account flow and a new About page',
-  ] },
-  { version: '1.0', date: '2026', title: 'Initial release', items: ['Track income and expenses', 'Monthly budgets by category', 'Categories and monthly reports', 'Light and dark theme', 'Private, secure account for your records'] },
+  { version: '1.0', date: 'October 7, 2026', title: 'Initial release', items: ['Track income and expenses', 'Monthly budgets by category', 'Categories and monthly reports', 'Light and dark theme', 'Private, secure account for your records'] },
 ]

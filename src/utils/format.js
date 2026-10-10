@@ -10,7 +10,8 @@ export const money = (n) => {
 }
 export const signed = (n, type) => (type === 'income' ? '+' : '−') + money(n)
 const d = (iso) => new Date(iso.slice(0, 10) + 'T00:00:00')
-export const formatDate = (iso) => d(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+// Transaction dates: MM/DD/YYYY. Built from the stored YYYY-MM-DD text, so no Date object and no timezone shift.
+export const formatDate = (iso) => { const [y, m, day] = iso.slice(0, 10).split('-'); return `${m}/${day}/${y}` }
 export const formatDateLong = (iso) => d(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 export const formatDateTime = (iso) => new Date(iso).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 export const monthLabel = (ym) => d(ym + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })

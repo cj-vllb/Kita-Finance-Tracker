@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import BootScreen from './components/BootScreen.jsx'
-import { ErrorState } from './components/ui.jsx'
 import { useApp } from './context/AppContext.jsx'
 import EmailConfirmed from './pages/EmailConfirmed.jsx'
 import { Login, Signup, ForgotPassword, ResetPassword } from './pages/Auth.jsx'
@@ -19,6 +18,7 @@ import Settings from './pages/Settings.jsx'
 import About from './pages/About.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
+import NotFound from './pages/NotFound.jsx'
 function Toast() { const { toast } = useApp(); return <div className="toast-region" role="status" aria-live="polite">{toast && <div className="toast">{toast}</div>}</div> }
 export default function App() {
   const { ready } = useApp()
@@ -32,6 +32,6 @@ export default function App() {
       <Route path="/budgets" element={<Budgets />} /><Route path="/budgets/new" element={<BudgetForm />} /><Route path="/budgets/:id/edit" element={<BudgetForm />} />
       <Route path="/categories" element={<Categories />} /><Route path="/categories/new" element={<CategoryForm />} /><Route path="/categories/:id/edit" element={<CategoryForm />} />
       <Route path="/reports" element={<Reports />} /><Route path="/profile" element={<Profile />} /><Route path="/settings" element={<Settings />} /><Route path="/settings/about" element={<About />} />
-      <Route path="*" element={<ErrorState title="Page not found" text="That page does not exist." />} />
-    </Route></Routes><Toast /></>)
+    </Route>
+    <Route path="*" element={<NotFound />} /></Routes><Toast /></>)
 }

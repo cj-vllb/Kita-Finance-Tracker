@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ChevronUp, ChevronDown, SlidersHorizontal, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react'
+import { ChevronUp, ChevronDown, SlidersHorizontal, MoreVertical, Eye, Pencil, Trash2, ArrowLeftRight } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { formatDate, signed, monthLabel, txLabel } from '../utils/format.js'
 import { allMonths } from '../utils/calc.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
-import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet, LoadingState, useLoading } from '../components/ui.jsx'
+import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet } from '../components/ui.jsx'
 const PAGE = 10
 export default function Transactions() {
-  const { transactions, categories, deleteTransaction, notify } = useApp(), [sp] = useSearchParams(), loading = useLoading(250)
+  const { transactions, categories, deleteTransaction, notify } = useApp(), [sp] = useSearchParams()
   const [f, setF] = useState({ q: '', type: 'all', cat: sp.get('category') || 'all', month: CURRENT_MONTH }), [sort, setSort] = useState({ key: 'date', dir: 'desc' }), [page, setPage] = useState(1), [del, setDel] = useState(null), [sheet, setSheet] = useState(null), [fOpen, setFOpen] = useState(false)
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setPage(1) }
   const label = (t) => txLabel(t, categories), active = (f.month !== CURRENT_MONTH) + (f.type !== 'all') + (f.cat !== 'all')
@@ -22,7 +22,7 @@ export default function Transactions() {
   const SortTh = ({ k, children, cls }) => <th className={`label ${cls || ''}`} aria-sort={sort.key === k ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button className="sort" onClick={() => toggle(k)}>{children}{sort.key === k && (sort.dir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</button></th>
   return (<>
     <PageHeader title="Transactions" subtitle={`${rows.length} transaction${rows.length === 1 ? '' : 's'}${f.month === 'all' ? '' : ' in ' + monthLabel(f.month)}`}><Link to="/transactions/new" className="btn btn-primary">Add transaction</Link></PageHeader>
-    {transactions.length === 0 ? <EmptyState title="No transactions yet" text="Add your first transaction to start tracking your money." to="/transactions/new" action="Add transaction" /> : <>
+    {transactions.length === 0 ? <EmptyState icon={ArrowLeftRight} title="No transactions yet" text="Your transactions will appear here once you add your first one." to="/transactions/new" action="Add transaction" /> : <>
       <div className="toolbar">
         <input className="input" type="search" placeholder="Search description or category" aria-label="Search transactions" value={f.q} onChange={set('q')} />
         <button type="button" className="btn filter-btn" aria-expanded={fOpen} aria-controls="tx-filters" onClick={() => setFOpen(!fOpen)}><SlidersHorizontal size={16} aria-hidden="true" />Filter{active > 0 && <span className="count" aria-label={`${active} active`}>{active}</span>}</button>
@@ -32,7 +32,7 @@ export default function Transactions() {
           <select className="input" aria-label="Category" value={f.cat} onChange={set('cat')}><option value="all">All categories</option><option value="none">No category</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
           <select className="input sort-m" aria-label="Sort by" value={`${sort.key}:${sort.dir}`} onChange={(e) => { const [key, dir] = e.target.value.split(':'); setSort({ key, dir }); setPage(1) }}><option value="date:desc">Newest first</option><option value="date:asc">Oldest first</option><option value="amount:desc">Highest amount</option><option value="amount:asc">Lowest amount</option></select>
           {(active > 0 || f.q) && <button type="button" className="btn-link reset" onClick={reset}>Reset</button>}</div></div>
-      {loading ? <LoadingState rows={6} label="Loading your transactions..." /> : rows.length === 0 ? <EmptyState title="No transactions found" text="Try adjusting your filters." /> : <>
+      {rows.length === 0 ? <EmptyState title="No transactions found" text="Try adjusting your filters." /> : <>
         <div className="table-wrap"><table className="table"><caption className="sr-only">Transactions</caption><thead><tr><SortTh k="date" cls="hide-m">Date</SortTh><th className="label">Description</th><th className="label hide-m">Category</th><th className="label hide-m">Type</th><SortTh k="amount" cls="amount">Amount</SortTh><th className="label hide-m">Actions</th><th className="only-m"><span className="sr-only">Actions</span></th></tr></thead>
           <tbody>{view.map((t) => <tr className="row" key={t.id}><td className="hide-m">{formatDate(t.date)}</td>
             <td><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><div className="muted small show-m">{name(t.categoryId)} · {formatDate(t.date)}</div></td>

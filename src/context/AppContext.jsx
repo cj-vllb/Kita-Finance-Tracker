@@ -99,6 +99,8 @@ export function AppProvider({ children }) {
     deleteBudget: remove(setBudgets, budgetService.deleteBudget, 'budget'),
     saveCategory: save(categories, setCategories, { create: categoryService.createCategory, update: categoryService.updateCategory }, 'category'),
     deleteCategory: remove(setCategories, categoryService.deleteCategory, 'category'),
+    // Same service and same state update as saveCategory, but also hands back the saved row so a form can select it straight away.
+    createCategory: async (x) => { let category = null; const error = await attempt(async () => { category = await categoryService.createCategory(x); setCategories((l) => upsert(l, category, true)) }, "We couldn't save this category. Please try again."); return { error, category: error ? null : category } },
     resetAll: async () => { // "Delete account" in Settings
       // Remove every stored photo first: once the account is gone nobody is allowed to delete them. Account deletion removes every database row.
       await profiles.removeAllAvatarFiles().catch(logError)

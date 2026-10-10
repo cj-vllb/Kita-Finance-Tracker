@@ -4,10 +4,12 @@ import { useApp } from '../context/AppContext.jsx'
 import { monthLabel } from '../utils/format.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
 import { PageHeader, Field, ErrorState, focusFirstInvalid } from '../components/ui.jsx'
+import CategoryDialog from '../components/CategoryDialog.jsx'
+const NEW_CATEGORY = '__new__' // sentinel option value; it is never stored in the form state
 import { budgetMonths } from './Budgets.jsx'
 export default function BudgetForm() {
   const { id } = useParams(), nav = useNavigate(), { budgets, categories, transactions, saveBudget, notify, settings } = useApp(), existing = id ? budgets.find((b) => b.id === id) : null
-  const [f, setF] = useState(() => (existing ? { ...existing, amount: String(existing.amount) } : { categoryId: '', amount: '', month: CURRENT_MONTH })), [err, setErr] = useState({}), [saving, setSaving] = useState(false)
+  const [f, setF] = useState(() => (existing ? { ...existing, amount: String(existing.amount) } : { categoryId: '', amount: '', month: CURRENT_MONTH })), [err, setErr] = useState({}), [saving, setSaving] = useState(false), [addCat, setAddCat] = useState(false)
   if (id && !existing) return <ErrorState title="Budget not found" text="It may have been deleted." />
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const submit = async (e) => {
@@ -21,9 +23,10 @@ export default function BudgetForm() {
   return (<>
     <PageHeader title={existing ? 'Edit budget' : 'Create budget'} subtitle="Set a monthly limit for one category." />
     <form className="form" onSubmit={submit} noValidate>
-      <Field label="Category" error={err.categoryId}><select className="input" value={f.categoryId} onChange={set('categoryId')} aria-invalid={!!err.categoryId}><option value="">Choose a category</option>{categories.filter((c) => c.type === 'expense').map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+      <Field label="Category" error={err.categoryId}><select className="input" value={f.categoryId} onChange={(e) => (e.target.value === NEW_CATEGORY ? setAddCat(true) : set('categoryId')(e))} aria-invalid={!!err.categoryId}><option value="">Choose a category</option>{categories.filter((c) => c.type === 'expense').map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}<option value={NEW_CATEGORY}>+ Add expense category</option></select></Field>
       <Field label={`Monthly amount (${settings.currency})`} error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={!!err.amount} /></Field>
       <Field label="Month"><select className="input" value={f.month} onChange={set('month')}>{budgetMonths(transactions, budgets).reverse().map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}</select></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
-      <div className="form-actions"><button className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save budget'}</button><button type="button" className="btn" onClick={() => nav('/budgets')}>Cancel</button></div></form></>)
+      <div className="form-actions"><button className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save budget'}</button><button type="button" className="btn" onClick={() => nav('/budgets')}>Cancel</button></div></form>
+    {addCat && <CategoryDialog type="expense" onClose={() => setAddCat(false)} onCreated={(c) => { setF((x) => ({ ...x, categoryId: c.id })); setErr(({ categoryId, ...rest }) => rest); setAddCat(false) }} />}</>)
 }

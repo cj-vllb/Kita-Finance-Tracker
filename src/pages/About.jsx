@@ -27,7 +27,7 @@ export default function About() {
           {showOld && <div id="older-updates">{CHANGELOG.slice(VISIBLE).map((r) => <Release key={r.version} r={r} />)}</div>}</>}
       </section>
       <section className="section" aria-labelledby="a-by"><h2 id="a-by">Creator</h2>
-        <p><strong>Created by CJ</strong></p><p className="muted">TrackMyKita was designed and developed by CJ.</p>
+        <p><strong>Created by Christian Jan Villalba</strong></p><p className="muted">TrackMyKita was designed and developed by Christian Jan Villalba.</p>
         <p style={{ marginTop: 12 }}><a className="ext-link" href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer">www.workwithcj.digital<ExternalLink size={14} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span></a></p>
         <p style={{ marginTop: 4 }}>Contact: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></p></section>
       <section className="section" aria-labelledby="a-legal"><h2 id="a-legal">Legal</h2>

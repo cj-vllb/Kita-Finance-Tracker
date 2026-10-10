@@ -5,9 +5,8 @@ import { money, signed, greeting, firstName, monthLabel, monthName, monthShort, 
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
 import { MoneyFlowChart, MiniBars } from '../components/charts.jsx'
-import { LoadingState, useLoading } from '../components/ui.jsx'
 export default function Dashboard() {
-  const { user, transactions, budgets, categories } = useApp(), loading = useLoading()
+  const { user, transactions, budgets, categories } = useApp()
   const name = (id) => categories.find((x) => x.id === id)?.name ?? 'Uncategorized'
   const month = c.inMonth(transactions, CURRENT_MONTH), income = c.calculateIncome(month), expenses = c.calculateExpenses(month), net = income - expenses
   const [top] = c.groupExpensesByCategory(month), prev = c.inMonth(transactions, c.shiftMonth(CURRENT_MONTH, -1)), prevExp = c.calculateExpenses(prev)
@@ -22,7 +21,7 @@ export default function Dashboard() {
   const chart = c.runningTotals(transactions, CURRENT_MONTH, days).map((d) => ({ ...d, label: `${monthShort(CURRENT_MONTH)} ${d.day}` }))
   return (<>
     <h1>{greeting()}, {firstName(user)}</h1><p className="muted">Here is your financial overview for {monthLabel(CURRENT_MONTH)}.</p>
-    {loading ? <div className="hero-balance"><LoadingState rows={5} /></div> : <>
+    <>
       <section className="hero-balance" aria-label="Balance"><div className="muted">Current balance</div><div className="balance">{money(c.calculateBalance(transactions, CURRENT_MONTH))}</div><div className="muted small">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div>
         <div className="figures">
           <div><div className="muted">Monthly income</div><div className="v pos">+{money(income)}</div></div>
@@ -49,7 +48,7 @@ export default function Dashboard() {
         <div><div className="muted">Highest spending category</div>{top ? <><div className="v">{name(top.categoryId)} · {money(top.amount)}</div><div className="muted small">{Math.round((top.amount / expenses) * 100)}% of this month's expenses</div></> : <div className="v">No expenses yet</div>}</div>
         <div><div className="muted">Compared with {monthName(c.shiftMonth(CURRENT_MONTH, -1))}</div>{diff === null ? <div className="v">No earlier data</div> : <><div className="v">{Math.abs(diff)}% {diff >= 0 ? 'less' : 'more'} spent</div><div className="muted small">{money(expenses)} so far, {money(prevExp)} last month</div></>}</div>
         <div><div className="muted">Budget status</div>{rows.length ? <><div className="v">{within === rows.length ? `All ${rows.length} within limit` : `${within} of ${rows.length} within limit`}</div>{worst.pct >= 80 && <div className="muted small">{name(worst.b.categoryId)} is at {worst.pct}%</div>}</> : <div className="v">No budgets set</div>}</div></div></section>
-</>}
+</>
   </>)
 }
 const Preview = ({ title, sub, to, action, tall, children }) => (

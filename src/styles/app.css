@@ -363,3 +363,85 @@ input:focus-visible+.color-box{outline:2px solid var(--color-primary);outline-of
 .legal-foot{display:flex;flex-wrap:wrap;gap:0 var(--space-6);margin-top:var(--space-12);padding-top:var(--space-4);border-top:1px solid var(--color-border)}
 .legal-foot a{display:inline-flex;align-items:center;min-height:44px}
 .legal-links{display:flex;flex-wrap:wrap;gap:0 var(--space-4)}
+
+/* ===== 1.2.1: compact lists, overflow menus, motion, empty states, 404, skeletons ===== */
+/* motion: opacity/transform only. data-state="closed" plays the exit before the element is removed (see Presence / useExit in ui.jsx). */
+@keyframes fade-out{to{opacity:0}}
+@keyframes pop-in{from{opacity:0;transform:translateY(8px) scale(.98)}}
+@keyframes pop-out{to{opacity:0;transform:translateY(8px) scale(.98)}}
+@keyframes menu-in{from{opacity:0;transform:translateY(-4px) scale(.98)}}
+@keyframes menu-out{to{opacity:0;transform:translateY(-4px) scale(.98)}}
+@keyframes sheet-out{to{opacity:0;transform:translateY(24px)}}
+@keyframes page-in{from{opacity:0;transform:translateY(6px)}}
+.scrim{animation:fadein .16s ease-out}.scrim[data-state=closed]{animation:fade-out .14s ease-in forwards}
+.dialog{animation:pop-in .18s ease-out}.dialog[data-state=closed]{animation:pop-out .14s ease-in forwards}
+.sheet[data-state=closed]{animation:sheet-out .14s ease-in forwards}
+.menu{transform-origin:top right;animation:menu-in .14s ease-out}.menu[data-state=closed]{animation:menu-out .12s ease-in forwards}
+.more-menu{animation:fadein .14s ease-out}.more-menu[data-state=closed]{animation:fade-out .12s ease-in forwards}
+@media (max-width:1100px){.more-menu{transform-origin:left top;animation:menu-in .14s ease-out}.more-menu[data-state=closed]{animation:menu-out .12s ease-in forwards}}
+[data-state=closed]{pointer-events:none}
+.page-enter{animation:page-in .2s ease-out}
+@media (prefers-reduced-motion:reduce){
+  .scrim,.dialog,.sheet,.menu,.more-menu,.row-menu,.row-menu-backdrop,.page-enter,[data-state]{animation:none!important}
+  .more-btn .chev,.older-toggle svg{transition:none}
+}
+
+/* row overflow menu */
+.row-menu-backdrop{position:fixed;inset:0;z-index:11;background:transparent}
+.row-menu{position:fixed;z-index:12;min-width:184px;max-width:calc(100vw - 16px);padding:var(--space-1);background:var(--color-field);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:0 8px 24px rgba(0,0,0,.14);transform-origin:top right;animation:menu-in .14s ease-out}
+.row-menu[data-state=closed]{animation:menu-out .12s ease-in forwards}
+.row-menu-item{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:44px;padding:0 var(--space-3);border:0;border-radius:var(--radius-md);background:none;font:inherit;color:var(--color-text);text-align:left;cursor:pointer}
+.row-menu-item:hover,.row-menu-item:focus-visible{background:var(--color-surface);text-decoration:none}.row-menu-item.danger{color:var(--color-negative)}
+.row-menu-wrap{display:none}
+
+/* categories: fewer columns, tighter rows, text links to add */
+.cat-table td{height:48px}
+.cat-table th:last-child,.cat-table td:last-child{width:150px}
+.add-link{display:inline-flex;align-items:center;gap:6px;margin-top:var(--space-2);min-height:40px;font-weight:500}
+@media (pointer:coarse){.add-link{min-height:44px}}
+
+/* empty states */
+.empty-icon{display:inline-grid;place-items:center;width:72px;height:72px;margin-bottom:var(--space-4);border-radius:50%;background:var(--color-primary-soft);color:var(--color-on-soft)}
+.empty-text{margin:4px auto 20px;max-width:44ch}
+.empty.compact{padding:var(--space-6) 0;border-top:1px solid var(--color-border)}
+.empty.compact .empty-icon{width:52px;height:52px;margin-bottom:var(--space-3)}.empty.compact h2{font-size:17px}.empty.compact .empty-text{margin-bottom:var(--space-4)}
+
+/* 404 */
+.auth-brand:hover{text-decoration:none}
+.notfound{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:var(--space-6) var(--page-margin)}
+.notfound .auth-brand{align-self:flex-start;align-items:center;min-height:44px}
+.notfound-body{flex:1;display:grid;align-content:center;justify-items:center;gap:var(--space-3);max-width:440px;margin:0 auto;padding-bottom:var(--space-16);text-align:center}
+.notfound-icon{width:104px;height:104px;margin-bottom:var(--space-2)}
+.notfound-actions{justify-content:center;margin-top:var(--space-4)}
+
+/* skeletons: shaped like the pages they stand in for */
+.sk-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-4);margin-bottom:var(--space-8)}
+.sk-stack{display:grid;gap:var(--space-2);min-width:0}.sk-inline{display:flex;align-items:center;gap:var(--space-2)}.sk-between{display:flex;justify-content:space-between;gap:var(--space-3)}
+.sk-toolbar{display:flex;gap:var(--space-3);margin-bottom:var(--space-4)}.sk-toolbar>:first-child{flex:1}
+.sk-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);height:var(--row-h);border-bottom:1px solid var(--color-border)}.sk-row-sm{height:48px}
+.sk-group+.sk-group{margin-top:var(--space-10);padding-top:var(--space-8);border-top:1px solid var(--color-border)}
+.sk-budget{display:grid;gap:var(--space-3);padding:var(--space-4) 0;border-bottom:1px solid var(--color-border)}
+.sk-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-4)}.sk-four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-6)}
+.sk-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-6);margin-top:var(--space-6)}
+.sk-card{min-width:0;padding:var(--space-5);border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-field)}
+.sk-form{display:grid;gap:var(--space-6);max-width:560px}
+
+@media (max-width:1100px){.sk-four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.sk-two{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){
+  .row-menu-wrap{display:block}.act-links.desk-only{display:none}
+  .empty{padding:var(--space-8) 0}.empty.compact{padding:var(--space-5) 0}
+  .notfound{padding:var(--space-4)}
+  .sk-head{flex-direction:column}.sk-head .sk-action{width:100%!important}
+  /* categories: one line per row, name left, single overflow icon right */
+  .cat-table.stack tr.row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);min-height:48px;padding:0 0 0 var(--space-1)}
+  .cat-table.stack td.cell-title{flex:1;min-width:0;padding:0}
+  .cat-table.stack td.cell-actions{flex:none;padding:0}
+  /* budgets: title row with the overflow icon, then budget / spent / remaining side by side, then progress */
+  .bud-table.stack tr.row{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px var(--space-3);padding:var(--space-1) 0 var(--space-3)}
+  .bud-table.stack td{min-width:0}
+  .bud-table.stack td.cell-title{grid-column:1/-1;min-height:44px;align-items:center;padding:0 48px 0 0}
+  .bud-table.stack td.amount[data-label]{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;text-align:left}
+  .bud-table.stack td.cell-progress{grid-column:1/-1;padding-top:var(--space-2)}.bud-table.stack td.cell-progress .progress{flex:1;max-width:none}
+  .bud-table.stack td.cell-actions{position:absolute;top:0;right:0;min-height:0;padding:0}
+}

@@ -1,9 +1,15 @@
+/* TrackMyKita design tokens: Concept 2, "The Digital Wallet". Values come from the approved design board (page 3).
+   Existing token names are kept so every component picks up the new system; new tokens are added at the end. */
 :root{
---color-background:#F7F7F4;--color-surface:#EDEEE9;--color-text:#171918;--color-muted:#5E645F;--color-border:#DDDFDA;
---color-primary:#24543F;--color-primary-dark:#193B2D;--color-primary-soft:#E6EEE9;--color-negative:#A23B2F;--color-warning:#8A5E12;--color-positive:#24543F;--color-on-soft:#193B2D;--color-button:#24543F;--color-button-hover:#193B2D;--color-negative-soft:#F8ECE9;
---color-field:#fff;--font:'IBM Plex Sans',system-ui,sans-serif;
+--color-background:#F1F4F2;--color-surface:#E7EEEA;--color-text:#14201A;--color-muted:#54605A;--color-border:#DCE4DF;
+--color-primary:#0B7550;--color-primary-dark:#123D2C;--color-primary-soft:#DDEBE3;--color-negative:#B0392B;--color-warning:#946200;--color-positive:#0B7550;--color-on-soft:#123D2C;--color-button:#123D2C;--color-button-hover:#0C2D20;--color-negative-soft:#FBEDEA;
+--color-field:#FFFFFF;--font:'IBM Plex Sans',system-ui,sans-serif;--font-display:'Poppins','IBM Plex Sans',system-ui,sans-serif;
 --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;
---radius-sm:4px;--radius-md:6px;--radius-lg:8px;
---sidebar-w:232px;--header-h:64px;--page-margin:40px;--row-h:56px;--input-h:48px;--button-h:44px;--content-w:1128px;
+--radius-sm:4px;--radius-md:10px;--radius-lg:14px;--radius-dialog:16px;--radius-sheet:20px;
+--sidebar-w:248px;--header-h:56px;--page-margin:32px;--row-h:50px;--input-h:46px;--button-h:44px;--content-w:1128px;
+/* added for the redesign */
+--brand:#0E8A5F;--hero-bg:#123D2C;--hero-text:#FFFFFF;--hero-muted:#BFD3C8;--hero-pos:#8EE0BC;--hero-neg:#F2A596;--hero-line:rgba(255,255,255,.16);
+--bar-ok:#0E8A5F;--bar-warn:#C98A0B;--bar-over:#B0392B;--shadow-pop:0 8px 24px rgba(20,32,26,.14);--scrim:rgba(20,32,26,.45);--focus-ring:rgba(14,138,95,.35);
 }
-[data-theme=dark]{--color-background:#141815;--color-surface:#1E2420;--color-text:#EDEFEA;--color-muted:#9AA29C;--color-border:#2E3630;--color-primary:#5BAA85;--color-primary-dark:#7CCBA6;--color-primary-soft:#1F3128;--color-negative:#E08A7E;--color-warning:#D9A441;--color-positive:#6FC49B;--color-field:#1A201C;--color-on-soft:#CFE9DC;--color-button:#2F7A59;--color-button-hover:#27694C;--color-negative-soft:#33201C}
+[data-theme=dark]{--color-background:#141815;--color-surface:#1E2420;--color-text:#EDEFEA;--color-muted:#9AA29C;--color-border:#2E3630;--color-primary:#5BAA85;--color-primary-dark:#7CCBA6;--color-primary-soft:#1F3128;--color-negative:#E08A7E;--color-warning:#D9A441;--color-positive:#6FC49B;--color-field:#1A201C;--color-on-soft:#CFE9DC;--color-button:#2F7A59;--color-button-hover:#27694C;--color-negative-soft:#33201C;
+--hero-bg:#17382A;--bar-ok:#3FA97F;--bar-warn:#D9A441;--bar-over:#E08A7E;--shadow-pop:0 8px 24px rgba(0,0,0,.5);--scrim:rgba(0,0,0,.6);--focus-ring:rgba(91,170,133,.45)}

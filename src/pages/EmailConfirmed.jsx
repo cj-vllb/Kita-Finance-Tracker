@@ -5,7 +5,7 @@ import { CheckBadge } from '../components/MailCheck.jsx'
 import { confirmLink } from '../services/authService.js'
 // Landing page for the confirmation link in the sign-up email. By the time this renders, the app has finished restoring
 // the session (App waits for it), so a confirmed user is already signed in. This page never writes anything: it only reports.
-const Shell = ({ children }) => <main className="auth status-screen"><div className="auth-brand"><Logo size={36} /></div>{children}</main>
+const Shell = ({ children }) => <main className="auth status-screen"><div className="auth-brand"><Logo size={34} /></div>{children}</main>
 export default function EmailConfirmed() {
   const { loggedIn } = useApp()
   if (confirmLink.error) return (<Shell><div className="status-copy"><h1>Link expired</h1><p className="muted">This confirmation link is invalid or has expired. Try signing in, or create your account again.</p></div>

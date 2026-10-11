@@ -25,21 +25,22 @@ export default function Profile() {
   const open = (m) => { setErr({}); setF({ fullName: user.fullName, email: user.email }); setMode(m) }
   return (<>
     <PageHeader title="Profile" subtitle="Your identity on TrackMyKita" />
-    <section className="avatar-edit" aria-label="Profile picture"><div className="avatar-wrap"><Avatar user={{ ...user, avatarUrl: photo ? photo.previewUrl : user.avatarUrl }} size={112} />
+    <section className="card avatar-edit" aria-label="Profile picture"><div className="avatar-wrap"><Avatar user={{ ...user, avatarUrl: photo ? photo.previewUrl : user.avatarUrl }} size={112} />
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={pick} />
-      <RowMenu label="Profile picture options" icon={Pencil} buttonClassName="avatar-menu-btn" disabled={photoBusy} note="JPG, PNG or WebP. Cropped to a square and not shown to other users."
+      <RowMenu sheet title="Profile picture" label="Profile picture options" icon={Pencil} buttonClassName="avatar-menu-btn" disabled={photoBusy} note="JPG, PNG or WebP. Cropped to a square and not shown to other users."
         items={[{ label: user.avatarUrl ? 'Change profile picture' : 'Add profile picture', icon: Upload, onSelect: () => fileRef.current?.click() }, ...(user.avatarUrl ? [{ label: 'Delete profile picture', icon: Trash2, danger: true, onSelect: () => setRmOpen(true) }] : [])]} /></div>
       <div className="avatar-side"><h2>{user.fullName}</h2><p className="muted">Member since {formatDateLong(user.memberSince)}</p>
         {photo && <><p className="small muted">Preview. Save to use this photo.</p><div className="form-actions"><button className="btn btn-primary" disabled={photoBusy} onClick={savePhoto}>{photoBusy ? 'Saving...' : 'Save photo'}</button><button className="btn" disabled={photoBusy} onClick={() => { setPhoto(null); setPhotoErr('') }}>Cancel</button></div></>}
         {photoErr && <p className="field-error" role="alert">{photoErr}</p>}</div></section>
+    <section className="card details" aria-labelledby="p-details"><h2 id="p-details">Details</h2>
     <dl className="dl"><dt>Name</dt><dd>{user.fullName}</dd><dt>Email</dt><dd>{user.email}</dd><dt>Account created</dt><dd>{formatDateLong(user.memberSince)}</dd></dl>
-    {!mode && <div className="form-actions" style={{ marginTop: 32 }}><button className="btn btn-primary" onClick={() => open('edit')}>Edit profile</button><button className="btn" onClick={() => open('password')}>Change password</button></div>}
-    {mode === 'edit' && <form className="form" style={{ marginTop: 32 }} onSubmit={saveProfile} noValidate><h2>Edit profile</h2>
+    {!mode && <div className="form-actions details-actions"><button className="btn btn-primary" onClick={() => open('edit')}>Edit profile</button><button className="btn" onClick={() => open('password')}>Change password</button></div>}</section>
+    {mode === 'edit' && <form className="form" style={{ marginTop: 16 }} onSubmit={saveProfile} noValidate><h2>Edit profile</h2>
       <Field label="Name" error={err.fullName}><input className="input" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} aria-invalid={!!err.fullName} autoComplete="name" autoFocus /></Field>
       <Field label="Email" error={err.email}><input className="input" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} aria-invalid={!!err.email} autoComplete="email" /></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
       <div className="form-actions"><button className="btn btn-primary" disabled={busy}>Save changes</button><button type="button" className="btn" onClick={() => setMode(null)}>Cancel</button></div></form>}
-    {mode === 'password' && <form className="form" style={{ marginTop: 32 }} onSubmit={savePassword} noValidate><h2>Change password</h2>
+    {mode === 'password' && <form className="form" style={{ marginTop: 16 }} onSubmit={savePassword} noValidate><h2>Change password</h2>
       <Field label="Current password" error={err.current}><PasswordInput className="input" autoComplete="current-password" value={p.current} onChange={(e) => setP({ ...p, current: e.target.value })} aria-invalid={!!err.current} autoFocus /></Field>
       <Field label="New password" error={err.next} hint="At least 8 characters."><PasswordInput className="input" autoComplete="new-password" value={p.next} onChange={(e) => setP({ ...p, next: e.target.value })} aria-invalid={!!err.next} /></Field>
       <Field label="Confirm new password" error={err.confirm}><PasswordInput className="input" autoComplete="new-password" value={p.confirm} onChange={(e) => setP({ ...p, confirm: e.target.value })} aria-invalid={!!err.confirm} /></Field>

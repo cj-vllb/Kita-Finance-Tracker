@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings, User, MoreHorizontal, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings, User, MoreHorizontal, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { ErrorState, Avatar, Presence, useDelayedFlag } from './ui.jsx'
 import PageSkeleton from './skeletons.jsx'
@@ -29,9 +29,9 @@ function MoreNav() {
   return (<div className="more" ref={box}>
     <button type="button" className={'nav-link more-btn' + (active ? ' active' : '')} title="More" aria-expanded={open} aria-controls="more-menu" onClick={() => setOpen(!open)}>
       <MoreHorizontal size={18} strokeWidth={1.75} /><span className="nav-text">More</span><ChevronDown size={16} className={'chev' + (open ? ' up' : '')} aria-hidden="true" /></button>
-    <Presence show={open}>{(state) => <div className="more-menu" id="more-menu" data-state={state}>{more.map(([to, text, Icon]) => <NavLink key={to} to={to} className="more-link"><Icon size={18} strokeWidth={1.75} />{text}</NavLink>)}</div>}</Presence></div>)
+    <Presence show={open}>{(state) => <><div className="more-scrim" data-state={state} aria-hidden="true" onClick={() => setOpen(false)} /><div className="more-menu" id="more-menu" data-state={state}><span className="more-grip" aria-hidden="true" />{more.map(([to, text, Icon]) => <NavLink key={to} to={to} className="more-link"><Icon size={18} strokeWidth={1.75} />{text}</NavLink>)}</div></>}</Presence></div>)
 }
-function ProfileMenu() {
+function ProfileMenu({ tile = false }) {
   const { user, logout } = useApp(); const [open, setOpen] = useState(false); const nav = useNavigate(); const box = useRef(); const btn = useRef(); const { pathname } = useLocation()
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
@@ -50,18 +50,19 @@ function ProfileMenu() {
     else if (e.key === 'End') go(last)
     else if (e.key === 'Escape') { setOpen(false); btn.current?.focus() }
   }
-  return (<div ref={box}>
-    <button ref={btn} className="profile-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen(!open)} onKeyDown={(e) => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true) } }}><Avatar user={user} size={32} /><span className="pname">{firstName(user)}</span></button>
-    <Presence show={open}>{(state) => <div className="menu" role="menu" data-state={state} onKeyDown={onMenuKey}><Link to="/profile" role="menuitem">Profile</Link><Link to="/settings" role="menuitem">Settings</Link>
+  return (<div ref={box} className={tile ? 'account-tile-wrap' : 'account-top'}>
+    <button ref={btn} className={tile ? 'profile-btn account-tile' : 'profile-btn'} aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen(!open)} onKeyDown={(e) => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true) } }}>{tile ? <><Avatar user={user} size={34} /><span className="acct-text"><span className="acct-name">{user.fullName}</span><span className="acct-email">{user.email}</span></span><ChevronsUpDown size={16} aria-hidden="true" className="acct-chev" /></> : <><Avatar user={user} size={34} /><span className="pname">{firstName(user)}</span></>}</button>
+    <Presence show={open}>{(state) => <div className={'menu' + (tile ? ' tile-menu' : '')} role="menu" data-state={state} onKeyDown={onMenuKey}><Link to="/profile" role="menuitem">Profile</Link><Link to="/settings" role="menuitem">Settings</Link>
       <button role="menuitem" onClick={async () => { await logout(); nav('/login') }}>Log out</button></div>}</Presence></div>)
 }
 export default function AppShell() {
   const { loggedIn, dataLoading, dataError, reload } = useApp(), { pathname } = useLocation(), showSkeleton = useDelayedFlag(dataLoading && !dataError) // a load under ~150ms never flashes a skeleton
   if (!loggedIn) return <Navigate to="/login" replace />
   return (<div className="shell">
-    <aside className="sidebar"><Link to="/dashboard" className="brand" aria-label="TrackMyKita home"><Logo size={26} /></Link>
+    <aside className="sidebar"><Link to="/dashboard" className="brand" aria-label="TrackMyKita home"><Logo size={28} /></Link>
       <nav className="nav-desktop" aria-label="Main">{groups.map((g, i) => <div className="nav-section" key={i}>{g.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link"><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}</div>)}</nav>
-      <nav className="nav-compact" aria-label="Main">{main.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link" title={text}><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}<MoreNav /></nav></aside>
+      <nav className="nav-compact" aria-label="Main">{main.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link" title={text}><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}<MoreNav /></nav>
+      <ProfileMenu tile /></aside>
     <div className="shell-main"><header className="header"><Link to="/dashboard" className="header-brand" aria-label="TrackMyKita home"><Logo size={24} /></Link><ProfileMenu /></header><main className="page">{dataError ? <ErrorState title="Unable to load your data" text="Check your connection and try again." onRetry={reload} /> : dataLoading ? (showSkeleton ? <PageSkeleton /> : null) : <div className="page-enter" key={pathname}><Outlet /></div>}</main></div>
   </div>)
 }

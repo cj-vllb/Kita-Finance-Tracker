@@ -36,7 +36,7 @@ export function MoneyFlowChart({ data }) {
   const every = Math.max(1, Math.ceil(56 / Math.max(1, (W - L - 12) / Math.max(1, data.length - 1)))), show = (i) => (data.length - 1 - i) % every === 0
   return (<figure style={{ margin: 0 }}><div ref={ref} className="chart-box"><svg className="chart" width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Running totals: income ${money(last.income)}, expenses ${money(last.expenses)}`}>
     <Grid {...{ W, L, max, y }} />{data.map((d, i) => show(i) && <text key={i} x={Math.min(Math.max(x(i), L + 14), W - 22)} y={H - 8} fontSize="12" textAnchor="middle" fill={TICK}>{d.label}</text>)}
-    <path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" /><path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.5" strokeDasharray="6 4" /></svg></div>
+    <path d={`${path('income')} L${x(data.length - 1)},${y(0)} L${x(0)},${y(0)} Z`} fill="var(--color-primary)" opacity=".08" stroke="none" /><path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" /><path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.5" strokeDasharray="6 4" /></svg></div>
     <Legend><Key color="var(--color-primary)">Income {money(last.income)}</Key><Key color="var(--color-negative)">Expenses {money(last.expenses)}</Key></Legend></figure>)
 }
 export function BarChart({ data }) {

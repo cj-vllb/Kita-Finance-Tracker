@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ChevronUp, ChevronDown, SlidersHorizontal, MoreVertical, Eye, Pencil, Trash2, ArrowLeftRight } from 'lucide-react'
+import { SlidersHorizontal, MoreVertical, Eye, Pencil, Trash2, ArrowLeftRight, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { formatDate, signed, monthLabel, txLabel } from '../utils/format.js'
 import { allMonths } from '../utils/calc.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
-import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet, CategoryLabel } from '../components/ui.jsx'
+import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet, RowMenu, DirIcon, CatLabel } from '../components/ui.jsx'
 const PAGE = 10
 export default function Transactions() {
   const { transactions, categories, deleteTransaction, notify } = useApp(), [sp] = useSearchParams()
@@ -18,28 +18,30 @@ export default function Transactions() {
   const rows = transactions.filter((t) => (f.type === 'all' || t.type === f.type) && (f.cat === 'all' || (f.cat === 'none' ? !t.categoryId : t.categoryId === f.cat)) && (f.month === 'all' || t.date.startsWith(f.month)) && `${label(t)} ${name(t.categoryId)}`.toLowerCase().includes(f.q.trim().toLowerCase()))
     .sort((a, b) => dir * (sort.key === 'amount' ? a.amount - b.amount : a.date.localeCompare(b.date)))
   const pages = Math.max(1, Math.ceil(rows.length / PAGE)), cur = Math.min(page, pages), view = rows.slice((cur - 1) * PAGE, cur * PAGE)
-  const toggle = (key) => setSort({ key, dir: sort.key === key && sort.dir === 'desc' ? 'asc' : 'desc' })
-  const SortTh = ({ k, children, cls }) => <th className={`label ${cls || ''}`} aria-sort={sort.key === k ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button className="sort" onClick={() => toggle(k)}>{children}{sort.key === k && (sort.dir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</button></th>
+  const grouped = sort.key === 'date' // date headers only make sense when the list is in date order
   return (<>
     <PageHeader title="Transactions" subtitle={`${rows.length} transaction${rows.length === 1 ? '' : 's'}${f.month === 'all' ? '' : ' in ' + monthLabel(f.month)}`}><Link to="/transactions/new" className="btn btn-primary">Add transaction</Link></PageHeader>
     {transactions.length === 0 ? <EmptyState icon={ArrowLeftRight} title="No transactions yet" text="Your transactions will appear here once you add your first one." to="/transactions/new" action="Add transaction" /> : <>
-      <div className="toolbar">
-        <input className="input" type="search" placeholder="Search title or category" aria-label="Search transactions" value={f.q} onChange={set('q')} />
+      <div className="toolbar tx-toolbar">
+        <div className="search"><Search size={16} aria-hidden="true" /><input className="input" type="search" placeholder="Search title or category" aria-label="Search transactions" value={f.q} onChange={set('q')} /></div>
         <button type="button" className="btn filter-btn" aria-expanded={fOpen} aria-controls="tx-filters" onClick={() => setFOpen(!fOpen)}><SlidersHorizontal size={16} aria-hidden="true" />Filter{active > 0 && <span className="count" aria-label={`${active} active`}>{active}</span>}</button>
-        <div id="tx-filters" className={'filters' + (fOpen ? ' open' : '')}>
-          <select className="input" aria-label="Date" value={f.month} onChange={set('month')}><option value="all">All dates</option>{allMonths(transactions, [CURRENT_MONTH]).reverse().map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}</select>
-          <select className="input" aria-label="Type" value={f.type} onChange={set('type')}><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select>
-          <select className="input" aria-label="Category" value={f.cat} onChange={set('cat')}><option value="all">All categories</option><option value="none">No category</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-          <select className="input sort-m" aria-label="Sort by" value={`${sort.key}:${sort.dir}`} onChange={(e) => { const [key, dir] = e.target.value.split(':'); setSort({ key, dir }); setPage(1) }}><option value="date:desc">Newest first</option><option value="date:asc">Oldest first</option><option value="amount:desc">Highest amount</option><option value="amount:asc">Lowest amount</option></select>
-          {(active > 0 || f.q) && <button type="button" className="btn-link reset" onClick={reset}>Reset</button>}</div></div>
+        {fOpen && <div className="filters-scrim" aria-hidden="true" onClick={() => setFOpen(false)} />}
+        <div id="tx-filters" className={'filters' + (fOpen ? ' open' : '')} role={fOpen ? 'group' : undefined} aria-label="Filters">
+          <span className="filters-title">Filters</span>
+          <label className="fsel"><span className="flabel">Date</span><select className="input" aria-label="Date" value={f.month} onChange={set('month')}><option value="all">All dates</option>{allMonths(transactions, [CURRENT_MONTH]).reverse().map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}</select></label>
+          <label className="fsel"><span className="flabel">Type</span><select className="input" aria-label="Type" value={f.type} onChange={set('type')}><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select></label>
+          <label className="fsel"><span className="flabel">Category</span><select className="input" aria-label="Category" value={f.cat} onChange={set('cat')}><option value="all">All categories</option><option value="none">No category</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <label className="fsel"><span className="flabel">Sort by</span><select className="input" aria-label="Sort by" value={`${sort.key}:${sort.dir}`} onChange={(e) => { const [key, dir] = e.target.value.split(':'); setSort({ key, dir }); setPage(1) }}><option value="date:desc">Newest first</option><option value="date:asc">Oldest first</option><option value="amount:desc">Highest amount</option><option value="amount:asc">Lowest amount</option></select></label>
+          {(active > 0 || f.q) && <button type="button" className="btn-link reset" onClick={reset}>Reset</button>}
+          <button type="button" className="btn btn-primary filters-done" onClick={() => setFOpen(false)}>Done</button></div></div>
       {rows.length === 0 ? <EmptyState title="No transactions found" text="Try adjusting your filters." /> : <>
-        <div className="table-wrap"><table className="table"><caption className="sr-only">Transactions</caption><thead><tr><SortTh k="date" cls="hide-m">Date</SortTh><th className="label">Title</th><th className="label hide-m">Category</th><th className="label hide-m">Type</th><SortTh k="amount" cls="amount">Amount</SortTh><th className="label hide-m">Actions</th><th className="only-m"><span className="sr-only">Actions</span></th></tr></thead>
-          <tbody>{view.map((t) => <tr className="row" key={t.id}><td className="hide-m">{formatDate(t.date)}</td>
-            <td><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><div className="muted small show-m"><CategoryLabel id={t.categoryId} categories={categories} /> · {formatDate(t.date)}</div></td>
-            <td className="hide-m"><CategoryLabel id={t.categoryId} categories={categories} /></td><td className="hide-m">{t.type === 'income' ? 'Income' : 'Expense'}</td>
-            <td className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</td>
-            <td className="hide-m"><div className="row-actions"><Link to={`/transactions/${t.id}`} aria-label={`View ${label(t)}`}>View</Link><Link to={`/transactions/${t.id}/edit`} aria-label={`Edit ${label(t)}`}>Edit</Link><button className="btn-link danger" aria-label={`Delete ${label(t)}`} onClick={() => setDel(t)}>Delete</button></div></td>
-            <td className="only-m act"><button type="button" className="icon-btn" aria-label={`Actions for ${label(t)}`} aria-haspopup="dialog" onClick={() => setSheet(t)}><MoreVertical size={20} aria-hidden="true" /></button></td></tr>)}</tbody></table></div>
+        <ul className={'tx-rows' + (grouped ? '' : ' ungrouped')} aria-label="Transactions">{view.map((t, i) => <li key={t.id} className="tx-li">
+          {grouped && (i === 0 || view[i - 1].date !== t.date) && <div className="date-head" aria-hidden="true">{formatDate(t.date)}</div>}
+          <div className="tx-row"><DirIcon type={t.type} />
+            <div className="tx-main"><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></div>
+            <div className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{t.type === 'income' ? 'Income' : 'Expense'}</span></div>
+            <div className="rm-desk"><RowMenu label={`Actions for ${label(t)}`} items={[{ label: 'View', icon: Eye, to: `/transactions/${t.id}` }, { label: 'Edit', icon: Pencil, to: `/transactions/${t.id}/edit` }, { label: 'Delete', icon: Trash2, danger: true, onSelect: () => setDel(t) }]} /></div>
+            <div className="rm-mob"><button type="button" className="icon-btn" aria-label={`Actions for ${label(t)}`} aria-haspopup="dialog" onClick={() => setSheet(t)}><MoreVertical size={20} aria-hidden="true" /></button></div></div></li>)}</ul>
         <div className="pager"><span className="muted small">Showing {(cur - 1) * PAGE + 1} to {(cur - 1) * PAGE + view.length} of {rows.length}</span>
           <span className="form-actions"><button className="btn" disabled={cur <= 1} onClick={() => setPage(cur - 1)}>Previous</button><button className="btn" disabled={cur >= pages} onClick={() => setPage(cur + 1)}>Next</button></span></div></>}</>}
     {sheet && <ActionSheet title={label(sheet)} subtitle={`${signed(sheet.amount, sheet.type)} · ${formatDate(sheet.date)}`} onClose={() => setSheet(null)}>

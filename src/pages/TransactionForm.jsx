@@ -26,12 +26,12 @@ export default function TransactionForm() {
   const bad = (k) => !!err[k]
   return (<>
     <PageHeader title={existing ? 'Edit transaction' : 'New transaction'} subtitle={existing ? 'Changes apply to your records and reports straight away.' : 'Record money coming in or going out.'} />
-    <form className="form" onSubmit={submit} noValidate>
+    <form className="form tx-form" onSubmit={submit} noValidate>
       <Field label="Type"><Segmented label="Type" value={f.type} onChange={(type) => setF({ ...f, type, categoryId: '' })} options={[['expense', 'Expense'], ['income', 'Income']]} /></Field>
-      <Field label={`Amount (${settings.currency})`} error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
-      <Field label="Category (optional)" hint="Leave as None if you do not need one."><select className="input" value={f.categoryId} onChange={(e) => (e.target.value === NEW_CATEGORY ? setAddCat(true) : set('categoryId')(e))}><option value="">None</option>{categories.filter((c) => c.type === f.type).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}<option value={NEW_CATEGORY}>+ Add category</option></select></Field>
-      <Field label="Transaction title (optional)" hint="A short name for this transaction. If left blank, the category name is shown."><input className="input" value={f.description} onChange={set('description')} /></Field>
-      <Field label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={bad('date')} /></Field>
+      <Field className="f-amount" label={`Amount (${settings.currency})`} error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
+      <Field className="f-cat" label="Category (optional)" hint="Leave as None if you do not need one."><select className="input" value={f.categoryId} onChange={(e) => (e.target.value === NEW_CATEGORY ? setAddCat(true) : set('categoryId')(e))}><option value="">None</option>{categories.filter((c) => c.type === f.type).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}<option value={NEW_CATEGORY}>+ Add category</option></select></Field>
+      <Field className="f-title" label="Transaction title (optional)" hint="A short name for this transaction. If left blank, the category name is shown."><input className="input" value={f.description} onChange={set('description')} /></Field>
+      <Field className="f-date" label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={bad('date')} /></Field>
       <Field label="Notes (optional)"><textarea className="input" value={f.notes} onChange={set('notes')} placeholder="Add a note" /></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
       <div className="form-actions"><button className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : existing ? 'Save changes' : 'Save transaction'}</button>

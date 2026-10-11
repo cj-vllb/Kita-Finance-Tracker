@@ -27,16 +27,19 @@ export default function Settings() {
   }
   return (<>
     <PageHeader title="Settings" subtitle="Your account, preferences and data" />
-    <div className="settings">
-      <section className="section" style={{ marginTop: 0 }} aria-labelledby="s-account"><h2 id="s-account">Account</h2>
+    <div className="settings settings-grid">
+      <div className="settings-col">
+      <section className="card" aria-labelledby="s-account"><h2 id="s-account">Account</h2>
         <div className="setting-row setting-id"><Avatar user={user} size={48} /><div className="setting-text"><div>{user.fullName}</div><div className="muted small">{user.email}</div></div><Link className="btn" to="/profile">Edit profile</Link></div>
         <Row label="Password" action={<Link className="btn" to="/profile?password=1">Change password</Link>}>Update the password you sign in with</Row></section>
-      <section className="section" aria-labelledby="s-pref"><h2 id="s-pref">Preferences</h2>
+      <section className="card" aria-labelledby="s-pref"><h2 id="s-pref">Preferences</h2>
         <Row id="lbl-currency" label="Currency" action={<select className="input" aria-labelledby="lbl-currency" value={settings.currency} onChange={async (e) => notify((await updateSettings({ currency: e.target.value })) || 'Currency updated.')}>{CURRENCY_CODES.map((k) => <option key={k} value={k}>{currencyLabel(k)}</option>)}</select>}>Changes the symbol shown for amounts. Amounts are not converted.</Row>
         <Row id="lbl-theme" label="Theme" action={<select className="input" aria-labelledby="lbl-theme" value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value })}><option value="light">Light</option><option value="dark">Dark</option></select>}>Applies to every page on this device.</Row></section>
-      <section className="section" aria-labelledby="s-data"><h2 id="s-data">Data</h2>
+      <section className="card" aria-labelledby="s-data"><h2 id="s-data">Data</h2>
         <Row label="Export transactions" action={<button className="btn" onClick={exportCsv}><Download size={16} aria-hidden="true" />Export CSV</button>}>Download all your transactions as a spreadsheet file</Row></section>
-      <section className="section" aria-labelledby="s-about"><h2 id="s-about">About</h2>
+      </div>
+      <div className="settings-col">
+      <section className="card" aria-labelledby="s-about"><h2 id="s-about">About</h2>
         <Link to="/settings/about" className="setting-row setting-link"><div className="setting-text"><div>About TrackMyKita</div><div className="muted small">Version {APP_VERSION}, update log and creator</div></div><ChevronRight size={18} aria-hidden="true" /></Link>
         <Link to="/privacy" className="setting-row setting-link"><div className="setting-text"><div>Privacy Policy</div><div className="muted small">What information TrackMyKita collects and why</div></div><ChevronRight size={18} aria-hidden="true" /></Link>
         <Link to="/terms" className="setting-row setting-link"><div className="setting-text"><div>Terms of Service</div><div className="muted small">The rules for using TrackMyKita</div></div><ChevronRight size={18} aria-hidden="true" /></Link></section>
@@ -45,6 +48,7 @@ export default function Settings() {
         <button className="btn btn-danger-outline" onClick={() => setConfirm(true)}>Delete account…</button></section>
       <section className="logout-zone" aria-label="Session"><button className="btn btn-lg" disabled={out} onClick={async () => { setOut(true); await logout(); nav('/login') }}><LogOut size={18} aria-hidden="true" />Log out</button>
         <p className="muted small">Signed in as {user.email}</p></section>
+      </div>
     </div>
     {confirm && <DeleteAccountDialog onCancel={() => setConfirm(false)} onConfirm={resetAll} />}
   </>)

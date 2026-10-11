@@ -19,12 +19,13 @@ import About from './pages/About.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import NotFound from './pages/NotFound.jsx'
+import LandingPage from './landing/LandingPage.jsx'
 function Toast() { const { toast } = useApp(); return <div className="toast-region" role="status" aria-live="polite">{toast && <div className="toast">{toast}</div>}</div> }
 export default function App() {
   const { ready } = useApp()
   if (!ready) return <BootScreen /> // session restoration + first data load: no login/dashboard flashing
   return (<><Routes>
-    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<Login />} /><Route path="/signup" element={<Signup />} /><Route path="/forgot-password" element={<ForgotPassword />} /><Route path="/reset-password" element={<ResetPassword />} /><Route path="/email-confirmed" element={<EmailConfirmed />} /><Route path="/privacy" element={<Privacy />} /><Route path="/terms" element={<Terms />} />
     <Route element={<AppShell />}>
       <Route path="/dashboard" element={<Dashboard />} />

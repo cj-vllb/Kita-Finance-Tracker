@@ -1,0 +1,81 @@
+/* ===== TrackMyKita 1.2.4: visual refinement =====
+   Loaded last. It adds depth, interaction feedback and one targeted layout fix on top of the existing system; it does not replace it.
+   Colour values live in tokens.css. Lighting is limited to: one quiet light in the app shell (stronger behind the Dashboard balance),
+   one on the sign-in pages, and one on the landing hero (landing.css). Motion uses transform and opacity only. */
+:root{--ease:cubic-bezier(.2,.7,.2,1);--lift:0 8px 18px -10px rgba(14,138,95,.7)}
+
+/* ---------- buttons: one interaction language for every page ---------- */
+.btn{transition:background-color .18s var(--ease),border-color .18s var(--ease),color .18s var(--ease),box-shadow .18s var(--ease),transform .18s var(--ease)}
+.btn:hover:not(:disabled):not([disabled]){transform:translateY(-1px)}
+.btn:active:not(:disabled):not([disabled]){transform:translateY(0) scale(.985);transition-duration:.06s}
+.btn-primary{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.22)}
+.btn-primary:hover:not(:disabled):not([disabled]){box-shadow:inset 0 1px 0 rgba(255,255,255,.18),var(--lift)}
+.btn-danger:hover:not(:disabled){opacity:1;filter:brightness(1.08)}
+.icon-btn,.nav-link,.more-link,.row-menu-item,.sheet-item{transition:background-color .15s var(--ease),color .15s var(--ease)}
+.btn:focus-visible,.icon-btn:focus-visible,.nav-link:focus-visible,.more-btn:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+
+[data-theme=dark] .btn:not(.btn-primary):not(.btn-danger):not(.btn-danger-outline){background:rgba(255,255,255,.03);border-color:#3B4840;color:var(--color-text)}
+[data-theme=dark] .btn:not(.btn-primary):not(.btn-danger):not(.btn-danger-outline):hover:not(:disabled){background:rgba(255,255,255,.075);border-color:#566860}
+[data-theme=dark] .btn-primary{border-color:rgba(255,255,255,.08)}
+[data-theme=dark] .btn-primary:hover:not(:disabled){border-color:rgba(255,255,255,.14)}
+[data-theme=dark] .btn-primary:disabled{background:#23382E;border-color:#23382E;color:#7E9488}
+[data-theme=dark] .btn-danger-outline:hover:not(:disabled){background:var(--color-negative-soft)}
+
+/* ---------- dark theme: surfaces, depth, inputs ---------- */
+[data-theme=dark] body{background:var(--color-background)}
+[data-theme=dark] .sidebar{background:linear-gradient(180deg,#0F1511 0%,#0C110E 100%)}
+[data-theme=dark] .header{background:rgba(12,17,14,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+[data-theme=dark] .card,[data-theme=dark] .preview,[data-theme=dark] .tx-rows,[data-theme=dark] .tx-toolbar,[data-theme=dark] .form,[data-theme=dark] .dl,[data-theme=dark] .sk-card,[data-theme=dark] .empty,[data-theme=dark] main.auth{box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+[data-theme=dark] .nav-link.active,[data-theme=dark] .more-link.active{box-shadow:inset 0 0 0 1px rgba(84,188,142,.2)}
+[data-theme=dark] .input{background-color:#0C120E}
+[data-theme=dark] .input::placeholder{color:#82908A}
+[data-theme=dark] .input:focus{box-shadow:0 0 0 3px rgba(84,188,142,.28)}
+[data-theme=dark] .search .input{background-color:#0C120E}
+[data-theme=dark] .search .input:focus{background-color:#0C120E}
+[data-theme=dark] .date-head{background:#0E140F}
+[data-theme=dark] .tx-row:hover{background:rgba(255,255,255,.02)}
+[data-theme=dark] .table tr.row:hover{background:rgba(84,188,142,.07)}
+[data-theme=dark] .glance>div+div{border-top-color:var(--color-border)}
+[data-theme=dark] .glance-section{border:1px solid var(--color-border)}
+[data-theme=dark] .toast{background:#173628;border:1px solid rgba(126,224,179,.2)}
+[data-theme=dark] .dialog,[data-theme=dark] .sheet,[data-theme=dark] .menu,[data-theme=dark] .row-menu,[data-theme=dark] .more-menu{border:1px solid #2A352E;background:#131A15}
+[data-theme=dark] .dialog,[data-theme=dark] .sheet{border-width:1px}
+[data-theme=dark] .alert-strip{background:var(--color-negative-soft)}
+[data-theme=dark] .swatch{box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+[data-theme=dark] .avatar-menu-btn{background:#131A15;box-shadow:none}
+
+/* one quiet light in the app shell. It sits behind the content, never behind individual cards. */
+[data-theme=dark] .shell-main{position:relative;isolation:isolate}
+[data-theme=dark] .shell-main::before{content:"";position:absolute;left:0;right:0;top:0;height:460px;z-index:-1;pointer-events:none;background:radial-gradient(60% 100% at 78% 0%,rgba(14,138,95,.085),transparent 72%)}
+/* Dashboard: no ambient light */
+[data-theme=dark] .shell-main:has(.hero-balance)::before{display:none}
+[data-theme=dark] .hero-balance{background:linear-gradient(135deg,#143523 0%,#10291E 55%,#0E231A 100%);border:1px solid rgba(126,224,179,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+/* sign-in pages */
+[data-theme=dark] body:has(main.auth){background:radial-gradient(60% 420px at 50% 0%,rgba(14,138,95,.13),transparent 72%) no-repeat,var(--color-background)}
+
+/* ---------- charts: quieter grid, readable labels on dark ---------- */
+[data-theme=dark] .chart-box line{stroke:#27322B}
+[data-theme=dark] .chart-box text{fill:#A3AFA8}
+[data-theme=dark] .chart-box rect{opacity:.92}
+[data-theme=dark] .chart-box path[opacity]{opacity:.12}
+
+/* progress bars fill in once when a page opens (transform only; the width itself never animates) */
+@keyframes bar-grow{from{transform:scaleX(0)}}
+.bar-fill{transform-origin:left center;animation:bar-grow .7s var(--ease) .1s both}
+
+/* ---------- Settings: rows stack on phones ---------- */
+/* Title and description sit in one column and the control gets its own full-width row, so text never fights a control for space. */
+@media (max-width:700px){
+  .settings .setting-row:not(.setting-link):not(.setting-id){display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:10px;padding:16px 0}
+  .settings .setting-row .setting-text{display:grid;gap:4px;min-width:0}
+  .settings .setting-row .setting-text>div:first-child{font-weight:600;font-size:15px;line-height:22px}
+  .settings .setting-row .setting-text .muted{font-size:13px;line-height:19px;max-width:46ch;overflow-wrap:break-word;text-wrap:pretty}
+  .settings .setting-row select.input{width:100%;max-width:none}
+  .settings .setting-row:not(.setting-link):not(.setting-id)>.btn{width:100%}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  .btn,.btn:hover,.btn:active,.icon-btn,.nav-link,.more-link{transform:none!important;transition:none!important}
+  .bar-fill{animation:none}
+}

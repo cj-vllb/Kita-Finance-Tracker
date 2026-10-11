@@ -1,6 +1,15 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.2.4', date: 'October 11, 2026', title: 'A darker, livelier look', items: [
+    'Refined the overall visual design',
+    'Introduced subtle ambient lighting and improved animations',
+    'Polished the landing page',
+    'Improved the mobile Settings layout',
+  ] },
+  { version: '1.2.3', date: 'October 11, 2026', title: 'Landing page', items: [
+    'Added a public landing page introducing TrackMyKita, with access to the existing login and signup pages',
+  ] },
   { version: '1.2.2', date: 'October 10, 2026', title: 'Clarity and polish', items: [
     'Clearer transaction titles',
     'A more prominent current balance on the dashboard',

@@ -9,40 +9,20 @@
 .landing-page .lp-sub{max-width:560px;margin:16px auto 0;color:var(--color-muted);font-size:clamp(15px,2vw,17px);line-height:1.6}
 .lp-skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--color-button);color:#fff;padding:10px 14px;border-radius:var(--radius-md)}
 .lp-skip:focus{top:calc(8px + env(safe-area-inset-top,0px))}
-.lp-pill{display:inline-block;padding:5px 14px;border:1px solid var(--color-border);border-radius:999px;background:var(--color-field);font-size:12.5px;font-weight:500;color:var(--color-muted);margin-bottom:20px}
 
 /* header */
 .lp-header{position:sticky;top:0;z-index:50;padding-top:env(safe-area-inset-top,0px);background:color-mix(in srgb,var(--color-field) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid transparent;transition:border-color .2s}
 .lp-header.scrolled{border-color:var(--color-border)}
 .lp-header-in{max-width:var(--lp-w);margin:0 auto;height:64px;padding:0 var(--lp-gut);display:flex;align-items:center;justify-content:space-between;gap:16px}
 .lp-brand{display:inline-flex;text-decoration:none}
-.lp-nav{display:flex;gap:32px}
-.lp-nav a{color:var(--color-muted);font-weight:500;font-size:14.5px;text-decoration:none}
-.lp-nav a:hover{color:var(--color-text)}
 .lp-actions{display:flex;align-items:center;gap:8px}
 .lp-login{padding:0 14px;min-height:44px;display:inline-flex;align-items:center;font-weight:600;font-size:14px;color:var(--color-text);text-decoration:none;border-radius:var(--radius-md)}
-.lp-login:hover{background:var(--color-background)}
-.landing-page .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
-.lp-menu-btn{display:none;width:44px;height:44px;align-items:center;justify-content:center;border:0;background:none;color:var(--color-text);border-radius:var(--radius-md)}
-.lp-menu{display:none}
-@media (max-width:760px){
-  .lp-nav,.lp-login{display:none}.lp-menu-btn{display:inline-flex}
-  .lp-header-in .lp-cta{padding:0 14px}
-  .lp-menu{display:flex;flex-direction:column;gap:4px;padding:8px var(--lp-gut) 20px;border-top:1px solid var(--color-border);background:var(--color-field);max-height:calc(100vh - 64px);overflow:auto}
-  .lp-menu a:not(.btn){padding:12px 4px;font-weight:600;color:var(--color-text);text-decoration:none;border-bottom:1px solid var(--color-border)}
-  .lp-menu .btn{margin-top:12px}
-}
-@media (max-width:360px){.lp-header-in .lp-cta svg{display:none}.lp-header-in .lp-cta{font-size:13px;padding:0 10px}}
 
+.landing-page .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
 /* hero */
 .lp-hero{max-width:var(--lp-w);margin:0 auto;padding:clamp(32px,7vw,72px) var(--lp-gut) 0;text-align:center}
 .lp-hero-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px}
 .lp-hero-visual{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:960px;max-height:min(520px,90vw);overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent);text-align:left}
-.lp-strip{max-width:var(--lp-w);margin:0 auto;padding:clamp(24px,5vw,48px) var(--lp-gut)}
-.lp-strip ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:12px clamp(20px,5vw,48px)}
-.lp-strip li{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:500;color:var(--color-muted);font-size:15px}
-.lp-strip svg{color:var(--color-primary)}
-
 /* product frame and shared preview pieces */
 .lp-frame{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-sheet);overflow:hidden;box-shadow:0 1px 0 var(--color-border);text-align:left;pointer-events:none;user-select:none}
 .lp-frame-bar{display:flex;gap:6px;padding:12px 16px;border-bottom:1px solid var(--color-border);background:var(--color-field)}
@@ -120,14 +100,6 @@
 @media (max-width:700px){.lp-footer-in{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:420px){.lp-foot-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-/* motion: only active when JS adds .lp-js (and never under reduced motion). Without it everything is simply visible. */
-.lp-js [data-reveal]{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.2,.7,.2,1) var(--d,0ms),transform .6s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
-.lp-js [data-reveal].is-in{opacity:1;transform:none}
-.lp-js .lp-hero-visual[data-reveal]{transform:translateY(40px) scale(.98)}.lp-js .lp-hero-visual[data-reveal].is-in{transform:none}
-.lp-js .lp-float-a,.lp-js .lp-float-b{opacity:0;transition:opacity .6s ease .7s}.lp-js .is-in .lp-float-a,.lp-js .is-in .lp-float-b{opacity:1;animation:lp-bob 6s ease-in-out 1.4s infinite alternate}
-.lp-js .is-in .lp-float-b{animation-delay:2.2s}
-@keyframes lp-bob{to{transform:translateY(-6px)}}
-.lp-js .lp-card,.lp-js .lp-feature{transition-property:opacity,transform,box-shadow}
 @media (prefers-reduced-motion:reduce){.landing-page *{animation:none!important;transition:none!important;scroll-behavior:auto}}
 html:has(.landing-page){scroll-behavior:smooth;scroll-padding-top:72px}
 @media (prefers-reduced-motion:reduce){html:has(.landing-page){scroll-behavior:auto}}

@@ -19,7 +19,7 @@ export function AppProvider({ children }) {
   const [session, setSession] = useState(null), [authLoading, setAuthLoading] = useState(true)
   const [profile, setProfile] = useState(null), [transactions, setTransactions] = useState([]), [budgets, setBudgets] = useState([]), [categories, setCategories] = useState([])
   const [dataLoading, setDataLoading] = useState(true), [dataError, setDataError] = useState(false), [loadedUid, setLoadedUid] = useState(null)
-  const [theme, setTheme] = useState(() => localStorage.getItem('kita:theme') || 'light') // UI preference only
+  const [theme, setTheme] = useState(() => localStorage.getItem('kita:theme') || 'dark') // UI preference only
   const [toast, setToast] = useState(null), timer = useRef(), [avatarUrl, setAvatarUrl] = useState(null)
   const uid = session?.user?.id
   useEffect(() => {

@@ -1,0 +1,82 @@
+/* TrackMyKita 1.2.4: landing page refinement. Loaded after the app stylesheets (see main.jsx) so these rules win ties.
+   Everything is scoped under .landing-page. The page always uses the dark palette (data-theme="dark" on its root). */
+html:has(.landing-page){background:#0A0F0C}
+.landing-page{background:var(--color-background);position:relative;isolation:isolate}
+
+/* ambient light: one soft field behind the hero. It drifts and breathes slowly (see motion, below). */
+.lp-ambient{position:absolute;left:0;right:0;top:0;height:min(980px,120vw);overflow:hidden;pointer-events:none;z-index:-1}
+.lp-glow{position:absolute;inset:-12% -20% 0;background:radial-gradient(44% 52% at 50% 24%,rgba(52,196,143,.17),transparent 70%),radial-gradient(30% 38% at 84% 40%,rgba(14,138,95,.10),transparent 72%),radial-gradient(26% 34% at 12% 48%,rgba(14,138,95,.06),transparent 76%)}
+
+/* header: logo left, Log In and Get Started right */
+.landing-page .lp-header{background:color-mix(in srgb,var(--color-background) 66%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}
+.landing-page .lp-header.scrolled{border-color:rgba(255,255,255,.08)}
+.landing-page .lp-login{color:var(--color-text);transition:background-color .18s var(--ease),color .18s var(--ease)}
+.landing-page .lp-login:hover{background:rgba(255,255,255,.07)}
+.landing-page .lp-login:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+@media (max-width:400px){
+  .lp-header-in{gap:8px}
+  .lp-brand .logo{font-size:16px}.lp-brand .logo-mark{width:20px;height:22px}
+  .landing-page .lp-login{padding:0 10px}
+  .landing-page .lp-header-in .lp-cta{padding:0 12px;font-size:13px}.lp-header-in .lp-cta svg{display:none}
+}
+
+/* buttons */
+.landing-page .btn-primary{background:#3DBE8B;border-color:#3DBE8B;color:#05160E;font-weight:600}
+.landing-page .btn-primary:hover:not(:disabled){background:#58D0A2;border-color:#58D0A2;color:#05160E;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 12px 26px -14px rgba(61,190,139,.85)}
+.landing-page .btn:not(.btn-primary):not(.lp-cta-light){background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.2);color:var(--color-text)}
+.landing-page .btn:not(.btn-primary):not(.lp-cta-light):hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.34)}
+.landing-page .lp-outline{border-radius:var(--radius-md);border-color:rgba(255,255,255,.24);transition:background-color .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease)}
+.landing-page .lp-outline:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.4);color:var(--color-text);transform:translateY(-1px)}
+.landing-page .lp-outline:active{transform:none}
+.landing-page .lp-outline:focus-visible,.landing-page .lp-ghost:focus-visible,.landing-page .lp-cta-light:focus-visible,.landing-page .lp-qa button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.landing-page .lp-cta-light,.landing-page .lp-ghost{transition:background-color .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease)}
+.landing-page .lp-cta-light{color:#0C281C}
+.landing-page .lp-cta-light:hover{color:#0C281C;transform:translateY(-1px);box-shadow:0 12px 26px -14px rgba(142,224,188,.6)}
+.landing-page .lp-cta-light:active,.landing-page .lp-ghost:active{transform:none}
+.landing-page .lp-ghost{border-color:rgba(255,255,255,.24)}
+.landing-page .lp-ghost:hover{border-color:rgba(255,255,255,.4)}
+
+/* hero: with the strip gone the heading, copy, actions and preview carry the page */
+.landing-page .lp-hero{padding:clamp(48px,9vw,104px) var(--lp-gut) clamp(8px,2vw,24px)}
+.landing-page h1{font-size:clamp(38px,7.2vw,74px);line-height:1.04;letter-spacing:-.025em}
+.landing-page .lp-hero .lp-sub{max-width:600px;margin-top:20px}
+.landing-page .lp-hero-actions{margin-top:32px}
+.landing-page .lp-hero-visual{margin-top:clamp(40px,6vw,72px);padding-top:12px;max-height:min(540px,95vw)}
+.lp-drift{will-change:transform}
+@media (max-width:700px){.landing-page .lp-hero-visual{max-height:500px}}
+
+/* product frames: slightly lifted panels on a darker base */
+.landing-page .lp-frame{--color-background:#0D130F;--color-field:#151C17;--color-surface:#1B241E;border-color:#28332C;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.landing-page .lp-frame-bar i{background:#2C3830}
+
+/* sections */
+.landing-page .lp-band{background:#0D130F;border-block:1px solid var(--color-border)}
+.landing-page .lp-card{background:var(--color-surface);border-color:#26312A}
+.landing-page .lp-feature{border-color:#222C26}
+.landing-page .lp-qa{background:var(--color-field)}
+.landing-page .lp-qa.open{background:#12251B;border-color:#25402F}
+.landing-page .lp-final{background-color:#0C1F17;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px)}
+.landing-page .lp-footer{background:var(--color-background)}
+
+/* motion. Entrances are varied by role: text lifts a little, product visuals lift and settle, long lists simply fade. */
+.lp-js [data-reveal]{opacity:0;transition:opacity .6s var(--ease) var(--d,0ms),transform .7s var(--ease) var(--d,0ms)}
+.lp-js [data-reveal=rise]{transform:translateY(14px)}
+.lp-js [data-reveal=zoom]{transform:translateY(28px) scale(.975)}
+.lp-js [data-reveal=fade]{transform:none}
+.lp-js [data-reveal].is-in{opacity:1;transform:none}
+.lp-js .lp-float-a,.lp-js .lp-float-b{opacity:0;transition:opacity .6s ease .7s}
+.lp-js .is-in .lp-float-a,.lp-js .is-in .lp-float-b{opacity:1}
+
+/* three slow loops share one tempo: the hero preview floats (9s), the two sample cards move against it (9s), the light drifts (18s). */
+@keyframes lp-drift{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-8px,0)}}
+@keyframes lp-counter{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,6px,0)}}
+@keyframes lp-aurora{0%,100%{transform:translate3d(0,0,0) scale(1);opacity:.88}50%{transform:translate3d(2.5%,2%,0) scale(1.06);opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+  .lp-drift{animation:lp-drift 9s ease-in-out infinite}
+  .lp-float-a,.lp-float-b{animation:lp-counter 9s ease-in-out infinite}
+  .lp-glow{animation:lp-aurora 18s ease-in-out infinite;will-change:transform,opacity}
+}
+@media (prefers-reduced-motion:reduce){
+  .landing-page *,.landing-page *::before{animation:none!important;transition:none!important}
+  .landing-page .btn:hover,.landing-page .lp-outline:hover,.landing-page .lp-cta-light:hover{transform:none}
+}

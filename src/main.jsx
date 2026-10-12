@@ -17,6 +17,7 @@ import './styles/tokens.css'
 import './styles/app.css'
 import './styles/redesign.css'
 import './styles/refine.css'
+import './styles/v125.css'
 import './landing/landing-refine.css'
 createRoot(document.getElementById('root')).render(isConfigured
   ? <><BrowserRouter><AppProvider><App /></AppProvider></BrowserRouter><Analytics beforeSend={sanitizeAnalyticsEvent} /><SpeedInsights beforeSend={sanitizeAnalyticsEvent} /></>

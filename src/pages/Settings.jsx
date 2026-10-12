@@ -26,7 +26,7 @@ export default function Settings() {
     notify(`Exported ${transactions.length} transaction${transactions.length === 1 ? '' : 's'}.`)
   }
   return (<>
-    <PageHeader title="Settings" subtitle="Your account, preferences and data" />
+    <PageHeader title="Settings" />
     <div className="settings settings-grid">
       <div className="settings-col">
       <section className="card" aria-labelledby="s-account"><h2 id="s-account">Account</h2>

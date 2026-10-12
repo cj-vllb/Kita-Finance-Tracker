@@ -4,8 +4,8 @@ import { useApp } from '../context/AppContext.jsx'
 import { money, signed, greeting, firstName, monthLabel, monthName, monthShort, formatDate, formatDateLong, txLabel } from '../utils/format.js'
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
-import { MoneyFlowChart, MiniBars } from '../components/charts.jsx'
-import { CategoryLabel, CatLabel, DirIcon } from '../components/ui.jsx'
+import { CashFlowChart, MiniBars } from '../components/charts.jsx'
+import { CategoryLabel, CatLabel, DirIcon, PageHeader } from '../components/ui.jsx'
 export default function Dashboard() {
   const { user, transactions, budgets, categories } = useApp()
   const name = (id) => categories.find((x) => x.id === id)?.name ?? 'Uncategorized'
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const days = Number(TODAY.slice(8))
   const chart = c.runningTotals(transactions, CURRENT_MONTH, days).map((d) => ({ ...d, label: `${monthShort(CURRENT_MONTH)} ${d.day}` }))
   return (<>
-    <h1>{greeting()}, {firstName(user)}</h1><p className="muted">Here is your financial overview for {monthLabel(CURRENT_MONTH)}.</p>
+    <PageHeader title={`${greeting()}, ${firstName(user)}`} subtitle={`Here is your financial overview for ${monthLabel(CURRENT_MONTH)}.`} />
     <>
       <section className="hero-balance" aria-label="Balance"><div className="hero-main"><div className="balance-label">Current balance</div><div className="balance">{money(c.calculateBalance(transactions, CURRENT_MONTH))}</div><div className="small hero-updated">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
         <div className="figures">
@@ -29,7 +29,7 @@ export default function Dashboard() {
           <div><div className="muted">Monthly expenses</div><div className="v neg">−{money(expenses)}</div></div>
           <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>
       <div className="previews cards">
-        <Preview title="Recent transactions" sub={recent.length ? 'Your latest activity' : null} to="/transactions" action="View All Transaction History">
+        <Preview title="Recent transactions" to="/transactions" action="View All Transaction History">
           {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
             <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><DirIcon type={t.type} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{t.type === 'income' ? 'Income' : 'Expense'}</span></span></Link></li>)}</ul>}</Preview>
         <Preview title="Budgets" sub={monthLabel(CURRENT_MONTH)} to="/budgets" action="View All Budgets">
@@ -38,8 +38,8 @@ export default function Dashboard() {
               <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${name(b.categoryId)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
               <div className={`small bp-note ${remaining < 0 ? 'neg' : 'muted'}`}>{remaining < 0 ? `${money(-remaining)} over budget` : `${money(remaining)} left`} · {pct}% used</div></li>)}</ul>}</Preview></div>
       <div className="previews charts">
-        <section className="preview" aria-label="Monthly money flow"><div className="preview-body"><h2>Monthly money flow</h2><MoneyFlowChart data={chart} /><p className="muted small" style={{ marginTop: 12 }}>Running totals for {monthName(CURRENT_MONTH)} 1 to {days}</p></div></section>
-        <Preview title="Reports" sub={transactions.length ? `Income and expenses, last ${trend.length} month${trend.length === 1 ? '' : 's'}` : null} to="/reports" action="View Reports">
+        <section className="preview flow-card" aria-label="Monthly money flow"><div className="preview-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
+        <Preview title="Reports" to="/reports" action="View Reports">
           {transactions.length === 0 ? <p className="muted pv-empty">Add transactions and your reports will fill in.</p> : <>
             <MiniBars data={trend} />
             <div className="legend small"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></div>

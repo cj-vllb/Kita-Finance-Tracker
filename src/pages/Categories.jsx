@@ -21,10 +21,10 @@ export default function Categories() {
     <span className="cat-name"><span className="dot" style={{ background: colorHex(cat.color) }} title={colorName(cat.color)} aria-hidden="true" />{cat.name}</span>
     <RowMenu label={`Category options for ${cat.name}`} items={[{ label: 'Edit category', icon: Pencil, to: `/categories/${cat.id}/edit` }, { label: 'Delete category', icon: Trash2, danger: true, onSelect: () => setDel(cat) }]} /></li>)}</ul>)
   return (<>
-    <PageHeader title="Categories" subtitle="Group your income and expenses"><Link className="btn btn-primary" to="/categories/new">Create category</Link></PageHeader>
+    <PageHeader title="Categories"><Link className="btn btn-primary" to="/categories/new">Create category</Link></PageHeader>
     {categories.length === 0 ? <EmptyState icon={Tags} title="No categories found" text="Create a category to start organizing your transactions." to="/categories/new" action="Create category" /> : <div className="cat-grid">
       {GROUPS.map((g) => { const rows = categories.filter((c) => c.type === g.type); return (<section className="card cat-group" key={g.type} aria-labelledby={`cg-${g.type}`}>
-        <div className="cat-head"><div><h2 id={`cg-${g.type}`}>{g.title}</h2><p className="muted small">{g.hint} · {rows.length} categor{rows.length === 1 ? 'y' : 'ies'}</p></div></div>
+        <div className="cat-head"><div><h2 id={`cg-${g.type}`}>{g.title}</h2><p className="muted small">{rows.length} categor{rows.length === 1 ? 'y' : 'ies'}</p></div></div>
         {rows.length === 0 ? <EmptyState compact icon={g.icon} title={`No ${g.type} categories yet`} text={g.empty} to={`/categories/new?type=${g.type}`} action={g.add} />
           : <>{list(rows, g)}<Link className="add-link" to={`/categories/new?type=${g.type}`}><Plus size={16} aria-hidden="true" />{g.add}</Link></>}</section>) })}
       {other.length > 0 && <section className="card cat-group" aria-labelledby="cg-other"><div className="cat-head"><div><h2 id="cg-other">Other categories</h2><p className="muted small">These need a type. Edit each one to choose Income or Expense.</p></div></div>

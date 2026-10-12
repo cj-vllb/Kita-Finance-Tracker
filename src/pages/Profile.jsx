@@ -24,7 +24,7 @@ export default function Profile() {
   const savePhoto = async () => { setPhotoBusy(true); const error = await saveAvatar(photo.blob); setPhotoBusy(false); if (error) return setPhotoErr(error); setPhoto(null); notify('Profile picture updated.') }
   const open = (m) => { setErr({}); setF({ fullName: user.fullName, email: user.email }); setMode(m) }
   return (<>
-    <PageHeader title="Profile" subtitle="Your identity on TrackMyKita" />
+    <PageHeader title="Profile" />
     <section className="card avatar-edit" aria-label="Profile picture"><div className="avatar-wrap"><Avatar user={{ ...user, avatarUrl: photo ? photo.previewUrl : user.avatarUrl }} size={112} />
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={pick} />
       <RowMenu sheet title="Profile picture" label="Profile picture options" icon={Pencil} buttonClassName="avatar-menu-btn" disabled={photoBusy} note="JPG, PNG or WebP. Cropped to a square and not shown to other users."

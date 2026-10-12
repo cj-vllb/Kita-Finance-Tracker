@@ -1,0 +1,216 @@
+/* ===== TrackMyKita 1.2.5: navigation and clarity =====
+   Loaded after refine.css. Everything here is scoped to the signed-in app (.shell, the page header, portalled menus) so the landing page
+   and the sign-in screens are not touched. Colours come from tokens.css; no new colours are introduced except neutral hover tints. */
+
+/* ---------- page headers: one spacing rule for every signed-in page ---------- */
+.shell .page{padding-top:36px}
+.shell .page-header{margin-bottom:28px;gap:var(--space-4)}
+.shell .page-header+.hero-balance{margin-top:0}
+.shell .hero-balance{margin-top:0}
+@media (max-width:1100px){.shell .page{padding-top:28px}.shell .page-header{margin-bottom:24px}}
+@media (max-width:700px){.shell .page{padding-top:20px}.shell .page-header{margin-bottom:20px}}
+
+/* ---------- sidebar (wide screens) ---------- */
+@media (min-width:1101px){
+  .shell{transition:grid-template-columns .22s var(--ease)}
+  .shell.is-collapsed{--sidebar-w:72px}
+  .shell .sidebar{overflow:visible;height:100vh;height:100dvh;padding:20px 12px 14px;min-width:0}
+  .side-top{position:relative;display:flex;align-items:center;height:40px;margin:0 0 16px}
+  .side-top .brand{padding:0 12px;height:40px;min-width:0}
+  .side-toggle{position:absolute;top:7px;right:-25px;z-index:2;display:grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid var(--color-border);border-radius:50%;background:var(--color-field);color:var(--color-muted);cursor:pointer;transition:background-color .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+  .side-toggle:hover{color:var(--color-text);border-color:var(--input-border)}
+  .side-toggle:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+  .side-nav{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0 -8px;padding:2px 8px;scrollbar-width:thin;overscroll-behavior:contain}
+  .sidebar .nav-link{overflow:hidden;white-space:nowrap}
+  .side-bottom{margin-top:auto;padding-top:10px;border-top:1px solid var(--color-border)}
+  .side-bottom .nav-link{margin:0 0 6px}
+  .side-bottom .account-tile-wrap{margin:0;padding:0;border:0}
+
+  /* collapsed: icon rail */
+  .shell.is-collapsed .sidebar{padding-left:0;padding-right:0}
+  .shell.is-collapsed .side-top{justify-content:center}
+  .shell.is-collapsed .side-top .brand{padding:0;justify-content:center}
+  .shell.is-collapsed .side-nav{margin:0;padding:2px 0}
+  .shell.is-collapsed .nav-link{margin:2px 14px;padding:0;justify-content:center}
+  .shell.is-collapsed .nav-text,.shell.is-collapsed .acct-text,.shell.is-collapsed .acct-chev{display:none}
+  .shell.is-collapsed .nav-section+.nav-section::before{margin:8px 20px}
+  .shell.is-collapsed .side-bottom{margin-left:0;margin-right:0}
+  .shell.is-collapsed .side-bottom .nav-link{margin:0 14px 6px}
+  .shell.is-collapsed .side-bottom .account-tile-wrap{margin:0 14px}
+  .shell.is-collapsed .account-tile{justify-content:center;padding:8px 0}
+  .shell.is-collapsed .menu.tile-menu{width:208px}
+  .side-bottom .menu.tile-menu{z-index:20}
+  .shell.is-collapsed .ss-rail{margin:0 0 10px}
+}
+@media (max-width:1100px){
+  .side-toggle{display:none}
+  .side-top{display:flex;justify-content:center;margin:0 0 6px}
+  .side-bottom{display:none}
+  .side-nav{flex:1 1 auto;min-height:0}
+  .ss-rail{margin:0 0 6px}
+}
+@media (max-width:700px){
+  .side-top,.side-bottom,.side-search,.ss-rail{display:none}
+  .side-nav{display:contents}
+}
+
+/* ---------- sidebar search ---------- */
+.side-search{margin:0 0 14px}
+.ss-field{position:relative;display:flex;align-items:center;height:40px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-background);color:var(--color-muted);transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background-color .15s var(--ease)}
+.ss-field:hover{border-color:var(--input-border)}
+.ss-field:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--focus-ring);color:var(--color-text)}
+.ss-field>svg{position:absolute;left:12px;pointer-events:none;flex:none}
+.ss-input{flex:1;min-width:0;height:100%;padding:0 34px 0 36px;border:0;border-radius:inherit;background:transparent;color:var(--color-text);font:400 14px var(--font);outline:0}
+.ss-input::placeholder{color:var(--color-muted);opacity:1}
+.ss-clear{position:absolute;right:5px;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:none;color:var(--color-muted);cursor:pointer}
+.ss-clear:hover{background:var(--color-surface);color:var(--color-text)}
+.ss-clear:focus-visible{outline:2px solid var(--brand)}
+[data-theme=dark] .ss-field{background:#0C120E;border-color:#2A352E}
+[data-theme=dark] .ss-field:hover{border-color:#3B4840}
+[data-theme=dark] .ss-field:focus-within{border-color:var(--brand)}
+.ss-btn{width:calc(100% - 28px);margin:0 14px;padding:0;border:1px solid var(--color-border);background:var(--color-background);color:var(--color-muted);font:inherit;cursor:pointer;justify-content:center}
+.ss-btn:hover{color:var(--color-text);border-color:var(--input-border)}
+[data-theme=dark] .ss-btn{background:#0C120E;border-color:#2A352E}
+
+.ss-panel{position:fixed;z-index:30;display:flex;flex-direction:column;overflow:hidden;background:var(--color-field);border:1px solid var(--color-border);border-radius:12px;box-shadow:var(--shadow-pop);animation:fadein .12s ease-out}
+[data-theme=dark] .ss-panel{background:#131A15;border-color:#2A352E}
+.ss-top{padding:10px 10px 4px}
+.ss-top .ss-field{height:40px}
+.ss-body{flex:1;min-height:0;overflow-y:auto;padding:6px;overscroll-behavior:contain}
+.ss-list{list-style:none;margin:0;padding:0}
+.ss-group{padding:8px 10px 4px;font:600 11px/16px var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted)}
+.ss-item{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 10px;border-radius:8px;color:var(--color-text);cursor:pointer}
+.ss-item.active{background:var(--color-primary-soft);color:var(--color-on-soft)}
+.ss-ico{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:8px;background:var(--color-background);color:var(--color-muted)}
+.ss-item.active .ss-ico{background:transparent;color:inherit}
+.ss-ico.dir.in{background:var(--color-primary-soft);color:var(--color-on-soft)}
+.ss-text{display:grid;flex:1;min-width:0}
+.ss-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600;line-height:20px}
+.ss-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:16px;color:var(--color-muted)}
+.ss-item.active .ss-sub{color:inherit;opacity:.8}
+.ss-amt{flex:none;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.ss-amt.pos{color:var(--color-positive)}.ss-amt.neg{color:var(--color-negative)}
+.ss-item.active .ss-amt{color:inherit}
+.ss-item.more .ss-label{color:var(--color-primary);font-weight:600}
+.ss-enter{flex:none;opacity:.6}
+.ss-empty,.ss-hint{margin:0;padding:18px 12px;text-align:center;font-size:13.5px;line-height:20px;color:var(--color-muted);overflow-wrap:anywhere}
+.ss-foot{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--color-border);font-size:11.5px;line-height:16px;color:var(--color-muted)}
+@media (pointer:coarse){.ss-foot{display:none}.ss-input{font-size:16px}.ss-item{min-height:48px}}
+@media (prefers-reduced-motion:reduce){.shell,.ss-panel,.ss-field,.side-toggle{transition:none!important;animation:none!important}}
+
+/* ---------- dashboard: balance hierarchy ---------- */
+.shell .hero-balance{padding:36px 40px;gap:24px 56px;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.shell .hero-balance .balance{margin-top:8px;font-size:clamp(40px,10vw,64px);line-height:1.08}
+.shell .hero-balance .balance-label{font-size:14px;font-weight:500}
+.shell .hero-balance .hero-updated{margin-top:12px}
+.shell .hero-balance .figures{padding-left:48px}
+.shell .hero-balance .figures>div{padding:14px 0}
+.shell .hero-balance .figures .muted{font-size:13px}
+.shell .hero-balance .figures .v{font-size:19px;line-height:26px;font-weight:600}
+@media (max-width:1100px){.shell .hero-balance{padding:28px 28px;gap:20px 32px}.shell .hero-balance .figures{padding-left:32px}}
+@media (max-width:700px){
+  .shell .hero-balance{grid-template-columns:minmax(0,1fr);padding:22px 20px;gap:18px}
+  .shell .hero-balance .balance{font-size:clamp(36px,12vw,48px)}
+  .shell .hero-balance .figures{padding:0;border-left:0}
+  .shell .hero-balance .figures .v{font-size:17px;line-height:24px}
+}
+
+/* ---------- dashboard: cash-flow chart ---------- */
+.flow-card .preview-body{padding:var(--space-5) var(--space-5) var(--space-4)}
+.cashflow .cf-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 20px}
+.cashflow .cf-head h2{font-size:16px}
+.cashflow .cf-legend{margin:0;gap:4px 18px;font-size:12.5px}
+.cashflow .cf-rule{height:1px;margin:14px 0 12px;border:0;background:var(--color-border)}
+.cf-box{position:relative;overflow:visible}
+.cf-box .cf-grid{stroke:var(--color-border);stroke-opacity:.8;stroke-width:1}
+.cf-box .cf-base{stroke:var(--color-border);stroke-width:1}
+.cf-box .cf-tick{fill:var(--color-muted)}
+.cf-box .cf-guide{stroke:var(--color-muted);stroke-opacity:.45;stroke-dasharray:3 4}
+.cf-box .cf-pt{stroke:var(--color-field);stroke-width:2}
+.cf-box svg{touch-action:pan-y;cursor:crosshair}
+[data-theme=dark] .cf-box .cf-grid{stroke:#27322B;stroke-opacity:1}
+[data-theme=dark] .cf-box .cf-base{stroke:#33403A}
+[data-theme=dark] .cf-box .cf-tick{fill:#A3AFA8}
+[data-theme=dark] .cf-box .cf-guide{stroke:#7C8A83}
+.cf-tip{position:absolute;top:6px;z-index:2;display:grid;gap:3px;min-width:132px;padding:8px 10px;transform:translateX(-50%);pointer-events:none;border:1px solid var(--color-border);border-radius:8px;background:var(--color-field);box-shadow:var(--shadow-pop);font-size:12px;line-height:16px;color:var(--color-text)}
+[data-theme=dark] .cf-tip{background:#131A15;border-color:#2A352E}
+.cf-tip strong{font-weight:600;color:var(--color-muted)}
+.cf-tip span{display:flex;align-items:center;gap:6px}
+.cf-tip i{width:8px;height:8px;border-radius:50%;flex:none}
+.cf-tip b{margin-left:auto;padding-left:12px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---------- transactions: controls sit on the page, not in a card ---------- */
+.shell .tx-toolbar,[data-theme=dark] .shell .tx-toolbar{padding:0 0 16px;margin:0;background:none;border:0;border-bottom:1px solid var(--color-border);border-radius:0;box-shadow:none}
+.shell .tx-rows{margin-top:16px}
+@media (max-width:700px){
+  .shell .tx-toolbar,[data-theme=dark] .shell .tx-toolbar{padding:0;border-bottom:0}
+  .shell .tx-rows{margin-top:12px}
+}
+
+/* ---------- transaction rows: use the middle of the row ---------- */
+.tx-rows{container-type:inline-size;container-name:txrows}
+.tx-row{grid-template-columns:34px minmax(0,1fr) auto auto;grid-template-areas:"icon main amt menu" ". note amt menu";column-gap:12px;row-gap:0}
+.tx-row .dir-icon{grid-area:icon}
+.tx-row .tx-main{grid-area:main}
+.tx-row .tx-note{grid-area:note}
+.tx-row .tx-amt{grid-area:amt}
+.tx-row .rm-desk,.tx-row .rm-mob{grid-area:menu}
+.tx-row .dir-icon{align-self:center}
+.tx-note{margin:2px 0 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;line-height:18px;color:var(--color-muted)}
+.tx-row.has-note{padding-top:10px;padding-bottom:10px}
+@container txrows (min-width:640px){
+  .tx-row{grid-template-columns:34px minmax(0,1.1fr) minmax(0,1fr) auto auto;grid-template-areas:"icon main main amt menu";column-gap:16px}
+  .tx-row.has-note{grid-template-areas:"icon main note amt menu";padding-top:8px;padding-bottom:8px}
+  .tx-note{margin:0;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;color:var(--color-muted)}
+}
+
+/* ---------- budgets: month selector belongs to the header ---------- */
+.month-pick{position:relative;display:inline-flex;align-items:center;min-height:44px;color:var(--color-text)}
+.month-pick select{appearance:none;-webkit-appearance:none;max-width:100%;height:44px;padding:0 30px 0 12px;border:1px solid transparent;border-radius:var(--radius-md);background:transparent;color:inherit;font:600 15px var(--font-display);cursor:pointer;text-overflow:ellipsis}
+.month-pick select:hover{background:var(--color-surface)}
+.month-pick select:focus-visible{outline:3px solid var(--brand);outline-offset:1px}
+.month-pick>svg{position:absolute;right:10px;pointer-events:none;color:var(--color-muted)}
+[data-theme=dark] .month-pick select:hover{background:rgba(255,255,255,.06)}
+[data-theme=dark] .month-pick select option{background:#131A15;color:#E8EDE9}
+.shell .budget-summary{grid-template-columns:minmax(0,1fr) auto;margin-bottom:var(--space-3)}
+@media (max-width:700px){
+  .shell .page-header .actions .month-pick{width:100%}
+  .shell .page-header .actions .month-pick select{width:100%;padding-left:2px;font-size:16px}
+  .shell .page-header .actions .month-pick>svg{right:2px}
+  .shell .page-header .actions:has(.month-pick){flex-direction:column;align-items:stretch;gap:8px}
+  .shell .budget-summary{grid-template-columns:minmax(0,1fr)}
+}
+
+/* ---------- menus: one look for profile menu, row menus and the More flyout ---------- */
+.menu a,.menu button{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border-radius:8px;font-size:14px;font-weight:500;color:var(--color-text)}
+.menu svg{flex:none;color:var(--color-muted)}
+.menu a:hover,.menu button:hover,.menu a:focus-visible,.menu button:focus-visible,.row-menu-item:hover,.row-menu-item:focus-visible,.more-link:hover{background:var(--color-surface);outline:0}
+.menu a:focus-visible,.menu button:focus-visible,.row-menu-item:focus-visible{box-shadow:inset 0 0 0 2px var(--focus-ring)}
+.menu .menu-logout,.menu .menu-logout svg{color:var(--color-negative)}
+.menu .menu-logout:hover,.menu .menu-logout:focus-visible{background:var(--color-negative-soft)}
+.row-menu-item.danger:hover,.row-menu-item.danger:focus-visible{background:var(--color-negative-soft)}
+[data-theme=dark] .menu a:hover,[data-theme=dark] .menu button:hover,[data-theme=dark] .menu a:focus-visible,[data-theme=dark] .menu button:focus-visible,[data-theme=dark] .row-menu-item:hover,[data-theme=dark] .row-menu-item:focus-visible,[data-theme=dark] .more-link:hover{background:rgba(255,255,255,.06)}
+[data-theme=dark] .menu .menu-logout:hover,[data-theme=dark] .menu .menu-logout:focus-visible,[data-theme=dark] .row-menu-item.danger:hover,[data-theme=dark] .row-menu-item.danger:focus-visible{background:var(--color-negative-soft)}
+@media (pointer:fine){.row-menu-item{min-height:40px}}
+
+/* ---------- dropdown option lists (native <select> kept: keyboard, screen readers and phone pickers keep working) ----------
+   Browsers that support customizable selects (Chromium 135+) get a styled list on mouse devices. Everywhere else, and on touch
+   devices, the normal native list is used, which is the right behaviour there. */
+@supports (appearance:base-select){
+  @media (hover:hover) and (pointer:fine){
+    .shell :is(select.input,.month-pick select),.shell :is(select.input,.month-pick select)::picker(select){appearance:base-select}
+    .shell :is(select.input,.month-pick select){background-image:none;padding-right:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:space-between;gap:8px}
+    .shell :is(select.input,.month-pick select):focus{padding-right:12px}
+    .shell :is(select.input,.month-pick select)::picker-icon{content:"";flex:none;width:16px;height:16px;background-color:var(--color-muted);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;transition:rotate .15s var(--ease)}
+    .shell :is(select.input,.month-pick select):open::picker-icon{rotate:180deg}
+    .shell :is(select.input,.month-pick select)::picker(select){margin-block:6px;padding:6px;min-width:anchor-size(width);max-height:min(340px,60vh);border:1px solid var(--color-border);border-radius:12px;background:var(--color-field);color:var(--color-text);box-shadow:var(--shadow-pop)}
+    [data-theme=dark] .shell :is(select.input,.month-pick select)::picker(select){background:#131A15;border-color:#2A352E}
+    .shell :is(select.input,.month-pick select) option{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 12px;border-radius:8px;font:500 14px var(--font);color:var(--color-text);cursor:pointer}
+    .shell :is(select.input,.month-pick select) option:hover,.shell :is(select.input,.month-pick select) option:focus-visible{background:var(--color-surface);outline:0}
+    [data-theme=dark] .shell :is(select.input,.month-pick select) option:hover,[data-theme=dark] .shell :is(select.input,.month-pick select) option:focus-visible{background:rgba(255,255,255,.06)}
+    .shell :is(select.input,.month-pick select) option:checked{background:var(--color-primary-soft);color:var(--color-on-soft);font-weight:600}
+    .shell :is(select.input,.month-pick select) option::checkmark{color:var(--color-primary);order:1;margin-left:auto}
+    .shell .month-pick select{padding-right:30px;background-image:none}
+    .shell .month-pick select::picker-icon{display:none}
+  }
+}

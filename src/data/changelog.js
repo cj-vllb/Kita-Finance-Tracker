@@ -1,6 +1,13 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.2.5', date: 'October 12, 2026', title: 'Navigation and clarity', items: [
+    'Search from the sidebar to find pages and transactions quickly',
+    'A collapsible sidebar, with Settings and your account kept at the bottom',
+    'A clearer dashboard balance and an easier-to-read cash flow chart',
+    'Cleaner transaction filters, with notes shown in each transaction row',
+    'Simpler month selection on Budgets and improved dropdown menus',
+  ] },
   { version: '1.2.4', date: 'October 11, 2026', title: 'A darker, livelier look', items: [
     'Refined the overall visual design',
     'Introduced subtle ambient lighting and improved animations',

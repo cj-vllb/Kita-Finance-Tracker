@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { money, monthShort } from '../utils/format.js'
 // Charts draw at the real width of their container (no scaling of a fixed canvas), so text stays 12px and
 // readable on a phone. Layout choices (label thinning, value labels) adapt to the space available.
@@ -38,6 +38,33 @@ export function MoneyFlowChart({ data }) {
     <Grid {...{ W, L, max, y }} />{data.map((d, i) => show(i) && <text key={i} x={Math.min(Math.max(x(i), L + 14), W - 22)} y={H - 8} fontSize="12" textAnchor="middle" fill={TICK}>{d.label}</text>)}
     <path d={`${path('income')} L${x(data.length - 1)},${y(0)} L${x(0)},${y(0)} Z`} fill="var(--color-primary)" opacity=".08" stroke="none" /><path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" /><path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.5" strokeDasharray="6 4" /></svg></div>
     <Legend><Key color="var(--color-primary)">Income {money(last.income)}</Key><Key color="var(--color-negative)">Expenses {money(last.expenses)}</Key></Legend></figure>)
+}
+// Dashboard cash-flow chart (title, legend, divider, graph). Same data and maths as MoneyFlowChart; this variant exists so the
+// landing page preview, which uses MoneyFlowChart, is not affected by dashboard-only refinements.
+export function CashFlowChart({ data, title }) {
+  const [ref, W] = useWidth(), [hover, setHover] = useState(null), gid = 'cf' + useId().replace(/[^a-zA-Z0-9]/g, '')
+  const H = W < 440 ? 240 : 310, B = 32, T = 16, R = 14, max = niceMax(Math.max(...data.map((d) => Math.max(d.income, d.expenses)))), L = padLeft(max) + 6, last = data.at(-1), n = data.length
+  const span = Math.max(1, n - 1), x = (i) => L + (i * (W - L - R)) / span, y = (v) => H - B - (v / max) * (H - B - T)
+  const path = (k) => data.map((d, i) => `${i ? 'L' : 'M'}${x(i)},${y(d[k])}`).join(' ')
+  const every = Math.max(1, Math.ceil(56 / Math.max(1, (W - L - R) / span))), show = (i) => (n - 1 - i) % every === 0
+  const move = (e) => { const r = e.currentTarget.getBoundingClientRect(), i = Math.round(((e.clientX - r.left - L) / Math.max(1, W - L - R)) * span); setHover(Math.min(n - 1, Math.max(0, i))) }
+  const h = hover !== null ? data[hover] : null, tipLeft = h ? Math.min(Math.max(x(hover), 74), W - 74) : 0
+  return (<figure className="cashflow" style={{ margin: 0 }}>
+    <div className="cf-head"><h2>{title}</h2><div className="legend cf-legend"><Key color="var(--color-primary)">Income {money(last.income)}</Key><Key color="var(--color-negative)">Expenses {money(last.expenses)}</Key></div></div>
+    <hr className="cf-rule" />
+    <div ref={ref} className="chart-box cf-box">
+      <svg className="chart" width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Running totals: income ${money(last.income)}, expenses ${money(last.expenses)}`} onPointerMove={move} onPointerDown={move} onPointerLeave={() => setHover(null)}>
+        <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--color-primary)" stopOpacity=".2" /><stop offset="1" stopColor="var(--color-primary)" stopOpacity="0" /></linearGradient></defs>
+        {[0, 1, 2, 3].map((i) => { const v = (max / 3) * i; return <g key={i}><line className={i === 0 ? 'cf-base' : 'cf-grid'} x1={L} x2={W - R} y1={y(v)} y2={y(v)} /><text className="cf-tick" x={L - 10} y={y(v) + 4} fontSize="12" textAnchor="end">{compact(v)}</text></g> })}
+        {data.map((d, i) => show(i) && <text className="cf-tick" key={i} x={Math.min(Math.max(x(i), L + 14), W - 22)} y={H - 9} fontSize="12" textAnchor="middle">{d.label}</text>)}
+        <path d={`${path('income')} L${x(n - 1)},${y(0)} L${x(0)},${y(0)} Z`} fill={`url(#${gid})`} stroke="none" />
+        <path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="6 4" />
+        <circle cx={x(n - 1)} cy={y(last.income)} r="3.5" fill="var(--color-primary)" /><circle cx={x(n - 1)} cy={y(last.expenses)} r="3.5" fill="var(--color-negative)" />
+        {h && <g><line className="cf-guide" x1={x(hover)} x2={x(hover)} y1={T} y2={H - B} /><circle cx={x(hover)} cy={y(h.income)} r="4.5" fill="var(--color-primary)" className="cf-pt" /><circle cx={x(hover)} cy={y(h.expenses)} r="4.5" fill="var(--color-negative)" className="cf-pt" /></g>}
+      </svg>
+      {h && <div className="cf-tip" aria-hidden="true" style={{ left: tipLeft }}><strong>{h.label}</strong><span><i style={{ background: 'var(--color-primary)' }} />Income <b>{money(h.income)}</b></span><span><i style={{ background: 'var(--color-negative)' }} />Expenses <b>{money(h.expenses)}</b></span></div>}
+    </div></figure>)
 }
 export function BarChart({ data }) {
   const [ref, W] = useWidth(), H = 280, B = 30, max = niceMax(Math.max(...data.map((d) => Math.max(d.income, d.expenses)))), L = padLeft(max)

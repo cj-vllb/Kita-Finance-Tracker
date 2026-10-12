@@ -1,6 +1,11 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.2.6', date: 'October 12, 2026', title: 'Landing page refresh', items: [
+    'A new landing page layout with an angled preview of the dashboard',
+    'Angled previews for transactions, budgets and reports',
+    'Monthly money flow shown on a phone, with a creator credit for CJ',
+  ] },
   { version: '1.2.5', date: 'October 12, 2026', title: 'Navigation and clarity', items: [
     'Search from the sidebar to find pages and transactions quickly',
     'A collapsible sidebar, with Settings and your account kept at the bottom',

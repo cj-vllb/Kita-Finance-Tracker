@@ -9,7 +9,7 @@
 .btn:hover:not(:disabled):not([disabled]){transform:translateY(-1px)}
 .btn:active:not(:disabled):not([disabled]){transform:translateY(0) scale(.985);transition-duration:.06s}
 .btn-primary{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.22)}
-.btn-primary:hover:not(:disabled):not([disabled]){box-shadow:inset 0 1px 0 rgba(255,255,255,.18),var(--lift)}
+.btn-primary:hover:not(:disabled):not([disabled]){box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.22)}
 .btn-danger:hover:not(:disabled){opacity:1;filter:brightness(1.08)}
 .icon-btn,.nav-link,.more-link,.row-menu-item,.sheet-item{transition:background-color .15s var(--ease),color .15s var(--ease)}
 .btn:focus-visible,.icon-btn:focus-visible,.nav-link:focus-visible,.more-btn:focus-visible{outline:3px solid var(--brand);outline-offset:2px}

@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ExternalLink } from 'lucide-react'
 import { Logo } from '../components/Logo.jsx'
+import { CreatorMark } from '../components/CreatorCredit.jsx'
 import { PageHeader } from '../components/ui.jsx'
 import { CONTACT_EMAIL } from '../data/site.js'
 import { APP_VERSION } from '../version.js'
@@ -37,7 +38,7 @@ export default function About() {
       </div>
       <div className="about-col">
       <section className="card" aria-labelledby="a-by"><h2 id="a-by">Creator</h2>
-        <p><strong>Created by Christian Jan Villalba</strong></p><p className="muted">TrackMyKita was designed and developed by Christian Jan Villalba.</p>
+        <div className="about-creator"><CreatorMark size={44} /><div><p><strong>Created by Christian Jan Villalba</strong></p><p className="muted">TrackMyKita was designed and developed by Christian Jan Villalba.</p></div></div>
         <p style={{ marginTop: 12 }}><a className="ext-link" href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer">www.workwithcj.digital<ExternalLink size={14} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span></a></p>
         <p style={{ marginTop: 4 }}>Contact: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></p></section>
       <section className="card" aria-labelledby="a-legal"><h2 id="a-legal">Legal</h2>

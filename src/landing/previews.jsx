@@ -1,6 +1,6 @@
 // Landing-page product previews. Static, illustrative sample data only: nothing here reads the user's data or touches Supabase.
 // They reuse the app's own classes and chart components so they match the current TrackMyKita interface.
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, BatteryFull, Signal, Wifi } from 'lucide-react'
 import { MoneyFlowChart, BarChart } from '../components/charts.jsx'
 
 const peso = (n) => '₱' + n.toLocaleString('en-US')
@@ -61,3 +61,17 @@ export const BudgetsPreview = () => (<Frame label="Preview of TrackMyKita monthl
 export const ReportsPreview = () => (<Frame label="Preview of the TrackMyKita Reports chart comparing income and expenses by month (sample data)"><section className="card"><h2>Income and expenses by month</h2><p className="muted small" style={{ marginBottom: 12 }}>Is spending staying below income?</p><BarChart data={MONTHS} /></section></Frame>)
 export const FlowPreview = () => (<Frame label="Preview of the TrackMyKita monthly money flow chart (sample data)"><Panel title="Monthly money flow"><MoneyFlowChart data={FLOW} /></Panel></Frame>)
 export const MiniTx = ({ t }) => (<div className="lp-float" aria-hidden="true"><DirIcon type={t.type} /><span className="tx-main"><span className="tx-title">{t.title}</span><span className="muted small">{t.cat} · {t.date}</span></span><span className={'amount ' + (t.type === 'income' ? 'pos' : 'neg')}>{t.type === 'income' ? '+' : '−'}{peso(t.amount)}</span></div>)
+
+// Smartphone presentation of the same sample Monthly money flow (and the recent list under it, as on the phone dashboard).
+// Generic rounded device: no brand marks. Static sample data only, nothing here reads the user's data.
+export const PhoneMockup = () => (
+  <div className="lp-phone" role="img" aria-label="Preview of the TrackMyKita monthly money flow chart on a smartphone (sample data)">
+    <div className="lp-phone-screen" aria-hidden="true">
+      <div className="lp-phone-status"><span>9:41</span><span className="lp-phone-island" /><span className="lp-phone-sys"><Signal size={13} strokeWidth={2.4} /><Wifi size={13} strokeWidth={2.4} /><BatteryFull size={16} strokeWidth={2} /></span></div>
+      <div className="lp-phone-body">
+        <Panel title="Monthly money flow"><MoneyFlowChart data={FLOW} /></Panel>
+        <Panel title="Recent transactions"><TxList rows={SAMPLE_TX.slice(0, 3)} /></Panel>
+      </div>
+      <span className="lp-phone-home" />
+    </div>
+  </div>)

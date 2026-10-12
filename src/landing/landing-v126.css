@@ -1,0 +1,100 @@
+/* TrackMyKita 1.2.6: landing page. Loaded after landing-refine.css (see main.jsx) so these rules win ties.
+   Everything is scoped under .landing-page. Previews are static sample data; the tilt is plain CSS 3D (no library). */
+
+/* ---------- shared: perspective stage + tilt ----------
+   .lp-persp holds the perspective; .lp-tilt is the plane that is rotated. The persp box has padding (cancelled by negative
+   margin) so the rotated plane stays inside the box and is not cut by the edge-fade mask. */
+.landing-page .lp-persp{--pt:56px;--pb:112px;--pl:40px;--pr:0px;position:relative;perspective:1700px;padding:var(--pt) var(--pr) var(--pb) var(--pl);margin:calc(var(--pt) * -1) calc(var(--pr) * -1) calc(var(--pb) * -1) calc(var(--pl) * -1)}
+.landing-page .lp-tilt{transform-style:preserve-3d;transform:rotateX(var(--rx,12deg)) rotateY(var(--ry,-20deg)) rotateZ(var(--rz,-4deg)) scale(var(--sc,1));transform-origin:var(--to,30% 50%)}
+.landing-page .lp-tilt .lp-frame{box-shadow:0 44px 70px -34px rgba(0,0,0,.85),0 14px 28px -18px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+
+/* ---------- hero: copy left, angled dashboard right ---------- */
+.landing-page .lp-hero{max-width:1240px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(8px,2vw,32px);align-items:center;text-align:left;padding:clamp(40px,6vw,88px) var(--lp-gut) clamp(16px,3vw,40px)}
+.lp-hero-copy{position:relative;z-index:2;min-width:0;padding-left:max(0px,calc((min(100vw,1240px) - 1120px) / 2))}
+.landing-page .lp-hero h1{font-size:clamp(36px,3.7vw,54px);line-height:1.05}
+.landing-page .lp-hero .lp-sub{margin-left:0;max-width:460px}
+.landing-page .lp-hero .lp-hero-actions{justify-content:flex-start}
+.landing-page .lp-hero-visual{position:relative;margin:0;padding:0;max-width:none;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none}
+.lp-hero-visual .lp-persp{width:112%;perspective-origin:0% 45%;--pb:150px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34%),linear-gradient(180deg,#000 42%,transparent 86%);mask-image:linear-gradient(90deg,transparent 0,#000 34%),linear-gradient(180deg,#000 42%,transparent 86%);
+  -webkit-mask-composite:source-in;mask-composite:intersect}
+.lp-hero-visual .lp-tilt{--rx:12deg;--ry:-22deg;--rz:-4deg;--sc:.82;--to:0% 50%}
+
+@media (max-width:1060px){.lp-hero-visual .lp-persp{width:108%}.lp-hero-visual .lp-tilt{--ry:-18deg;--sc:.78}}
+@media (max-width:860px){
+  .lp-hero-copy{padding-left:0}
+  .landing-page .lp-hero{grid-template-columns:minmax(0,1fr);gap:40px;padding-top:clamp(32px,8vw,56px)}
+  .landing-page .lp-hero h1{font-size:clamp(36px,9.5vw,52px)}
+  .lp-hero-visual .lp-persp{width:100%;--pl:0px;--pt:24px;--pb:96px;perspective-origin:50% 30%;
+    -webkit-mask-image:linear-gradient(180deg,#000 58%,transparent 94%);mask-image:linear-gradient(180deg,#000 58%,transparent 94%);-webkit-mask-composite:source-over;mask-composite:add}
+  .lp-hero-visual .lp-tilt{--rx:10deg;--ry:-9deg;--rz:-1.5deg;--sc:.98;--to:50% 0%}
+  .landing-page .lp-hero .lp-hero-actions .btn{flex:1 1 auto}
+}
+@media (max-width:420px){.lp-hero-visual .lp-tilt{--ry:-6deg;--rx:8deg;--rz:0deg}}
+
+/* ---------- features: open editorial rows, no boxes. Visual side alternates; each plane has its own angle ---------- */
+.landing-page .lp-features{max-width:1240px;gap:clamp(64px,9vw,128px);padding-bottom:clamp(24px,5vw,56px)}
+.landing-page .lp-features .lp-head{margin-bottom:0}
+.landing-page .lp-feature{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(16px,3vw,48px);padding:0;border:0;border-radius:0;background:none}
+.landing-page .lp-feature.flip{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.landing-page .lp-f-text{position:relative;z-index:2}
+.landing-page .lp-f-text h3{font-size:clamp(26px,3.4vw,40px);letter-spacing:-.015em}
+.landing-page .lp-f-text p{font-size:clamp(15px,1.5vw,17px)}
+.landing-page .lp-f-visual{min-width:0;position:relative}
+.lp-f-visual .lp-persp{--pt:110px;--pb:140px;perspective-origin:50% 45%}
+.landing-page .lp-feature:not(.flip) .lp-f-text{padding-left:max(0px,calc((min(100vw,1240px) - 1120px) / 2))}
+.landing-page .lp-feature.flip .lp-f-text{padding-right:max(0px,calc((min(100vw,1240px) - 1120px) / 2))}
+/* visual on the right: near edge is the right one, the far (left) edge recedes; fades on the outer edge and downward */
+.f-transactions .lp-persp,.f-reports .lp-persp{--pr:0px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 80%,transparent 100%),linear-gradient(180deg,#000 62%,transparent 94%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 80%,transparent 100%),linear-gradient(180deg,#000 62%,transparent 94%);-webkit-mask-composite:source-in;mask-composite:intersect}
+.f-transactions .lp-tilt{--rx:8deg;--ry:-20deg;--rz:-3deg;--sc:.96;--to:0% 50%}
+/* mirrored composition for the second feature */
+.f-budgets .lp-persp{--pl:0px;--pr:40px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 20%,#000 88%,transparent 100%),linear-gradient(180deg,#000 62%,transparent 94%);mask-image:linear-gradient(90deg,transparent 0,#000 20%,#000 88%,transparent 100%),linear-gradient(180deg,#000 62%,transparent 94%);-webkit-mask-composite:source-in;mask-composite:intersect}
+.f-budgets .lp-tilt{--rx:8deg;--ry:20deg;--rz:3deg;--sc:.96;--to:100% 50%}
+/* the wide chart leans back more, like a plane laid on a desk */
+.f-reports .lp-tilt{--rx:20deg;--ry:-12deg;--rz:-5deg;--sc:.98;--to:0% 50%}
+
+@media (max-width:1060px){.f-transactions .lp-tilt{--ry:-16deg}.f-budgets .lp-tilt{--ry:16deg}.f-reports .lp-tilt{--ry:-10deg}}
+@media (max-width:820px){
+  .landing-page .lp-feature,.landing-page .lp-feature.flip{grid-template-columns:minmax(0,1fr);gap:32px}
+  .landing-page .lp-feature.flip .lp-f-text{order:0}
+  .landing-page .lp-feature:not(.flip) .lp-f-text,.landing-page .lp-feature.flip .lp-f-text{padding-left:0;padding-right:0}
+  .lp-f-visual .lp-persp{--pl:0px;--pr:0px;--pt:24px;--pb:80px;perspective-origin:50% 30%;
+    -webkit-mask-image:linear-gradient(180deg,#000 62%,transparent 96%)!important;mask-image:linear-gradient(180deg,#000 62%,transparent 96%)!important;-webkit-mask-composite:source-over!important;mask-composite:add!important}
+  .f-transactions .lp-tilt,.f-budgets .lp-tilt,.f-reports .lp-tilt{--rx:9deg;--rz:0deg;--sc:1;--to:50% 0%}
+  .f-transactions .lp-tilt,.f-reports .lp-tilt{--ry:-8deg}.f-budgets .lp-tilt{--ry:8deg}
+}
+@media (max-width:420px){.f-transactions .lp-tilt,.f-reports .lp-tilt{--ry:-5deg}.f-budgets .lp-tilt{--ry:5deg}}
+
+/* ---------- "Designed for your everyday life": Monthly money flow inside a phone ---------- */
+.landing-page .lp-benefits{grid-template-columns:minmax(0,1fr) minmax(0,340px) minmax(0,1fr);gap:clamp(16px,3vw,36px)}
+.lp-phone-stage{display:flex;justify-content:center;perspective:1500px;padding:16px 0}
+.lp-phone-tilt{transform:rotateX(5deg) rotateY(-16deg) rotateZ(3deg);transform-style:preserve-3d}
+.lp-phone{position:relative;box-sizing:border-box;width:min(296px,78vw);aspect-ratio:9/18.6;padding:11px;border-radius:48px;text-align:left;pointer-events:none;user-select:none;
+  background:linear-gradient(150deg,#3A423D 0%,#171C19 38%,#0B0E0C 100%);
+  box-shadow:inset 0 0 0 1.5px #4B564F,inset 0 0 0 3.5px #090C0A,0 54px 80px -34px rgba(0,0,0,.9),0 18px 30px -18px rgba(0,0,0,.65)}
+.lp-phone::before,.lp-phone::after{content:"";position:absolute;width:3px;border-radius:2px;background:#2A312D}
+.lp-phone::before{left:-3px;top:112px;height:46px;box-shadow:0 64px 0 #2A312D}
+.lp-phone::after{right:-3px;top:150px;height:78px}
+.lp-phone-screen{position:relative;display:flex;flex-direction:column;height:100%;overflow:hidden;border-radius:38px;background:#0D130F;--color-background:#0D130F;--color-field:#151C17;--color-surface:#1B241E;color:var(--color-text)}
+.lp-phone-status{position:relative;display:flex;align-items:center;justify-content:space-between;height:48px;flex:none;padding:12px 26px 0 28px;font:600 13px var(--font);letter-spacing:.01em}
+.lp-phone-island{position:absolute;left:50%;top:10px;width:82px;height:23px;transform:translateX(-50%);border-radius:14px;background:#000}
+.lp-phone-sys{display:inline-flex;align-items:center;gap:5px}
+.lp-phone-body{flex:1;min-height:0;display:grid;align-content:start;gap:12px;padding:6px 12px 0;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 80%,transparent 98%);mask-image:linear-gradient(180deg,#000 80%,transparent 98%)}
+.lp-phone .preview-body{padding:14px 14px 12px}
+.lp-phone h2{font-size:15px;line-height:20px;letter-spacing:0}
+.lp-phone .tx-kind,.lp-phone .meta-date{display:none}
+.lp-phone .tx-item{gap:10px}
+.lp-phone-home{position:absolute;left:50%;bottom:8px;width:104px;height:4px;transform:translateX(-50%);border-radius:2px;background:rgba(255,255,255,.55)}
+.landing-page .lp-b-visual .lp-phone-stage{overflow:visible}
+
+@media (max-width:980px){
+  .landing-page .lp-benefits{grid-template-columns:minmax(0,1fr)}
+  .lp-phone-tilt{transform:rotateX(4deg) rotateY(-9deg) rotateZ(2deg)}
+  .lp-phone{width:min(296px,76vw)}
+}
+@media (max-width:420px){.lp-phone-tilt{transform:rotateX(3deg) rotateY(-6deg) rotateZ(1.5deg)}}
+
+/* ---------- footer: one quiet creator credit ---------- */
+.landing-page .lp-copy-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}

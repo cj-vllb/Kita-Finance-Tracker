@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight, ArrowRight, ChevronDown, ListChecks, Tags, PiggyBank, BarChart3, Download, Smartphone, SlidersHorizontal } from 'lucide-react'
 import { Logo } from '../components/Logo.jsx'
 import { useApp } from '../context/AppContext.jsx'
-import { DashboardPreview, TransactionsPreview, BudgetsPreview, ReportsPreview, FlowPreview, MiniTx, SAMPLE_TX } from './previews.jsx'
+import { CreatorCredit } from '../components/CreatorCredit.jsx'
+import { DashboardPreview, TransactionsPreview, BudgetsPreview, ReportsPreview, PhoneMockup } from './previews.jsx'
 import './landing.css'
 
 // Content stays visible unless JS adds .lp-js; reveal is skipped entirely for reduced motion.
@@ -33,9 +34,9 @@ const FAQ = [
   ['Where can I read about privacy?', 'The Privacy Policy and Terms of Service are linked at the bottom of this page.'],
 ]
 const FEATURES = [
-  { id: 'transactions', tint: 'lilac', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds, give each a clear title and category, and find it again later in a tidy, dated list.', cta: 'Start tracking', Visual: TransactionsPreview },
-  { id: 'budgets', tint: 'peach', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and watch the bar fill as you spend. You see what is left, and when a budget is going over.', cta: 'Plan a budget', Visual: BudgetsPreview, flip: true },
-  { id: 'reports', tint: 'mint', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month to see whether you are staying below what you earn.', cta: 'See your reports', Visual: ReportsPreview },
+  { id: 'transactions', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds, give each a clear title and category, and find it again later in a tidy, dated list.', cta: 'Start tracking', Visual: TransactionsPreview },
+  { id: 'budgets', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and watch the bar fill as you spend. You see what is left, and when a budget is going over.', cta: 'Plan a budget', Visual: BudgetsPreview, flip: true },
+  { id: 'reports', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month to see whether you are staying below what you earn.', cta: 'See your reports', Visual: ReportsPreview },
 ]
 const BENEFITS = [
   { icon: Tags, t: 'Categories your way', d: 'Create categories with your own names and colours, even while adding a transaction.' },
@@ -64,27 +65,29 @@ export default function LandingPage() {
 
       <main id="main">
         <section className="lp-hero">
-          <R as="h1" delay={60}>Take control of<br />your money</R>
-          <R as="p" delay={120} className="lp-sub">Record every transaction, organise it by category, set monthly budgets and see where your money goes, all in one calm place.</R>
-          <R delay={180} className="lp-hero-actions"><Link className="btn btn-primary btn-lg lp-cta" to={primary.to}>{loggedIn ? 'Go to Dashboard' : 'Get Started Free'}<ArrowUpRight size={16} aria-hidden="true" /></Link>{!loggedIn && <Link className="btn btn-lg" to="/login">Log In</Link>}</R>
-          <R kind="zoom" delay={240} className="lp-hero-visual"><div className="lp-drift"><DashboardPreview /><div className="lp-float-a"><MiniTx t={SAMPLE_TX[1]} /></div><div className="lp-float-b"><MiniTx t={SAMPLE_TX[4]} /></div></div></R>
+          <div className="lp-hero-copy">
+            <R as="h1" delay={60}>Take control of<br />your money</R>
+            <R as="p" delay={120} className="lp-sub">Record every transaction, organise it by category, set monthly budgets and see where your money goes, all in one calm place.</R>
+            <R delay={180} className="lp-hero-actions"><Link className="btn btn-primary btn-lg lp-cta" to={primary.to}>{loggedIn ? 'Go to Dashboard' : 'Get Started Free'}<ArrowUpRight size={16} aria-hidden="true" /></Link>{!loggedIn && <Link className="btn btn-lg" to="/login">Log In</Link>}</R>
+          </div>
+          <R kind="zoom" delay={240} className="lp-hero-visual"><div className="lp-persp"><div className="lp-tilt"><DashboardPreview /></div></div></R>
         </section>
 
         <section id="everyday" className="lp-band">
           <div className="lp-head"><R as="h2">Designed for your everyday life</R><R as="p" kind="fade" delay={80} className="lp-sub">Simple tools that help you spend thoughtfully and stay in control, without the clutter.</R></div>
           <div className="lp-benefits">
             <div className="lp-b-col">{BENEFITS.slice(0, 2).map(({ icon: I, t, d }, i) => <R key={t} delay={i * 80} className="lp-card"><I size={22} aria-hidden="true" /><h3>{t}</h3><p>{d}</p></R>)}</div>
-            <R kind="zoom" delay={80} className="lp-b-visual"><FlowPreview /></R>
+            <R kind="zoom" delay={80} className="lp-b-visual"><div className="lp-phone-stage"><div className="lp-phone-tilt"><PhoneMockup /></div></div></R>
             <div className="lp-b-col">{BENEFITS.slice(2).map(({ icon: I, t, d }, i) => <R key={t} delay={i * 80 + 80} className="lp-card"><I size={22} aria-hidden="true" /><h3>{t}</h3><p>{d}</p></R>)}</div>
           </div>
         </section>
 
         <section id="features" className="lp-features">
           <div className="lp-head"><R as="h2">Powerful features for your finances</R><R as="p" kind="fade" delay={80} className="lp-sub">Everything you need to understand your income and spending, built into one tidy app.</R></div>
-          {FEATURES.map(({ id, tint, icon: I, title, text, cta, Visual, flip }) => (
-            <R key={id} as="article" kind="zoom" className={`lp-feature ${tint}${flip ? ' flip' : ''}`}>
+          {FEATURES.map(({ id, icon: I, title, text, cta, Visual, flip }) => (
+            <R key={id} as="article" kind="rise" className={`lp-feature f-${id}${flip ? ' flip' : ''}`}>
               <div className="lp-f-text"><I size={24} aria-hidden="true" /><h3>{title}</h3><p>{text}</p><Link className="lp-outline" to={loggedIn ? '/dashboard' : '/signup'}>{loggedIn ? 'Open TrackMyKita' : cta}<ArrowUpRight size={15} aria-hidden="true" /></Link></div>
-              <div className="lp-f-visual"><Visual /></div></R>))}
+              <div className="lp-f-visual"><div className="lp-persp"><div className="lp-tilt"><Visual /></div></div></div></R>))}
         </section>
 
         <section id="faq" className="lp-faq">
@@ -110,7 +113,7 @@ export default function LandingPage() {
           <div><h4>Product</h4><a href="#features">Features</a><a href="#faq">FAQ</a></div>
           <div><h4>Account</h4>{loggedIn ? <Link to="/dashboard">Dashboard</Link> : <><Link to="/login">Log In</Link><Link to="/signup">Sign Up</Link></>}</div>
           <div><h4>Legal</h4><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Service</Link></div></nav>
-        <p className="lp-copy small">© {new Date().getFullYear()} TrackMyKita</p>
+        <div className="lp-copy lp-copy-row small"><p>© {new Date().getFullYear()} TrackMyKita</p><CreatorCredit /></div>
       </div></footer>
     </div>)
 }

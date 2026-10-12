@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings, User, MoreHorizontal, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings, LifeBuoy, User, MoreHorizontal, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { ErrorState, Avatar, Presence, useDelayedFlag } from './ui.jsx'
 import PageSkeleton from './skeletons.jsx'
@@ -14,7 +14,7 @@ const groups = [
   [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags]],
 ]
 const main = [['/dashboard', 'Dashboard', LayoutDashboard], ['/transactions', 'Transactions', ArrowLeftRight], ['/reports', 'Reports', BarChart3]]
-const more = [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags], ['/settings', 'Settings', Settings], ['/profile', 'Profile', User]]
+const more = [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags], ['/help', 'Help Center', LifeBuoy], ['/settings', 'Settings', Settings], ['/profile', 'Profile', User]]
 // Inline list in the wide sidebar, flyout beside the icon rail on tablets, sheet above the tab bar on phones (see app.css).
 function MoreNav() {
   const [open, setOpen] = useState(false), box = useRef(), { pathname } = useLocation()
@@ -71,7 +71,8 @@ export default function AppShell() {
       <div className="side-nav">
         <nav className="nav-desktop" aria-label="Main">{groups.map((g, i) => <div className="nav-section" key={i}>{g.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link" title={isCollapsed ? text : undefined}><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}</div>)}</nav>
         <nav className="nav-compact" aria-label="Main">{main.map(([to, text, Icon]) => <NavLink key={to} to={to} className="nav-link" title={text}><Icon size={18} strokeWidth={1.75} /><span className="nav-text">{text}</span></NavLink>)}<MoreNav /></nav></div>
-      <div className="side-bottom"><NavLink to="/settings" className="nav-link" title={isCollapsed ? 'Settings' : undefined}><Settings size={18} strokeWidth={1.75} /><span className="nav-text">Settings</span></NavLink>
+      <div className="side-bottom"><NavLink to="/help" className="nav-link" title={isCollapsed ? 'Help Center' : undefined}><LifeBuoy size={18} strokeWidth={1.75} /><span className="nav-text">Help Center</span></NavLink>
+        <NavLink to="/settings" className="nav-link" title={isCollapsed ? 'Settings' : undefined}><Settings size={18} strokeWidth={1.75} /><span className="nav-text">Settings</span></NavLink>
         <ProfileMenu tile /></div></aside>
     <div className="shell-main"><header className="header"><Link to="/dashboard" className="header-brand" aria-label="TrackMyKita home"><Logo size={24} /></Link><ProfileMenu /></header><main className="page">{dataError ? <ErrorState title="Unable to load your data" text="Check your connection and try again." onRetry={reload} /> : dataLoading ? (showSkeleton ? <PageSkeleton /> : null) : <div className="page-enter" key={pathname}><Outlet /></div>}</main></div>
   </div>)

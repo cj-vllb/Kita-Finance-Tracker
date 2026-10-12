@@ -15,6 +15,7 @@ import CategoryForm from './pages/CategoryForm.jsx'
 import Reports from './pages/Reports.jsx'
 import Profile from './pages/Profile.jsx'
 import Settings from './pages/Settings.jsx'
+import Help from './pages/Help.jsx'
 import About from './pages/About.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
@@ -32,7 +33,7 @@ export default function App() {
       <Route path="/transactions" element={<Transactions />} /><Route path="/transactions/new" element={<TransactionForm />} /><Route path="/transactions/:id" element={<TransactionDetail />} /><Route path="/transactions/:id/edit" element={<TransactionForm />} />
       <Route path="/budgets" element={<Budgets />} /><Route path="/budgets/new" element={<BudgetForm />} /><Route path="/budgets/:id/edit" element={<BudgetForm />} />
       <Route path="/categories" element={<Categories />} /><Route path="/categories/new" element={<CategoryForm />} /><Route path="/categories/:id/edit" element={<CategoryForm />} />
-      <Route path="/reports" element={<Reports />} /><Route path="/profile" element={<Profile />} /><Route path="/settings" element={<Settings />} /><Route path="/settings/about" element={<About />} />
+      <Route path="/reports" element={<Reports />} /><Route path="/profile" element={<Profile />} /><Route path="/help" element={<Help />} /><Route path="/settings" element={<Settings />} /><Route path="/settings/about" element={<About />} />
     </Route>
     <Route path="*" element={<NotFound />} /></Routes><Toast /></>)
 }

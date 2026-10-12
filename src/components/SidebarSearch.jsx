@@ -1,12 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Search, X, ArrowLeftRight, LayoutDashboard, PiggyBank, BarChart3, Tags, Settings, User, Info, FileText, ShieldCheck, Plus, KeyRound, ArrowUpRight, ArrowDownLeft, CornerDownLeft } from 'lucide-react'
+import { Search, X, ArrowLeftRight, LayoutDashboard, PiggyBank, BarChart3, Tags, Settings, User, LifeBuoy, HelpCircle, Info, FileText, ShieldCheck, Plus, KeyRound, ArrowUpRight, ArrowDownLeft, CornerDownLeft } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { signed, formatDate, txLabel } from '../utils/format.js'
+import { HELP_ITEMS, helpText } from '../data/help.js'
 
 // Destinations the search can open. Every path here is a real route in App.jsx; nothing is advertised that does not exist.
-// `keys` are extra words that should find the page (there is no separate Help Center page, so "help" and "contact" lead to About).
+// `keys` are extra words that should find the page. Help topics (data/help.js) are searched too; they open the Help Center at that topic.
 const PAGES = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, keys: 'home overview balance' },
   { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight, keys: 'income expense history' },
@@ -19,11 +20,12 @@ const PAGES = [
   { to: '/settings', label: 'Settings', icon: Settings, keys: 'preferences currency theme export csv delete account' },
   { to: '/profile', label: 'Profile', icon: User, keys: 'account name email picture avatar photo' },
   { to: '/profile?password=1', label: 'Change password', icon: KeyRound, keys: 'security' },
-  { to: '/settings/about', label: 'About', icon: Info, keys: 'help support contact version update log changelog creator' },
+  { to: '/help', label: 'Help Center', icon: LifeBuoy, keys: 'help support faq questions guide how to contact' },
+  { to: '/settings/about', label: 'About', icon: Info, keys: 'contact version update log changelog creator' },
   { to: '/privacy', label: 'Privacy Policy', icon: ShieldCheck, keys: 'data legal' },
   { to: '/terms', label: 'Terms of Service', icon: FileText, keys: 'legal rules' },
 ]
-const MAX_PAGES = 4, MAX_TX = 6
+const MAX_PAGES = 4, MAX_TX = 6, MAX_HELP = 3
 const norm = (s) => String(s ?? '').toLowerCase()
 
 export function useMedia(query) {
@@ -58,7 +60,9 @@ export default function SidebarSearch({ rail }) {
       .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || ''))
     const txs = found.slice(0, MAX_TX).map((t) => ({ id: 't:' + t.id, group: 'Transactions', to: `/transactions/${t.id}`, label: txLabel(t, categories), sub: `${cat(t.categoryId) || 'Uncategorized'} · ${formatDate(t.date)}`, amount: signed(t.amount, t.type), type: t.type }))
     const more = found.length > MAX_TX ? [{ id: 'more', group: 'Transactions', to: `/transactions?q=${encodeURIComponent(query)}`, label: `See all ${found.length} matching transactions`, more: true }] : []
-    return { items: [...pages, ...txs, ...more], moreTx: found.length }
+    // Help topics are static text bundled with the app, so searching them reads no user data.
+    const help = HELP_ITEMS.filter((h) => hit(helpText(h))).slice(0, MAX_HELP).map((h) => ({ id: 'h:' + h.id, group: 'Help', to: `/help#${h.id}`, label: h.q, sub: h.groupTitle, Icon: HelpCircle }))
+    return { items: [...pages, ...txs, ...more, ...help], moreTx: found.length }
   }, [query, transactions, categories])
 
   useEffect(() => setActive(0), [query])
@@ -101,7 +105,7 @@ export default function SidebarSearch({ rail }) {
   </div>)
 
   let lastGroup = null
-  const results = !query ? <p className="ss-hint">Type to search pages and transactions.</p> : items.length === 0 ? <p className="ss-empty" role="status">No results for “{query}”.</p> : (
+  const results = !query ? <p className="ss-hint">Type to search pages, transactions and help.</p> : items.length === 0 ? <p className="ss-empty" role="status">No results for “{query}”.</p> : (
     <ul id={listId} role="listbox" aria-label="Search results" className="ss-list">{items.map((it, i) => {
       const head = it.group !== lastGroup ? (lastGroup = it.group, <li role="presentation" className="ss-group" key={'g' + it.group}>{it.group}</li>) : null
       return [head, <li key={it.id} id={`${uid}-o${i}`} role="option" aria-selected={i === active} className={'ss-item' + (i === active ? ' active' : '') + (it.more ? ' more' : '')} onMouseMove={() => active !== i && setActive(i)} onClick={() => pick(it)}>

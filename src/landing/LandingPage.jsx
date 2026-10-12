@@ -34,9 +34,9 @@ const FAQ = [
   ['Where can I read about privacy?', 'The Privacy Policy and Terms of Service are linked at the bottom of this page.'],
 ]
 const FEATURES = [
-  { id: 'transactions', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds, give each a clear title and category, and find it again later in a tidy, dated list.', cta: 'Start tracking', Visual: TransactionsPreview },
-  { id: 'budgets', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and watch the bar fill as you spend. You see what is left, and when a budget is going over.', cta: 'Plan a budget', Visual: BudgetsPreview, flip: true },
-  { id: 'reports', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month to see whether you are staying below what you earn.', cta: 'See your reports', Visual: ReportsPreview },
+  { id: 'transactions', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds, give each a clear title and category, and find it again later in a tidy, dated list.', Visual: TransactionsPreview },
+  { id: 'budgets', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and watch the bar fill as you spend. You see what is left, and when a budget is going over.', Visual: BudgetsPreview, flip: true },
+  { id: 'reports', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month to see whether you are staying below what you earn.', Visual: ReportsPreview },
 ]
 const BENEFITS = [
   { icon: Tags, t: 'Categories your way', d: 'Create categories with your own names and colours, even while adding a transaction.' },
@@ -84,9 +84,9 @@ export default function LandingPage() {
 
         <section id="features" className="lp-features">
           <div className="lp-head"><R as="h2">Powerful features for your finances</R><R as="p" kind="fade" delay={80} className="lp-sub">Everything you need to understand your income and spending, built into one tidy app.</R></div>
-          {FEATURES.map(({ id, icon: I, title, text, cta, Visual, flip }) => (
+          {FEATURES.map(({ id, icon: I, title, text, Visual, flip }) => (
             <R key={id} as="article" kind="rise" className={`lp-feature f-${id}${flip ? ' flip' : ''}`}>
-              <div className="lp-f-text"><I size={24} aria-hidden="true" /><h3>{title}</h3><p>{text}</p><Link className="lp-outline" to={loggedIn ? '/dashboard' : '/signup'}>{loggedIn ? 'Open TrackMyKita' : cta}<ArrowUpRight size={15} aria-hidden="true" /></Link></div>
+              <div className="lp-f-text"><I size={24} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></div>
               <div className="lp-f-visual"><div className="lp-persp"><div className="lp-tilt"><Visual /></div></div></div></R>))}
         </section>
 
@@ -111,7 +111,7 @@ export default function LandingPage() {
         <div className="lp-foot-top"><Logo size={30} /><p>A simple personal finance tracker for your transactions, categories, budgets and reports.</p></div>
         <nav className="lp-foot-links" aria-label="Footer">
           <div><h4>Product</h4><a href="#features">Features</a><a href="#faq">FAQ</a></div>
-          <div><h4>Account</h4>{loggedIn ? <Link to="/dashboard">Dashboard</Link> : <><Link to="/login">Log In</Link><Link to="/signup">Sign Up</Link></>}</div>
+          <div className="lp-foot-account"><h4>Account</h4>{loggedIn ? <Link to="/dashboard">Dashboard</Link> : <><Link to="/login">Log In</Link><Link to="/signup">Sign Up</Link></>}</div>
           <div><h4>Legal</h4><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Service</Link></div></nav>
         <div className="lp-copy lp-copy-row small"><p>© {new Date().getFullYear()} TrackMyKita</p><CreatorCredit /></div>
       </div></footer>

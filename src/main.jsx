@@ -19,8 +19,10 @@ import './styles/redesign.css'
 import './styles/refine.css'
 import './styles/v125.css'
 import './styles/v126.css'
+import './styles/v127.css'
 import './landing/landing-refine.css'
 import './landing/landing-v126.css'
+import './landing/landing-v127.css'
 createRoot(document.getElementById('root')).render(isConfigured
   ? <><BrowserRouter><AppProvider><App /></AppProvider></BrowserRouter><Analytics beforeSend={sanitizeAnalyticsEvent} /><SpeedInsights beforeSend={sanitizeAnalyticsEvent} /></>
   : <main className="auth"><h1>Supabase is not configured</h1><p className="muted">Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to your .env.local file, then restart the dev server.</p></main>)

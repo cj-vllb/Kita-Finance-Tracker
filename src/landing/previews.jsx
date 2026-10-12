@@ -64,8 +64,13 @@ export const MiniTx = ({ t }) => (<div className="lp-float" aria-hidden="true"><
 
 // Smartphone presentation of the same sample Monthly money flow (and the recent list under it, as on the phone dashboard).
 // Generic rounded device: no brand marks. Static sample data only, nothing here reads the user's data.
+// Depth: the device body is a stack of identical rounded plates behind the screen (see .lp-phone-slice in landing-v127.css), so the
+// side edge keeps the rounded corners at any tilt. Only the frame is 3D; the screen content is never distorted.
+const PHONE_SLICES = Array.from({ length: 10 }, (_, i) => i + 1)
 export const PhoneMockup = () => (
   <div className="lp-phone" role="img" aria-label="Preview of the TrackMyKita monthly money flow chart on a smartphone (sample data)">
+    <span className="lp-phone-cast" aria-hidden="true" />
+    {PHONE_SLICES.map((n) => <span key={n} className="lp-phone-slice" style={{ '--i': n }} aria-hidden="true" />)}
     <div className="lp-phone-screen" aria-hidden="true">
       <div className="lp-phone-status"><span>9:41</span><span className="lp-phone-island" /><span className="lp-phone-sys"><Signal size={13} strokeWidth={2.4} /><Wifi size={13} strokeWidth={2.4} /><BatteryFull size={16} strokeWidth={2} /></span></div>
       <div className="lp-phone-body">
@@ -73,5 +78,6 @@ export const PhoneMockup = () => (
         <Panel title="Recent transactions"><TxList rows={SAMPLE_TX.slice(0, 3)} /></Panel>
       </div>
       <span className="lp-phone-home" />
+      <span className="lp-phone-glare" />
     </div>
   </div>)

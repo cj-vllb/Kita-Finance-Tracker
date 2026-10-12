@@ -1,7 +1,6 @@
 /* ===== TrackMyKita 1.2.4: visual refinement =====
    Loaded last. It adds depth, interaction feedback and one targeted layout fix on top of the existing system; it does not replace it.
-   Colour values live in tokens.css. Lighting is limited to: one quiet light in the app shell (stronger behind the Dashboard balance),
-   one on the sign-in pages, and one on the landing hero (landing.css). Motion uses transform and opacity only. */
+   Colour values live in tokens.css. Lighting is limited to: the Dashboard balance card, one on the sign-in pages, and one on the landing hero (landing.css). Motion uses transform and opacity only. */
 :root{--ease:cubic-bezier(.2,.7,.2,1);--lift:0 8px 18px -10px rgba(14,138,95,.7)}
 
 /* ---------- buttons: one interaction language for every page ---------- */
@@ -44,11 +43,9 @@
 [data-theme=dark] .swatch{box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 [data-theme=dark] .avatar-menu-btn{background:#131A15;box-shadow:none}
 
-/* one quiet light in the app shell. It sits behind the content, never behind individual cards. */
+/* 1.2.7: the quiet ambient light that used to sit behind every app page is gone. The Dashboard never showed it (its balance card carries the
+   page's only light), so nothing on the Dashboard changes. The stacking context below is kept so layering stays exactly as before. */
 [data-theme=dark] .shell-main{position:relative;isolation:isolate}
-[data-theme=dark] .shell-main::before{content:"";position:absolute;left:0;right:0;top:0;height:460px;z-index:-1;pointer-events:none;background:radial-gradient(60% 100% at 78% 0%,rgba(14,138,95,.085),transparent 72%)}
-/* Dashboard: no ambient light */
-[data-theme=dark] .shell-main:has(.hero-balance)::before{display:none}
 [data-theme=dark] .hero-balance{background:linear-gradient(135deg,#143523 0%,#10291E 55%,#0E231A 100%);border:1px solid rgba(126,224,179,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 /* sign-in pages */
 [data-theme=dark] body:has(main.auth){background:radial-gradient(60% 420px at 50% 0%,rgba(14,138,95,.13),transparent 72%) no-repeat,var(--color-background)}

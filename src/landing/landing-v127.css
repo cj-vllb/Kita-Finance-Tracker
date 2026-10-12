@@ -1,0 +1,68 @@
+/* TrackMyKita 1.2.7: landing page refinements. Loaded after landing-v126.css (see main.jsx) so these rules win ties.
+   Everything is scoped under .landing-page. Desktop (wider than 1024px) keeps its approved layout: the only rules that reach it
+   are the 3D treatment of the phone frame. The breakpoints used here match the ones the page already switches layout at:
+   860px (hero stacks), 980px (the phone and its four cards stack) and 1024px (largest tablet width, used for the simple
+   typographic changes: no feature icons, dividers, and no Account footer group). */
+
+/* ---------- Monthly money flow phone: real thickness, all screen sizes ----------
+   The body is ten identical rounded plates stacked behind the screen (--i = depth step). Because each plate keeps the 48px corner
+   radius, the visible side edge is rounded at any angle. Only the frame is 3D; the screen content is never distorted. */
+.landing-page .lp-phone{transform-style:preserve-3d;
+  box-shadow:inset 0 0 0 1.5px #566259,inset 0 0 0 3.5px #090C0A}
+.landing-page .lp-phone::before,.landing-page .lp-phone::after{transform:translateZ(-14px)} /* side buttons sit inside the thickness */
+.lp-phone-slice{position:absolute;inset:1.5px;border-radius:46.5px;pointer-events:none;
+  transform:translateZ(calc(var(--i) * -3px));
+  background:color-mix(in srgb,#434E47,#0A0D0B calc(var(--i) * 8%))}
+/* soft cast shadow on the surface behind the device (replaces the old drop shadow, which would have painted over the edge) */
+.lp-phone-cast{position:absolute;inset:7% -3% -2% 8%;border-radius:52px;pointer-events:none;background:rgba(0,0,0,.78);filter:blur(26px);opacity:.8;
+  transform:translateZ(-44px) translate(12px,30px)}
+/* faint reflection across the glass: restrained, static */
+.lp-phone-glare{position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(112deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.035) 24%,rgba(255,255,255,0) 44%)}
+@media (max-width:980px){
+  .landing-page .lp-phone-tilt{transform:rotateX(4deg) rotateY(-12deg) rotateZ(2deg)}
+}
+@media (max-width:420px){
+  .landing-page .lp-phone-tilt{transform:rotateX(3deg) rotateY(-9deg) rotateZ(1.5deg)}
+}
+
+/* ---------- tablet and mobile: hero ---------- */
+@media (max-width:860px){
+  /* the stacked hero: tighter rhythm, and a shorter window onto the same angled dashboard */
+  .landing-page .lp-hero{gap:28px;padding-top:clamp(28px,7vw,48px);padding-bottom:0}
+  .landing-page .lp-hero .lp-hero-actions{margin-top:24px}
+  .landing-page .lp-hero-visual{padding-top:12px;max-height:clamp(290px,80vw,420px);overflow:hidden;
+    -webkit-mask-image:linear-gradient(180deg,#000 60%,transparent 100%);mask-image:linear-gradient(180deg,#000 60%,transparent 100%)}
+  /* the fade now lives on the clipping window, so the plane's own fade is not applied twice */
+  .landing-page .lp-hero-visual .lp-persp{-webkit-mask-image:none;mask-image:none}
+  .landing-page .lp-band{padding-top:clamp(40px,7vw,64px)}
+}
+
+/* ---------- tablet and mobile: phone as a background layer behind the four cards ----------
+   Stacking order, back to front: section background, then the phone (z-index 0, clipped to roughly its upper half and faded out
+   at the bottom), then the card columns (z-index 1, opaque). The first card row is pulled up over the lower part of the phone. */
+@media (max-width:980px){
+  .landing-page .lp-benefits{--pw:min(296px,76vw);--ov:100px;position:relative}
+  .landing-page .lp-b-visual{position:relative;z-index:0;height:calc(var(--pw) * 1.1 + 28px);overflow:hidden;
+    -webkit-mask-image:linear-gradient(180deg,#000 50%,transparent 86%);mask-image:linear-gradient(180deg,#000 50%,transparent 86%)}
+  .landing-page .lp-b-visual .lp-phone-stage{padding:16px 0 0}
+  .landing-page .lp-phone{width:var(--pw)}
+  .landing-page .lp-b-col{position:relative;z-index:1}
+  .landing-page .lp-benefits>.lp-b-col:first-child{margin-top:calc(var(--ov) * -1)}
+  .landing-page .lp-b-col .lp-card{box-shadow:0 14px 28px -16px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.25)}
+}
+
+/* ---------- tablet and mobile: feature list, open and editorial ---------- */
+@media (max-width:1024px){
+  .landing-page .lp-f-text>svg{display:none}
+  .landing-page .lp-f-text h3{margin-top:0}
+  .landing-page .lp-features{gap:clamp(44px,8vw,72px)}
+  /* a thin rule between the three features; the gap above the rule and the padding below it are equal */
+  .landing-page .lp-feature+.lp-feature{border-top:1px solid rgba(255,255,255,.12);padding-top:clamp(44px,8vw,72px)}
+}
+
+/* ---------- tablet and mobile: footer shows Product and Legal only ---------- */
+@media (max-width:1024px){
+  .landing-page .lp-foot-account{display:none}
+  .landing-page .lp-foot-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

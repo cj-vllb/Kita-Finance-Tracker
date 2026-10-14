@@ -39,32 +39,50 @@ export function MoneyFlowChart({ data }) {
     <path d={`${path('income')} L${x(data.length - 1)},${y(0)} L${x(0)},${y(0)} Z`} fill="var(--color-primary)" opacity=".08" stroke="none" /><path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" /><path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.5" strokeDasharray="6 4" /></svg></div>
     <Legend><Key color="var(--color-primary)">Income {money(last.income)}</Key><Key color="var(--color-negative)">Expenses {money(last.expenses)}</Key></Legend></figure>)
 }
+// Smooth line through the points (monotone cubic, so it never overshoots the data). Presentation only: the values are unchanged.
+function smooth(pts) {
+  const n = pts.length, line = (p, i) => `${i ? 'L' : 'M'}${p[0]},${p[1]}`
+  if (n < 3) return pts.map(line).join(' ')
+  const dx = [], m = [], t = []
+  for (let i = 0; i < n - 1; i++) { dx[i] = pts[i + 1][0] - pts[i][0] || 1; m[i] = (pts[i + 1][1] - pts[i][1]) / dx[i] }
+  t[0] = m[0]; t[n - 1] = m[n - 2]
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) { t[i] = 0; t[i + 1] = 0; continue }
+    const a = t[i] / m[i], b = t[i + 1] / m[i], s2 = a * a + b * b
+    if (s2 > 9) { const k = 3 / Math.sqrt(s2); t[i] = k * a * m[i]; t[i + 1] = k * b * m[i] }
+  }
+  let d = `M${pts[0][0]},${pts[0][1]}`
+  for (let i = 0; i < n - 1; i++) { const h = dx[i] / 3; d += ` C${pts[i][0] + h},${pts[i][1] + t[i] * h} ${pts[i + 1][0] - h},${pts[i + 1][1] - t[i + 1] * h} ${pts[i + 1][0]},${pts[i + 1][1]}` }
+  return d
+}
 // Dashboard cash-flow chart (title, legend, divider, graph). Same data and maths as MoneyFlowChart; this variant exists so the
 // landing page preview, which uses MoneyFlowChart, is not affected by dashboard-only refinements.
 export function CashFlowChart({ data, title }) {
   const [ref, W] = useWidth(), [hover, setHover] = useState(null), gid = 'cf' + useId().replace(/[^a-zA-Z0-9]/g, '')
   const H = W < 440 ? 240 : 310, B = 32, T = 16, R = 14, max = niceMax(Math.max(...data.map((d) => Math.max(d.income, d.expenses)))), L = padLeft(max) + 6, last = data.at(-1), n = data.length
   const span = Math.max(1, n - 1), x = (i) => L + (i * (W - L - R)) / span, y = (v) => H - B - (v / max) * (H - B - T)
-  const path = (k) => data.map((d, i) => `${i ? 'L' : 'M'}${x(i)},${y(d[k])}`).join(' ')
+  const path = (k) => smooth(data.map((d, i) => [x(i), y(d[k])]))
   const every = Math.max(1, Math.ceil(56 / Math.max(1, (W - L - R) / span))), show = (i) => (n - 1 - i) % every === 0
   const move = (e) => { const r = e.currentTarget.getBoundingClientRect(), i = Math.round(((e.clientX - r.left - L) / Math.max(1, W - L - R)) * span); setHover(Math.min(n - 1, Math.max(0, i))) }
   const h = hover !== null ? data[hover] : null, tipLeft = h ? Math.min(Math.max(x(hover), 74), W - 74) : 0
   return (<figure className="cashflow" style={{ margin: 0 }}>
     <div className="cf-head"><h2>{title}</h2><div className="legend cf-legend"><Key color="var(--color-primary)">Income {money(last.income)}</Key><Key color="var(--color-negative)">Expenses {money(last.expenses)}</Key></div></div>
     <hr className="cf-rule" />
-    <div ref={ref} className="chart-box cf-box">
+    <div className="cf-pad"><div ref={ref} className="chart-box cf-box">
       <svg className="chart" width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Running totals: income ${money(last.income)}, expenses ${money(last.expenses)}`} onPointerMove={move} onPointerDown={move} onPointerLeave={() => setHover(null)}>
-        <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--color-primary)" stopOpacity=".2" /><stop offset="1" stopColor="var(--color-primary)" stopOpacity="0" /></linearGradient></defs>
+        <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--color-primary)" stopOpacity=".34" /><stop offset="1" stopColor="var(--color-primary)" stopOpacity="0" /></linearGradient></defs>
+        {data.map((d, i) => show(i) && <line className="cf-vgrid" key={'v' + i} x1={x(i)} x2={x(i)} y1={T - 4} y2={H - B} />)}
         {[0, 1, 2, 3].map((i) => { const v = (max / 3) * i; return <g key={i}><line className={i === 0 ? 'cf-base' : 'cf-grid'} x1={L} x2={W - R} y1={y(v)} y2={y(v)} /><text className="cf-tick" x={L - 10} y={y(v) + 4} fontSize="12" textAnchor="end">{compact(v)}</text></g> })}
         {data.map((d, i) => show(i) && <text className="cf-tick" key={i} x={Math.min(Math.max(x(i), L + 14), W - 22)} y={H - 9} fontSize="12" textAnchor="middle">{d.label}</text>)}
         <path d={`${path('income')} L${x(n - 1)},${y(0)} L${x(0)},${y(0)} Z`} fill={`url(#${gid})`} stroke="none" />
-        <path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
-        <path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="6 4" />
-        <circle cx={x(n - 1)} cy={y(last.income)} r="3.5" fill="var(--color-primary)" /><circle cx={x(n - 1)} cy={y(last.expenses)} r="3.5" fill="var(--color-negative)" />
+        <path d={path('income')} fill="none" stroke="var(--color-primary)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path('expenses')} fill="none" stroke="var(--color-negative)" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="6 5" />
+        <circle cx={x(n - 1)} cy={y(last.income)} r="4" fill="var(--color-primary)" /><circle cx={x(n - 1)} cy={y(last.expenses)} r="4" fill="var(--color-negative)" />
         {h && <g><line className="cf-guide" x1={x(hover)} x2={x(hover)} y1={T} y2={H - B} /><circle cx={x(hover)} cy={y(h.income)} r="4.5" fill="var(--color-primary)" className="cf-pt" /><circle cx={x(hover)} cy={y(h.expenses)} r="4.5" fill="var(--color-negative)" className="cf-pt" /></g>}
       </svg>
       {h && <div className="cf-tip" aria-hidden="true" style={{ left: tipLeft }}><strong>{h.label}</strong><span><i style={{ background: 'var(--color-primary)' }} />Income <b>{money(h.income)}</b></span><span><i style={{ background: 'var(--color-negative)' }} />Expenses <b>{money(h.expenses)}</b></span></div>}
-    </div></figure>)
+    </div></div></figure>)
 }
 export function BarChart({ data }) {
   const [ref, W] = useWidth(), H = 280, B = 30, max = niceMax(Math.max(...data.map((d) => Math.max(d.income, d.expenses)))), L = padLeft(max)

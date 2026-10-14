@@ -1,13 +1,33 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Eye, EyeOff } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { money, signed, txKind, greeting, firstName, monthLabel, monthName, monthShort, formatDate, formatDateLong, txLabel } from '../utils/format.js'
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
 import { CashFlowChart, MiniBars } from '../components/charts.jsx'
 import { CategoryLabel, CatLabel, DirIcon, PageHeader } from '../components/ui.jsx'
+import { useMedia } from '../components/SidebarSearch.jsx'
+import { VISIBILITY_KEYS, MASK, readVisibility, writeVisibility } from '../utils/balanceVisibility.js'
+// One independent show/hide preference per balance, remembered in this browser (see utils/balanceVisibility.js).
+function useVisibility(key) {
+  const [visible, set] = useState(() => readVisibility(key))
+  return [visible, () => set((v) => { writeVisibility(key, !v); return !v })]
+}
+const EyeButton = ({ name, visible, onToggle }) => <button type="button" className="eye-btn" onClick={onToggle} aria-label={`${visible ? 'Hide' : 'Show'} ${name}`} title={`${visible ? 'Hide' : 'Show'} ${name}`}>{visible ? <Eye size={18} strokeWidth={1.75} aria-hidden="true" /> : <EyeOff size={18} strokeWidth={1.75} aria-hidden="true" />}</button>
+const Masked = () => <span role="img" aria-label="Amount hidden">{MASK}</span>
+const TABS = [['balance', 'Balance'], ['savings', 'Savings']]
 export default function Dashboard() {
   const { user, transactions, budgets, categories, ledger, savingsReady, activeGoals } = useApp()
+  const compact = useMedia('(max-width:1100px)') // tablet and phone get the Balance/Savings selector; desktop shows both balances as before
+  const [tab, setTab] = useState('balance') // deliberately not persisted: the dashboard always opens on Balance
+  const [showCurrent, toggleCurrent] = useVisibility(VISIBILITY_KEYS.current), [showSavings, toggleSavings] = useVisibility(VISIBILITY_KEYS.savings)
+  const selector = compact && savingsReady, showBalance = !selector || tab === 'balance', showSavingsCard = savingsReady && (!selector || tab === 'savings')
+  const onTabKey = (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault(); const next = e.key === 'Home' ? 'balance' : e.key === 'End' ? 'savings' : tab === 'balance' ? 'savings' : 'balance'
+    setTab(next); requestAnimationFrame(() => document.getElementById('bal-tab-' + next)?.focus())
+  }
   const name = (id) => categories.find((x) => x.id === id)?.name ?? 'Uncategorized'
   const month = c.inMonth(transactions, CURRENT_MONTH), income = c.calculateIncome(month), expenses = c.calculateExpenses(month), net = income - expenses
   const [top] = c.groupExpensesByCategory(month), prev = c.inMonth(transactions, c.shiftMonth(CURRENT_MONTH, -1)), prevExp = c.calculateExpenses(prev)
@@ -24,15 +44,23 @@ export default function Dashboard() {
     <PageHeader title={`${greeting()}, ${firstName(user)}`} subtitle={`Here is your financial overview for ${monthLabel(CURRENT_MONTH)}.`} />
     <>
       <div className="balances">
-      <section className="hero-balance" aria-label="Current Balance"><div className="hero-main"><div className="balance-label">Current Balance</div><div className="balance">{money(ledger.current)}</div><div className="small hero-updated">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
+      {selector && <div className="seg bal-seg" role="tablist" aria-label="Balance view" onKeyDown={onTabKey}>{TABS.map(([id, text]) => <button key={id} type="button" role="tab" id={'bal-tab-' + id} aria-selected={tab === id} aria-controls={'bal-panel-' + id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{text}</button>)}</div>}
+      {showBalance && <section className="hero-balance" aria-label="Current Balance" {...(selector ? { role: 'tabpanel', id: 'bal-panel-balance', 'aria-labelledby': 'bal-tab-balance' } : {})}><div className="hero-main"><div className="balance-label bal-head">Current Balance<EyeButton name="Current Balance" visible={showCurrent} onToggle={toggleCurrent} /></div><div className="balance">{showCurrent ? money(ledger.current) : <Masked />}</div><div className="small hero-updated">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
         <div className="figures">
           <div><div className="muted">Monthly income</div><div className="v pos">+{money(income)}</div></div>
           <div><div className="muted">Monthly expenses</div><div className="v neg">−{money(expenses)}</div></div>
-          <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>
-        {savingsReady && <section className="savings-balance" aria-label="Savings"><div><div className="balance-label">Savings</div><div className="sb-amount">{money(ledger.savings)}</div>
-          <div className="muted small">{activeGoals.length ? `${money(ledger.allocated)} set aside for goals` : 'Money you have put aside'}</div></div>
+          <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>}
+      {showSavingsCard && <section className="savings-balance" aria-label="Savings" {...(selector ? { role: 'tabpanel', id: 'bal-panel-savings', 'aria-labelledby': 'bal-tab-savings' } : {})}><div><div className="balance-label bal-head">Savings<EyeButton name="Savings" visible={showSavings} onToggle={toggleSavings} /></div><div className="sb-amount">{showSavings ? money(ledger.savings) : <Masked />}</div>
+          <div className="muted small">{activeGoals.length ? (showSavings ? `${money(ledger.allocated)} set aside for goals` : 'Set aside for goals') : 'Money you have put aside'}</div></div>
           <Link to="/savings" className="pv-link">Manage savings<ChevronRight size={16} aria-hidden="true" /></Link></section>}
       </div>
+      <div className="previews charts">
+        <section className="preview flow-card" aria-label="Monthly money flow"><div className="pv-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
+        <Preview title="Reports" to="/reports" action="View Reports" pad>
+          {transactions.length === 0 ? <p className="muted pv-empty">Add transactions and your reports will fill in.</p> : <>
+            <MiniBars data={trend} />
+            <div className="legend small"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></div>
+            {top && <p className="small muted" style={{ marginTop: 8 }}>{name(top.categoryId)} is {Math.round((top.amount / expenses) * 100)}% of this month's expenses.</p>}</>}</Preview></div>
       <div className="previews cards">
         <Preview title="Recent transactions" to="/transactions" action="View All Transaction History">
           {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
@@ -42,14 +70,6 @@ export default function Dashboard() {
             <ul className="bp-list">{budgetTop.map(({ b, spent, remaining, pct }) => <li key={b.id}><div className="bp-top"><span>{name(b.categoryId)}</span><span className="muted small">{money(spent)} of {money(b.amount)}</span></div>
               <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${name(b.categoryId)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
               <div className={`small bp-note ${remaining < 0 ? 'neg' : 'muted'}`}>{remaining < 0 ? `${money(-remaining)} over budget` : `${money(remaining)} left`} · {pct}% used</div></li>)}</ul>}</Preview></div>
-      <div className="previews charts">
-        <section className="preview flow-card" aria-label="Monthly money flow"><div className="pv-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
-        <Preview title="Reports" to="/reports" action="View Reports" pad>
-          {transactions.length === 0 ? <p className="muted pv-empty">Add transactions and your reports will fill in.</p> : <>
-            <MiniBars data={trend} />
-            <div className="legend small"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></div>
-            {top && <p className="small muted" style={{ marginTop: 8 }}>{name(top.categoryId)} is {Math.round((top.amount / expenses) * 100)}% of this month's expenses.</p>}</>}</Preview></div>
-
       <section className="section glance-section"><h2>This month at a glance</h2><div className="glance">
         <div><div className="muted">Highest spending category</div>{top ? <><div className="v"><CategoryLabel id={top.categoryId} categories={categories} /> · {money(top.amount)}</div><div className="muted small">{Math.round((top.amount / expenses) * 100)}% of this month's expenses</div></> : <div className="v">No expenses yet</div>}</div>
         <div><div className="muted">Compared with {monthName(c.shiftMonth(CURRENT_MONTH, -1))}</div>{diff === null ? <div className="v">No earlier data</div> : <><div className="v">{Math.abs(diff)}% {diff >= 0 ? 'less' : 'more'} spent</div><div className="muted small">{money(expenses)} so far, {money(prevExp)} last month</div></>}</div>

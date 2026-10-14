@@ -1,6 +1,12 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.3.2', date: 'October 15, 2026', title: 'Easier navigation and private balances', items: [
+    'Switch between Balance and Savings on tablets and phones, and hide either amount with an eye button that remembers your choice',
+    'Transactions now open on all dates, and phones show a date heading above each day',
+    'A shorter More menu, with Help Center and Settings moved into your profile menu',
+    'A tidier two-column dashboard with money flow, reports, recent transactions and budgets side by side',
+  ] },
   { version: '1.3.1', date: 'October 14, 2026', title: 'Savings and two balances', items: [
     'A new Savings page to set money aside, track goals and see what is still unassigned',
     'Your dashboard now shows Current Balance and Savings as two separate balances',

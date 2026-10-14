@@ -9,12 +9,12 @@ import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet, RowMenu, 
 const PAGE = 10
 export default function Transactions() {
   const { transactions, categories, deleteTransaction, notify } = useApp(), [sp] = useSearchParams()
-  const [f, setF] = useState({ q: sp.get('q') || '', type: 'all', cat: sp.get('category') || 'all', month: sp.get('q') ? 'all' : CURRENT_MONTH }), [sort, setSort] = useState({ key: 'date', dir: 'desc' }), [page, setPage] = useState(1), [del, setDel] = useState(null), [sheet, setSheet] = useState(null), [fOpen, setFOpen] = useState(false)
+  const [f, setF] = useState({ q: sp.get('q') || '', type: 'all', cat: sp.get('category') || 'all', month: 'all' }), [sort, setSort] = useState({ key: 'date', dir: 'desc' }), [page, setPage] = useState(1), [del, setDel] = useState(null), [sheet, setSheet] = useState(null), [fOpen, setFOpen] = useState(false)
   const qParam = sp.get('q')
   useEffect(() => { if (qParam) { setF((p) => ({ ...p, q: qParam, month: 'all' })); setPage(1) } }, [qParam])
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setPage(1) }
-  const label = (t) => txLabel(t, categories), active = (f.month !== CURRENT_MONTH) + (f.type !== 'all') + (f.cat !== 'all')
-  const reset = () => { setF({ q: '', type: 'all', cat: 'all', month: CURRENT_MONTH }); setPage(1) }
+  const label = (t) => txLabel(t, categories), active = (f.month !== 'all') + (f.type !== 'all') + (f.cat !== 'all')
+  const reset = () => { setF({ q: '', type: 'all', cat: 'all', month: 'all' }); setPage(1) }
   const name = (id) => categories.find((c) => c.id === id)?.name ?? 'Uncategorized'
   const dir = sort.dir === 'asc' ? 1 : -1
   const rows = transactions.filter((t) => (f.type === 'all' || t.type === f.type) && (f.cat === 'all' || (f.cat === 'none' ? !t.categoryId : t.categoryId === f.cat)) && (f.month === 'all' || t.date.startsWith(f.month)) && `${label(t)} ${name(t.categoryId)}`.toLowerCase().includes(f.q.trim().toLowerCase()))
@@ -38,7 +38,7 @@ export default function Transactions() {
           <button type="button" className="btn btn-primary filters-done" onClick={() => setFOpen(false)}>Done</button></div></div>
       {rows.length === 0 ? <EmptyState title="No transactions found" text="Try adjusting your filters." /> : <>
         <ul className={'tx-rows' + (grouped ? '' : ' ungrouped')} aria-label="Transactions">{view.map((t, i) => <li key={t.id} className="tx-li">
-          {grouped && (i === 0 || view[i - 1].date !== t.date) && <div className="date-head" aria-hidden="true">{formatDate(t.date)}</div>}
+          {grouped && (i === 0 || view[i - 1].date !== t.date) && <div className="date-head">{formatDate(t.date)}</div>}
           <div className={'tx-row' + (t.notes?.trim() ? ' has-note' : '')}><DirIcon type={t.type} />
             <div className="tx-main"><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></div>
             {t.notes?.trim() && <p className="tx-note" title={t.notes}>{t.notes}</p>}

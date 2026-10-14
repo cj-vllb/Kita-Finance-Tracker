@@ -370,8 +370,7 @@ main.auth{width:calc(100% - 32px);max-width:440px;margin:min(10vh,72px) auto;pad
   .flabel{display:block;font-size:13px;font-weight:600}
   .filters-done{display:inline-flex;order:9;grid-column:1/-1;width:100%;min-height:46px}
   .tx-rows{margin-top:12px}
-  .date-head{display:none}
-  .tx-rows .meta-date{display:inline}
+  .tx-rows.ungrouped .meta-date{display:inline}
   .tx-row{grid-template-columns:34px minmax(0,1fr) auto auto;gap:12px;padding:8px 4px 8px 12px;min-height:64px}
   .tx-li+.tx-li .tx-row{border-top:1px solid var(--color-border)}
   .date-head+.tx-row{border-top:0}

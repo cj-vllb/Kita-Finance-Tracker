@@ -1,6 +1,13 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.3.1', date: 'October 14, 2026', title: 'Savings and two balances', items: [
+    'A new Savings page to set money aside, track goals and see what is still unassigned',
+    'Your dashboard now shows Current Balance and Savings as two separate balances',
+    'Choose whether new income goes to Current Balance or Savings, and pay expenses from either one',
+    'Move money between Current Balance and Savings without it counting as income or spending',
+    'Savings goals with targets and progress, and an activity history you can undo',
+  ] },
   { version: '1.3', date: 'October 13, 2026', title: 'A new workspace design', items: [
     'A redesigned workspace with a refined sidebar and a cleaner page layout',
     'A reorganized dashboard with a clearer balance summary and a smoother money flow chart',

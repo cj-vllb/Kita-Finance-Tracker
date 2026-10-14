@@ -10,6 +10,7 @@ import TransactionForm from './pages/TransactionForm.jsx'
 import TransactionDetail from './pages/TransactionDetail.jsx'
 import Budgets from './pages/Budgets.jsx'
 import BudgetForm from './pages/BudgetForm.jsx'
+import Savings from './pages/Savings.jsx'
 import Categories from './pages/Categories.jsx'
 import CategoryForm from './pages/CategoryForm.jsx'
 import Reports from './pages/Reports.jsx'
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/transactions" element={<Transactions />} /><Route path="/transactions/new" element={<TransactionForm />} /><Route path="/transactions/:id" element={<TransactionDetail />} /><Route path="/transactions/:id/edit" element={<TransactionForm />} />
       <Route path="/budgets" element={<Budgets />} /><Route path="/budgets/new" element={<BudgetForm />} /><Route path="/budgets/:id/edit" element={<BudgetForm />} />
+      <Route path="/savings" element={<Savings />} />
       <Route path="/categories" element={<Categories />} /><Route path="/categories/new" element={<CategoryForm />} /><Route path="/categories/:id/edit" element={<CategoryForm />} />
       <Route path="/reports" element={<Reports />} /><Route path="/profile" element={<Profile />} /><Route path="/help" element={<Help />} /><Route path="/settings" element={<Settings />} /><Route path="/settings/about" element={<About />} />
     </Route>

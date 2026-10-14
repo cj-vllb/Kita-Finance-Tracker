@@ -3,8 +3,8 @@ export const inMonth = (txs, ym) => txs.filter((t) => t.date.startsWith(ym))
 export const calculateIncome = (txs) => sum(txs.filter((t) => t.type === 'income'))
 export const calculateExpenses = (txs) => sum(txs.filter((t) => t.type === 'expense'))
 export const calculateNet = (txs) => calculateIncome(txs) - calculateExpenses(txs)
-// Current balance = all recorded income minus all recorded expenses (not a bank balance).
-export const calculateBalance = (txs) => calculateNet(txs)
+// Income, expense and net totals always count EVERY income/expense row once, whichever balance it used. Transfers are not transactions, so they never reach here.
+// Current Balance and Savings are computed in utils/ledger.js (computeLedger), the single place that knows about both balances.
 const spentOf = (b, txs) => sum(inMonth(txs, b.month).filter((t) => t.type === 'expense' && t.categoryId === b.categoryId))
 export const calculateBudgetSpent = spentOf
 export const calculateBudgetRemaining = (b, txs) => b.amount - spentOf(b, txs)

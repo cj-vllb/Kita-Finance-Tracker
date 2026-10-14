@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, PiggyBank, BarChart3, Tags, Settings, LifeBuoy, User, MoreHorizontal, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, Coins, PiggyBank, BarChart3, Tags, Settings, LifeBuoy, User, MoreHorizontal, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { ErrorState, Avatar, Presence, useDelayedFlag } from './ui.jsx'
 import PageSkeleton from './skeletons.jsx'
@@ -11,10 +11,10 @@ import { firstName } from '../utils/format.js'
 const groups = [
   [['/dashboard', 'Dashboard', LayoutDashboard]],
   [['/transactions', 'Transactions', ArrowLeftRight], ['/reports', 'Reports', BarChart3]],
-  [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags]],
+  [['/budgets', 'Budgets', PiggyBank], ['/savings', 'Savings', Coins], ['/categories', 'Categories', Tags]],
 ]
 const main = [['/dashboard', 'Dashboard', LayoutDashboard], ['/transactions', 'Transactions', ArrowLeftRight], ['/reports', 'Reports', BarChart3]]
-const more = [['/budgets', 'Budgets', PiggyBank], ['/categories', 'Categories', Tags], ['/help', 'Help Center', LifeBuoy], ['/settings', 'Settings', Settings], ['/profile', 'Profile', User]]
+const more = [['/budgets', 'Budgets', PiggyBank], ['/savings', 'Savings', Coins], ['/categories', 'Categories', Tags], ['/help', 'Help Center', LifeBuoy], ['/settings', 'Settings', Settings], ['/profile', 'Profile', User]]
 // Inline list in the wide sidebar, flyout beside the icon rail on tablets, sheet above the tab bar on phones (see app.css).
 function MoreNav() {
   const [open, setOpen] = useState(false), box = useRef(), { pathname } = useLocation()

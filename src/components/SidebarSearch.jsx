@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Search, X, ArrowLeftRight, LayoutDashboard, PiggyBank, BarChart3, Tags, Settings, User, LifeBuoy, HelpCircle, Info, FileText, ShieldCheck, Plus, KeyRound, ArrowUpRight, ArrowDownLeft, CornerDownLeft } from 'lucide-react'
+import { Search, X, Coins, ArrowLeftRight, LayoutDashboard, PiggyBank, BarChart3, Tags, Settings, User, LifeBuoy, HelpCircle, Info, FileText, ShieldCheck, Plus, KeyRound, ArrowUpRight, ArrowDownLeft, CornerDownLeft } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { signed, formatDate, txLabel } from '../utils/format.js'
 import { HELP_ITEMS, helpText } from '../data/help.js'
@@ -14,6 +14,7 @@ const PAGES = [
   { to: '/transactions/new', label: 'Add transaction', icon: Plus, keys: 'new create record income expense' },
   { to: '/budgets', label: 'Budgets', icon: PiggyBank, keys: 'limits spending' },
   { to: '/budgets/new', label: 'Create budget', icon: Plus, keys: 'new add limit' },
+  { to: '/savings', label: 'Savings', icon: Coins, keys: 'goals save transfer withdraw current balance allocate' },
   { to: '/categories', label: 'Categories', icon: Tags, keys: 'groups colors' },
   { to: '/categories/new', label: 'Create category', icon: Plus, keys: 'new add group' },
   { to: '/reports', label: 'Reports', icon: BarChart3, keys: 'charts monthly summary' },

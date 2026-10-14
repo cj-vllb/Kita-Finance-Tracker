@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, MoreVertical, Eye, Pencil, Trash2, ArrowLeftRight, Search } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
-import { formatDate, signed, monthLabel, txLabel } from '../utils/format.js'
+import { formatDate, signed, monthLabel, txLabel, txKind } from '../utils/format.js'
 import { allMonths } from '../utils/calc.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
 import { PageHeader, EmptyState, DeleteTransactionDialog, ActionSheet, RowMenu, DirIcon, CatLabel } from '../components/ui.jsx'
@@ -42,7 +42,7 @@ export default function Transactions() {
           <div className={'tx-row' + (t.notes?.trim() ? ' has-note' : '')}><DirIcon type={t.type} />
             <div className="tx-main"><Link className="tx-link" to={`/transactions/${t.id}`}>{label(t)}</Link><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></div>
             {t.notes?.trim() && <p className="tx-note" title={t.notes}>{t.notes}</p>}
-            <div className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{t.type === 'income' ? 'Income' : 'Expense'}</span></div>
+            <div className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{txKind(t)}</span></div>
             <div className="rm-desk"><RowMenu label={`Actions for ${label(t)}`} items={[{ label: 'View', icon: Eye, to: `/transactions/${t.id}` }, { label: 'Edit', icon: Pencil, to: `/transactions/${t.id}/edit` }, { label: 'Delete', icon: Trash2, danger: true, onSelect: () => setDel(t) }]} /></div>
             <div className="rm-mob"><button type="button" className="icon-btn" aria-label={`Actions for ${label(t)}`} aria-haspopup="dialog" onClick={() => setSheet(t)}><MoreVertical size={20} aria-hidden="true" /></button></div></div></li>)}</ul>
         <div className="pager"><span className="muted small">Showing {(cur - 1) * PAGE + 1} to {(cur - 1) * PAGE + view.length} of {rows.length}</span>

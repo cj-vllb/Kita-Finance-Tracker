@@ -1,9 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import * as auth from '../services/authService.js'
 import * as profiles from '../services/profileService.js'
 import * as txService from '../services/transactionService.js'
 import * as budgetService from '../services/budgetService.js'
 import * as categoryService from '../services/categoryService.js'
+import * as savingsService from '../services/savingsService.js'
+import { computeLedger } from '../utils/ledger.js'
 import { friendlyError } from '../lib/errors.js'
 import { logError } from '../lib/log.js'
 import { setCurrency } from '../utils/format.js'
@@ -14,10 +16,12 @@ export const useApp = () => useContext(Ctx)
 export { CURRENCIES }
 const upsert = (list, item, isNew) => (isNew ? [item, ...list] : list.map((x) => (x.id === item.id ? item : x)))
 // Runs an action and returns null on success or a friendly message on failure.
-const attempt = async (fn, fallback) => { try { await fn(); return null } catch (e) { return friendlyError(e, fallback) } }
+// `onError` lets the provider re-sync after a rejected ledger write (see `resync` below).
+const attempt = async (fn, fallback, onError) => { try { await fn(); return null } catch (e) { if (onError) await onError(e); return friendlyError(e, fallback) } }
 export function AppProvider({ children }) {
   const [session, setSession] = useState(null), [authLoading, setAuthLoading] = useState(true)
   const [profile, setProfile] = useState(null), [transactions, setTransactions] = useState([]), [budgets, setBudgets] = useState([]), [categories, setCategories] = useState([])
+  const [goals, setGoals] = useState([]), [transfers, setTransfers] = useState([]), [reallocations, setReallocations] = useState([]), [savingsReady, setSavingsReady] = useState(false)
   const [dataLoading, setDataLoading] = useState(true), [dataError, setDataError] = useState(false), [loadedUid, setLoadedUid] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('kita:theme') || 'dark') // UI preference only
   const [toast, setToast] = useState(null), timer = useRef(), [avatarUrl, setAvatarUrl] = useState(null)
@@ -28,12 +32,13 @@ export function AppProvider({ children }) {
     const sub = auth.onAuthChange((_event, s) => setSession(s))
     return () => { live = false; sub.unsubscribe() }
   }, [])
+  const applySavings = (s) => { setSavingsReady(s.ready); setGoals(s.goals); setTransfers(s.transfers); setReallocations(s.reallocations) }
   const reload = useCallback(async () => {
-    if (!uid) { setProfile(null); setTransactions([]); setBudgets([]); setCategories([]); setDataLoading(false); setLoadedUid(null); return }
+    if (!uid) { setProfile(null); setTransactions([]); setBudgets([]); setCategories([]); setGoals([]); setTransfers([]); setReallocations([]); setSavingsReady(false); setDataLoading(false); setLoadedUid(null); return }
     setDataLoading(true); setDataError(false)
     try {
-      const [p, t, b, c] = await Promise.all([profiles.getProfile(), txService.getTransactions(), budgetService.getBudgets(), categoryService.getCategories()])
-      setProfile(p); setTransactions(t); setBudgets(b); setCategories(c)
+      const [p, t, b, c, s] = await Promise.all([profiles.getProfile(), txService.getTransactions(), budgetService.getBudgets(), categoryService.getCategories(), savingsService.getSavingsData()])
+      setProfile(p); setTransactions(t); setBudgets(b); setCategories(c); applySavings(s)
     } catch (e) { logError(e); setDataError(true) } finally { setDataLoading(false); setLoadedUid(uid) }
   }, [uid])
   useEffect(() => { reload() }, [reload])
@@ -47,16 +52,26 @@ export function AppProvider({ children }) {
     const sign = () => profiles.getAvatarUrl(avatarPath).then((u) => { if (live) { setAvatarUrl(u); t = setTimeout(sign, (profiles.AVATAR_URL_TTL - 300) * 1000) } }).catch((e) => { logError(e); if (live) setAvatarUrl(null) })
     sign(); return () => { live = false; clearTimeout(t) }
   }, [avatarPath])
+  // Both balances and every goal amount come from one pure calculation over the loaded ledger rows (utils/ledger.js).
+  const ledger = useMemo(() => computeLedger({ transactions, transfers, reallocations, goals }), [transactions, transfers, reallocations, goals])
+  const activeGoals = useMemo(() => goals.filter((g) => !g.archived), [goals])
+  // The database rejects a write that would break a balance or goal with a message starting "KITA: ". The write did not happen, but the screen may have
+  // been built from stale data (another device, another tab), so re-read the ledger rows quietly; the user then sees the real balances, not stale ones.
+  const resync = async (e) => {
+    if (!/^KITA: /.test(e?.message || '')) return
+    try { const [t, s] = await Promise.all([txService.getTransactions(), savingsService.getSavingsData()]); setTransactions(t); applySavings(s) } catch (x) { logError(x) }
+  }
+  const run = (fn, fallback) => attempt(fn, fallback, resync)
   const notify = useCallback((msg) => { setToast(msg); clearTimeout(timer.current); timer.current = setTimeout(() => setToast(null), 2800) }, [])
   const user = { avatarUrl, fullName: profile?.full_name || session?.user?.user_metadata?.full_name || '', email: session?.user?.email || '', memberSince: (profile?.created_at || new Date().toISOString()).slice(0, 10) }
-  const save = (list, setList, svc, label) => (x) => attempt(async () => {
+  const save = (list, setList, svc, label) => (x) => run(async () => {
     const isNew = !list.some((i) => i.id === x.id), saved = isNew ? await svc.create(x) : await svc.update(x)
     setList((l) => upsert(l, saved, isNew))
   }, `We couldn't save this ${label}. Please try again.`)
-  const remove = (setList, fn, label) => (id) => attempt(async () => { await fn(id); setList((l) => l.filter((i) => i.id !== id)) }, `We couldn't delete this ${label}. Please try again.`)
+  const remove = (setList, fn, label) => (id) => run(async () => { await fn(id); setList((l) => l.filter((i) => i.id !== id)) }, `We couldn't delete this ${label}. Please try again.`)
   const value = {
     session, loggedIn: !!session, authLoading, ready: !authLoading && (!uid || loadedUid === uid), user, settings: { currency: safeCurrency(profile?.currency), theme },
-    transactions, budgets, categories, dataLoading: dataLoading || (!!uid && loadedUid !== uid), dataError, reload, toast, notify,
+    transactions, budgets, categories, goals, activeGoals, transfers, reallocations, ledger, savingsReady, dataLoading: dataLoading || (!!uid && loadedUid !== uid), dataError, reload, toast, notify,
     signIn: (email, password) => attempt(() => auth.signIn(email, password), "We couldn't sign you in. Please try again."),
     signUp: async (name, email, password) => { let r; const error = await attempt(async () => { r = await auth.signUp(name, email, password) }, "We couldn't create your account. Please try again."); return { error, needsConfirmation: !error && !r.session } },
     logout: async () => { await attempt(() => auth.signOut()); setSession(null) },
@@ -93,7 +108,14 @@ export function AppProvider({ children }) {
       setProfile(await profiles.updateProfile({ avatarPath: null })); profiles.removeAvatarFile(old).catch(logError)
     }, "We couldn't remove your photo. Please try again."),
     checkAvatar: prepareAvatar,
-    saveTransaction: save(transactions, setTransactions, { create: txService.createTransaction, update: txService.updateTransaction }, 'transaction'),
+    saveTransaction: (x) => save(transactions, setTransactions, { create: txService.createTransaction, update: txService.updateTransaction }, 'transaction')({ ...x, withBalance: savingsReady }),
+    // Savings. Every write is one statement or one function call in the database, so it succeeds or fails as a whole. The three small savings
+    // tables are re-read afterwards, so what is shown is always what the database holds (and what another device will show).
+    saveGoal: (x) => run(async () => { if (goals.some((g) => g.id === x.id)) await savingsService.updateGoal(x); else await savingsService.createGoal(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't save this goal. Please try again."),
+    deleteGoal: (id, moveTo, date) => run(async () => { await savingsService.archiveGoal(id, moveTo, date); applySavings(await savingsService.getSavingsData()) }, "We couldn't delete this goal. Please try again."),
+    addTransfer: (x) => run(async () => { await savingsService.createTransfer(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't move this money. Please try again."),
+    moveSavings: (x) => run(async () => { await savingsService.createReallocation(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't move this money. Please try again."),
+    undoSavingsActivity: (kind, id) => run(async () => { await (kind === 'transfer' ? savingsService.deleteTransfer(id) : savingsService.deleteReallocation(id)); applySavings(await savingsService.getSavingsData()) }, "We couldn't undo this. Please try again."),
     deleteTransaction: remove(setTransactions, txService.deleteTransaction, 'transaction'),
     saveBudget: save(budgets, setBudgets, { create: budgetService.createBudget, update: budgetService.updateBudget }, 'budget'),
     deleteBudget: remove(setBudgets, budgetService.deleteBudget, 'budget'),

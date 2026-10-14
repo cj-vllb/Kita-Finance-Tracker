@@ -3,6 +3,8 @@ import { logError } from './log.js'
 export function friendlyError(e, fallback = "We couldn't save this. Please try again.") {
   logError(e)
   if (!e) return fallback
+  // Messages written by the savings ledger checks in the database are already plain language.
+  if (typeof e.message === 'string' && e.message.startsWith('KITA: ')) return e.message.slice(6)
   if (e.wrongPassword) return 'Current password is incorrect.'
   if (e.userMessage) return e.userMessage
   if (/mime type|not supported/i.test(e.message || '')) return 'Use a JPG, PNG or WebP image.'

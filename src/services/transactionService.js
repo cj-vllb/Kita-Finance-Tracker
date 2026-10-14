@@ -1,6 +1,8 @@
 import { supabase, unwrap, fetchAll } from '../lib/supabaseClient.js'
-const fromRow = (r) => ({ id: r.id, date: r.transaction_date, description: r.description || '', categoryId: r.category_id || '', type: r.type, amount: Number(r.amount), notes: r.notes || '', createdAt: r.created_at })
-const toRow = (x) => ({ category_id: x.categoryId || null, type: x.type, amount: x.amount, description: x.description?.trim() || null, transaction_date: x.date, notes: x.notes?.trim() || null })
+const fromRow = (r) => ({ id: r.id, date: r.transaction_date, description: r.description || '', categoryId: r.category_id || '', type: r.type, amount: Number(r.amount), notes: r.notes || '', createdAt: r.created_at, balance: r.balance === 'savings' ? 'savings' : 'current', goalId: r.goal_id || '' })
+const toRow = (x) => ({ category_id: x.categoryId || null, type: x.type, amount: x.amount, description: x.description?.trim() || null, transaction_date: x.date, notes: x.notes?.trim() || null,
+  // Sent only once the 1.3.1 migration exists, so an older database keeps working. Income: where it goes. Expense: where it is paid from.
+  ...(x.withBalance ? { balance: x.balance === 'savings' ? 'savings' : 'current', goal_id: x.balance === 'savings' && x.goalId ? x.goalId : null } : {}) })
 export const getTransactions = async () => (await fetchAll(() => supabase.from('transactions').select('*').order('transaction_date', { ascending: false }).order('created_at', { ascending: false }).order('id'))).map(fromRow)
 export const getTransaction = (id) => supabase.from('transactions').select('*').eq('id', id).maybeSingle().then(unwrap).then((r) => (r ? fromRow(r) : null))
 export const createTransaction = (x) => supabase.from('transactions').insert(toRow(x)).select().single().then(unwrap).then(fromRow)

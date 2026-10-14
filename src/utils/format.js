@@ -8,6 +8,8 @@ export const money = (n) => {
   const text = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: dp && v % 1 ? 2 : 0, maximumFractionDigits: dp })
   return (v < 0 ? '−' : '') + currencyPrefix(currency) + text
 }
+// Second line of a transaction row: its kind, plus the balance when it used Savings (text, so colour is never the only cue).
+export const txKind = (t) => (t.type === 'income' ? 'Income' : 'Expense') + (t.balance === 'savings' ? (t.type === 'income' ? ' to Savings' : ' from Savings') : '')
 export const signed = (n, type) => (type === 'income' ? '+' : '−') + money(n)
 const d = (iso) => new Date(iso.slice(0, 10) + 'T00:00:00')
 // Transaction dates: MM/DD/YYYY. Built from the stored YYYY-MM-DD text, so no Date object and no timezone shift.

@@ -2,7 +2,9 @@
 
 TrackMyKita is a personal finance tracker for recording income and expenses, setting monthly budgets and seeing where your money goes, all in one personal account.
 
-**Current version:** 1.3
+**Current version:** 1.3.1
+
+Version 1.3.1 adds Savings: Current Balance and Savings are two separate balances, income can be sent to either, expenses can be paid from either, money moves between them as transfers (never income or expenses), and savings goals set aside parts of Savings. It needs the database migration `20261014000000_savings_and_balances.sql` (see `SUPABASE_SETUP.md`).
 
 Version 1.2 is a security, privacy and accessibility release: Privacy Policy and Terms pages, self-hosted fonts, sanitised analytics, security headers, clearer errors, fuller cleanup when an account is deleted, and accessibility fixes.
 
@@ -12,6 +14,7 @@ Version 1.2 is a security, privacy and accessibility release: Privacy Policy and
 - Monthly budgets by category with progress indicators
 - Income and expense categories with colors
 - Dashboard overview and monthly reports
+- Current Balance and Savings kept apart, savings goals, transfers and an undoable savings history
 - 16 currencies, profile pictures, light and dark theme
 - CSV export
 - Email sign-up with confirmation, password reset and account deletion
@@ -34,7 +37,7 @@ cp .env.example .env.local   # then fill in your Supabase values
 npm run dev
 ```
 
-Build for production with `npm run build`.
+Build for production with `npm run build`. Run the money-rule unit tests with `npm test` (Node's built-in test runner, no extra dependencies).
 
 ### Environment variables
 

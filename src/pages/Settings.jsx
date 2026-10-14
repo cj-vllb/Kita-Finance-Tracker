@@ -11,7 +11,7 @@ const CONFIRM_WORD = 'DELETE'
 function DeleteAccountDialog({ onCancel, onConfirm }) {
   const [text, setText] = useState('')
   return (<ConfirmDialog title="Delete your account?" confirmLabel="Delete account permanently" disabled={text !== CONFIRM_WORD} onCancel={onCancel} onConfirm={onConfirm}>
-    <p><strong>This permanently deletes your TrackMyKita account.</strong> Your profile, profile picture, transactions, budgets and categories are permanently removed from our database and cannot be recovered. Copies in backups kept by our database provider may remain for a limited time.</p>
+    <p><strong>This permanently deletes your TrackMyKita account.</strong> Your profile, profile picture, transactions, budgets, categories, savings goals and transfers are permanently removed from our database and cannot be recovered. Copies in backups kept by our database provider may remain for a limited time.</p>
     <p className="muted">If you want a copy of your transactions, cancel and use Export in Settings first.</p>
     <label className="field" style={{ marginTop: 8 }}><span className="field-label">Type {CONFIRM_WORD} to confirm</span>
       <input className="input" value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} aria-describedby="del-hint" /></label>
@@ -44,7 +44,7 @@ export default function Settings() {
         <Link to="/privacy" className="setting-row setting-link"><div className="setting-text"><div>Privacy Policy</div><div className="muted small">What information TrackMyKita collects and why</div></div><ChevronRight size={18} aria-hidden="true" /></Link>
         <Link to="/terms" className="setting-row setting-link"><div className="setting-text"><div>Terms of Service</div><div className="muted small">The rules for using TrackMyKita</div></div><ChevronRight size={18} aria-hidden="true" /></Link></section>
       <section className="danger-zone" aria-labelledby="s-danger"><h2 id="s-danger"><AlertTriangle size={18} aria-hidden="true" />Danger zone</h2>
-        <p>Deleting your account permanently removes your profile, transactions, budgets and categories. This cannot be undone.</p>
+        <p>Deleting your account permanently removes your profile, transactions, budgets, categories and savings. This cannot be undone.</p>
         <button className="btn btn-danger-outline" onClick={() => setConfirm(true)}>Delete account…</button></section>
       <section className="logout-zone" aria-label="Session"><button className="btn btn-lg" disabled={out} onClick={async () => { setOut(true); await logout(); nav('/login') }}><LogOut size={18} aria-hidden="true" />Log out</button>
         <p className="muted small">Signed in as {user.email}</p></section>

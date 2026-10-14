@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
-import { money, signed, greeting, firstName, monthLabel, monthName, monthShort, formatDate, formatDateLong, txLabel } from '../utils/format.js'
+import { money, signed, txKind, greeting, firstName, monthLabel, monthName, monthShort, formatDate, formatDateLong, txLabel } from '../utils/format.js'
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
 import { CashFlowChart, MiniBars } from '../components/charts.jsx'
 import { CategoryLabel, CatLabel, DirIcon, PageHeader } from '../components/ui.jsx'
 export default function Dashboard() {
-  const { user, transactions, budgets, categories } = useApp()
+  const { user, transactions, budgets, categories, ledger, savingsReady, activeGoals } = useApp()
   const name = (id) => categories.find((x) => x.id === id)?.name ?? 'Uncategorized'
   const month = c.inMonth(transactions, CURRENT_MONTH), income = c.calculateIncome(month), expenses = c.calculateExpenses(month), net = income - expenses
   const [top] = c.groupExpensesByCategory(month), prev = c.inMonth(transactions, c.shiftMonth(CURRENT_MONTH, -1)), prevExp = c.calculateExpenses(prev)
@@ -23,15 +23,20 @@ export default function Dashboard() {
   return (<>
     <PageHeader title={`${greeting()}, ${firstName(user)}`} subtitle={`Here is your financial overview for ${monthLabel(CURRENT_MONTH)}.`} />
     <>
-      <section className="hero-balance" aria-label="Balance"><div className="hero-main"><div className="balance-label">Current balance</div><div className="balance">{money(c.calculateBalance(transactions, CURRENT_MONTH))}</div><div className="small hero-updated">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
+      <div className="balances">
+      <section className="hero-balance" aria-label="Current Balance"><div className="hero-main"><div className="balance-label">Current Balance</div><div className="balance">{money(ledger.current)}</div><div className="small hero-updated">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
         <div className="figures">
           <div><div className="muted">Monthly income</div><div className="v pos">+{money(income)}</div></div>
           <div><div className="muted">Monthly expenses</div><div className="v neg">−{money(expenses)}</div></div>
           <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>
+        {savingsReady && <section className="savings-balance" aria-label="Savings"><div><div className="balance-label">Savings</div><div className="sb-amount">{money(ledger.savings)}</div>
+          <div className="muted small">{activeGoals.length ? `${money(ledger.allocated)} set aside for goals` : 'Money you have put aside'}</div></div>
+          <Link to="/savings" className="pv-link">Manage savings<ChevronRight size={16} aria-hidden="true" /></Link></section>}
+      </div>
       <div className="previews cards">
         <Preview title="Recent transactions" to="/transactions" action="View All Transaction History">
           {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
-            <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><DirIcon type={t.type} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{t.type === 'income' ? 'Income' : 'Expense'}</span></span></Link></li>)}</ul>}</Preview>
+            <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><DirIcon type={t.type} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{txKind(t)}</span></span></Link></li>)}</ul>}</Preview>
         <Preview title="Budgets" sub={monthLabel(CURRENT_MONTH)} to="/budgets" action="View All Budgets">
           {budgetTop.length === 0 ? <p className="muted pv-empty">No budgets set for this month. <Link to="/budgets/new">Create a budget</Link></p> :
             <ul className="bp-list">{budgetTop.map(({ b, spent, remaining, pct }) => <li key={b.id}><div className="bp-top"><span>{name(b.categoryId)}</span><span className="muted small">{money(spent)} of {money(b.amount)}</span></div>

@@ -38,8 +38,8 @@ export default function Dashboard() {
               <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${name(b.categoryId)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
               <div className={`small bp-note ${remaining < 0 ? 'neg' : 'muted'}`}>{remaining < 0 ? `${money(-remaining)} over budget` : `${money(remaining)} left`} · {pct}% used</div></li>)}</ul>}</Preview></div>
       <div className="previews charts">
-        <section className="preview flow-card" aria-label="Monthly money flow"><div className="preview-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
-        <Preview title="Reports" to="/reports" action="View Reports">
+        <section className="preview flow-card" aria-label="Monthly money flow"><div className="pv-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
+        <Preview title="Reports" to="/reports" action="View Reports" pad>
           {transactions.length === 0 ? <p className="muted pv-empty">Add transactions and your reports will fill in.</p> : <>
             <MiniBars data={trend} />
             <div className="legend small"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></div>
@@ -52,6 +52,6 @@ export default function Dashboard() {
 </>
   </>)
 }
-const Preview = ({ title, sub, to, action, tall, children }) => (
-  <section className={'preview' + (tall ? ' tall' : '')} aria-label={title}><div className="preview-body"><h2>{title}</h2>{sub && <p className="muted small">{sub}</p>}{children}</div>
-    <Link to={to} className="preview-foot">{action}<ChevronRight size={16} aria-hidden="true" /></Link></section>)
+const Preview = ({ title, sub, to, action, pad, children }) => (
+  <section className="preview" aria-label={title}><div className="pv-head"><div className="pv-title"><h2>{title}</h2>{sub && <p className="muted small">{sub}</p>}</div>
+    <Link to={to} className="pv-link">{action}<ChevronRight size={16} aria-hidden="true" /></Link></div><div className={'pv-body' + (pad ? ' pad' : '')}>{children}</div></section>)

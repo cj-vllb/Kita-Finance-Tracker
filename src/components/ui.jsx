@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useCallback, useRef, useState, useId, isValidElement, cloneElement } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, MoreVertical, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { Eye, EyeOff, MoreVertical, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, X } from 'lucide-react'
 import { initials } from '../utils/format.js'
 import { colorHex } from '../utils/colors.js'
 // Shared dialog behaviour: focus moves in, Tab stays inside, Escape closes, page behind does not scroll, focus returns on close.
@@ -82,7 +82,7 @@ export function ConfirmDialog({ title, children, confirmLabel, onConfirm, onCanc
   const confirm = async () => { if (busy || disabled) return; setBusy(true); try { await onConfirm() } finally { setBusy(false) } }
   useDialog(ref, dismiss, focusRef || cancel)
   return (<div className="scrim" data-state={state} onMouseDown={(e) => e.target === e.currentTarget && dismiss()}>
-    <div className="dialog" data-state={state} role="dialog" aria-modal="true" aria-labelledby="dlg-title" ref={ref}><h2 id="dlg-title">{title}</h2><div className="dialog-body">{children}</div>
+    <div className="dialog" data-state={state} role="dialog" aria-modal="true" aria-labelledby="dlg-title" ref={ref}><div className="dialog-head"><h2 id="dlg-title">{title}</h2><button type="button" className="icon-btn dialog-x" aria-label="Close dialog" onClick={dismiss}><X size={18} aria-hidden="true" /></button></div><div className="dialog-body">{children}</div>
       <div className="dialog-actions"><button ref={cancel} className="btn" onClick={dismiss}>{infoOnly ? 'Close' : 'Cancel'}</button>
         {!infoOnly && <button className={'btn ' + (danger ? 'btn-danger' : 'btn-primary')} disabled={busy || disabled} onClick={confirm}>{confirmLabel}</button>}</div></div></div>)
 }

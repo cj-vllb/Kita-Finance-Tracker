@@ -124,7 +124,9 @@ end $$;
 -- account (which cascades through these tables in an arbitrary order) is never blocked.
 create or replace function public.kita_ledger_check(p_user uuid, p_guard_current boolean default false) returns void
 language plpgsql security definer set search_path = '' as $$
-declare r record; cur numeric;
+declare
+  r record;
+  cur numeric;
 begin
   if not exists (select 1 from public.profiles where id = p_user) then return; end if;
   perform public.kita_lock_user(p_user);
@@ -169,49 +171,97 @@ end $$;
 -- 6) Triggers ----------------------------------------------------------------------------------------------------------------------------
 create or replace function public.kita_tx_ledger_trg() returns trigger
 language plpgsql security definer set search_path = '' as $$
-declare uid uuid := coalesce(new.user_id, old.user_id), guard boolean := false, touches boolean;
+declare
+  uid uuid;
+  guard boolean := false;
+  touches boolean := false;
 begin
+  -- NEW only exists for INSERT/UPDATE and OLD only for UPDATE/DELETE, so each is read only inside the branch where it exists.
+  if tg_op = 'DELETE' then
+    uid := old.user_id;
+    touches := (old.balance = 'savings');
+  elsif tg_op = 'INSERT' then
+    uid := new.user_id;
+    touches := (new.balance = 'savings');
+  else
+    uid := new.user_id;
+    touches := (new.balance = 'savings') or (old.balance = 'savings');
+  end if;
   -- Taking income away from Current Balance (edit/delete) is refused if it would leave Current Balance negative, but only for people who have
   -- already moved money to Savings. Everyone else keeps the original behaviour.
-  if tg_op in ('UPDATE','DELETE') and old.type = 'income' and old.balance = 'current'
-     and exists (select 1 from public.savings_transfers t where t.user_id = old.user_id and t.direction = 'to_savings') then guard := true; end if;
-  touches := guard or (tg_op <> 'DELETE' and new.balance = 'savings') or (tg_op <> 'INSERT' and old.balance = 'savings');
-  if touches then perform public.kita_ledger_check(uid, guard); end if;
+  if tg_op <> 'INSERT' then
+    if old.type = 'income' and old.balance = 'current'
+       and exists (select 1 from public.savings_transfers t where t.user_id = old.user_id and t.direction = 'to_savings') then
+      guard := true;
+    end if;
+  end if;
+  if guard or touches then perform public.kita_ledger_check(uid, guard); end if;
   return null;
 end $$;
 
 create or replace function public.kita_transfer_ledger_trg() returns trigger
 language plpgsql security definer set search_path = '' as $$
-declare uid uuid := coalesce(new.user_id, old.user_id), guard boolean;
+declare
+  uid uuid;
+  guard boolean := false;
 begin
-  guard := (tg_op <> 'DELETE' and new.direction = 'to_savings') or (tg_op <> 'INSERT' and old.direction = 'to_current');
+  -- Moving money into Savings, or undoing a withdrawal, takes money out of Current Balance, so Current Balance must stay >= 0.
+  if tg_op = 'DELETE' then
+    uid := old.user_id;
+    guard := (old.direction = 'to_current');
+  elsif tg_op = 'INSERT' then
+    uid := new.user_id;
+    guard := (new.direction = 'to_savings');
+  else
+    uid := new.user_id;
+    guard := (new.direction = 'to_savings') or (old.direction = 'to_current');
+  end if;
   perform public.kita_ledger_check(uid, guard);
   return null;
 end $$;
 
 create or replace function public.kita_realloc_ledger_trg() returns trigger
 language plpgsql security definer set search_path = '' as $$
-begin perform public.kita_ledger_check(coalesce(new.user_id, old.user_id), false); return null; end $$;
+declare
+  uid uuid;
+begin
+  -- Also used by savings_goals (after archiving), which has no DELETE trigger.
+  if tg_op = 'DELETE' then uid := old.user_id; else uid := new.user_id; end if;
+  perform public.kita_ledger_check(uid, false);
+  return null;
+end $$;
 
 -- New activity may not point at an archived (deleted) goal.
 create or replace function public.kita_goal_ref_trg() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
+  -- BEFORE INSERT OR UPDATE only: NEW always exists, OLD only for UPDATE.
   if tg_table_name = 'savings_reallocations' then
-    if tg_op = 'INSERT' or new.from_goal_id is distinct from old.from_goal_id then perform public.kita_assert_goal_active(new.from_goal_id); end if;
-    if tg_op = 'INSERT' or new.to_goal_id is distinct from old.to_goal_id then perform public.kita_assert_goal_active(new.to_goal_id); end if;
-  elsif tg_op = 'INSERT' or new.goal_id is distinct from old.goal_id then
-    perform public.kita_assert_goal_active(new.goal_id);
+    if tg_op = 'INSERT' then
+      perform public.kita_assert_goal_active(new.from_goal_id);
+      perform public.kita_assert_goal_active(new.to_goal_id);
+    else
+      if new.from_goal_id is distinct from old.from_goal_id then perform public.kita_assert_goal_active(new.from_goal_id); end if;
+      if new.to_goal_id is distinct from old.to_goal_id then perform public.kita_assert_goal_active(new.to_goal_id); end if;
+    end if;
+  else
+    if tg_op = 'INSERT' then
+      perform public.kita_assert_goal_active(new.goal_id);
+    elsif new.goal_id is distinct from old.goal_id then
+      perform public.kita_assert_goal_active(new.goal_id);
+    end if;
   end if;
   return new;
 end $$;
 
--- A goal can only be archived once it holds nothing, so earmarked money can never get stuck in a hidden goal.
+-- A goal can only be archived once it holds nothing, so earmarked money can never get stuck in a hidden goal. (BEFORE UPDATE: OLD and NEW exist.)
 create or replace function public.kita_goal_archive_trg() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
-  if old.archived_at is null and new.archived_at is not null and public.kita_bucket(new.user_id, new.id) <> 0 then
-    raise exception 'KITA: This goal still holds money. Move it to General Savings or another goal first.' using errcode = 'P0001';
+  if old.archived_at is null and new.archived_at is not null then
+    if public.kita_bucket(new.user_id, new.id) <> 0 then
+      raise exception 'KITA: This goal still holds money. Move it to General Savings or another goal first.' using errcode = 'P0001';
+    end if;
   end if;
   return new;
 end $$;
@@ -244,7 +294,10 @@ create trigger savings_goals_archive_chk before update on public.savings_goals f
 -- The goal row and all history stay; the goal just disappears from lists and pickers.
 create or replace function public.archive_savings_goal(p_goal uuid, p_move_to uuid default null, p_date date default current_date) returns void
 language plpgsql security definer set search_path = '' as $$
-declare uid uuid := auth.uid(), g public.savings_goals; bal numeric;
+declare
+  uid uuid := auth.uid();
+  g public.savings_goals;
+  bal numeric;
 begin
   if uid is null then raise exception 'KITA: Please sign in again.' using errcode = '42501'; end if;
   select * into g from public.savings_goals where id = p_goal and user_id = uid and archived_at is null;
@@ -284,10 +337,14 @@ alter table public.savings_transfers enable row level security;
 alter table public.savings_reallocations enable row level security;
 
 do $$
-declare t text; op text;
+declare
+  t text;
+  op text;
+  ops text[];
 begin
   foreach t in array array['savings_goals','savings_transfers','savings_reallocations'] loop
-    foreach op in array case t when 'savings_goals' then array['select','insert','update'] else array['select','insert','delete'] end loop
+    ops := case t when 'savings_goals' then array['select','insert','update'] else array['select','insert','delete'] end;
+    foreach op in array ops loop
       execute format('drop policy if exists %1$s_%2$s_own on public.%1$I', t, op);
     end loop;
     execute format('create policy %1$s_select_own on public.%1$I for select to authenticated using (user_id = (select auth.uid()))', t);

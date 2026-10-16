@@ -53,3 +53,37 @@ export function goalProgress(goal, saved) {
   return { saved: s, target, remaining: Math.max(0, toMoney(target - s)), pct: target > 0 ? Math.min(100, (s / target) * 100) : 0, reached: target > 0 && s >= target }
 }
 export const pctText = (pct) => `${Number(pct.toFixed(1))}%`
+
+// ---- One transfer form for every movement of money (Savings > Add money) ----
+// A "place" is Current Balance, General Savings (unassigned) or one active goal (its id). The same ledger tables as before do the work, nothing new:
+//   Current Balance -> General Savings / goal   savings_transfers  to_savings (goal NULL = General)
+//   General Savings / goal -> Current Balance   savings_transfers  to_current (goal NULL = General)
+//   General Savings / goal -> General / goal    savings_reallocations (goal NULL = General)
+// None of them is income or an expense. The database re-checks every one under its per-user lock; the checks here only give an early, clear message.
+export const CURRENT = 'current', GENERAL = 'general'
+const goalOf = (place) => (place === GENERAL ? '' : place)
+// Add money opened from a goal (or from General Savings, goalId '') pays from Current Balance into that place.
+export const transferDefaults = (goalId = '') => ({ from: CURRENT, to: goalId || GENERAL })
+export const placeAmount = (ledger, place) => (place === CURRENT ? ledger.current : place === GENERAL ? ledger.unassigned : ledger.goals[place] ?? 0)
+// Which database write a (from, to) pair needs, or null when the pair makes no sense (same place twice).
+export function transferPlan(from, to) {
+  if (!from || !to || from === to) return null
+  if (from === CURRENT) return { kind: 'transfer', direction: 'to_savings', goalId: goalOf(to) }
+  if (to === CURRENT) return { kind: 'transfer', direction: 'to_current', goalId: goalOf(from) }
+  return { kind: 'move', fromGoalId: goalOf(from), toGoalId: goalOf(to) }
+}
+// First problem with a requested transfer as { field, message }, or null. `activeGoals` are the goals that may be used (deleted goals are not in it).
+export function transferProblem(ledger, activeGoals, { from, to, amount }, fmt = (n) => String(n)) {
+  const known = (p) => p === CURRENT || p === GENERAL || activeGoals.some((g) => g.id === p)
+  const name = (p) => (p === CURRENT ? 'Current Balance' : p === GENERAL ? 'General Savings' : activeGoals.find((g) => g.id === p)?.name || 'That goal')
+  if (!known(from)) return { field: 'from', message: 'Choose where the money comes from. That goal may have been deleted.' }
+  if (!known(to)) return { field: 'to', message: 'Choose where the money goes. That goal may have been deleted.' }
+  if (from === to) return { field: 'to', message: 'Choose a different place to move the money to.' }
+  const raw = typeof amount === 'string' ? amount.trim() : amount
+  if (raw === '' || raw == null || !Number.isFinite(Number(raw))) return { field: 'amount', message: 'Enter an amount.' }
+  const amt = toMoney(raw)
+  if (!(amt > 0)) return { field: 'amount', message: 'Enter an amount above zero.' }
+  const have = placeAmount(ledger, from)
+  if (cents(amt) > cents(have)) return { field: 'amount', message: `${name(from)} only has ${fmt(Math.max(0, have))} available. Enter a smaller amount.` }
+  return null
+}

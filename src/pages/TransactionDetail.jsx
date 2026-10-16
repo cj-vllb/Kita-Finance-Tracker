@@ -9,7 +9,7 @@ export default function TransactionDetail() {
   if (!t) return <ErrorState title="Transaction not found" text="It may have been deleted." />
   const isIn = t.type === 'income'
   return (<>
-    <PageHeader title={txLabel(t, categories)} subtitle={`${isIn ? 'Income' : 'Expense'} · Recorded ${formatDateLong(t.date)}`} />
+    <PageHeader title={txLabel(t, categories)} />
     <p className={'detail-amount ' + (isIn ? 'pos' : 'neg')}>{signed(t.amount, t.type)}</p>
     <div className="form-actions" style={{ marginBottom: 32 }}><Link className="btn btn-primary" to={`/transactions/${t.id}/edit`}>Edit</Link><button className="btn btn-danger-outline" onClick={() => setConfirm(true)}>Delete</button><Link className="btn" to="/transactions">Back to transactions</Link></div>
     <dl className="dl"><dt>Title</dt><dd>{txLabel(t, categories)}</dd><dt>Amount</dt><dd className={isIn ? 'pos' : 'neg'}>{signed(t.amount, t.type)}</dd><dt>Type</dt><dd>{isIn ? 'Income' : 'Expense'}</dd><dt>Category</dt><dd><CategoryLabel id={t.categoryId} categories={categories} /></dd>

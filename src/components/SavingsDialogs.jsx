@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { useApp } from '../context/AppContext.jsx'
-import { ConfirmDialog, Field } from './ui.jsx'
+import { ConfirmDialog, Field, focusFirstInvalid } from './ui.jsx'
 import { money } from '../utils/format.js'
 import { TODAY } from '../utils/dates.js'
-import { bucketAmount, toMoney } from '../utils/ledger.js'
+import { bucketAmount, toMoney, CURRENT, GENERAL, transferDefaults, transferPlan, transferProblem, placeAmount } from '../utils/ledger.js'
 
 // Dialogs for the Savings page. They use the same ConfirmDialog, Field and input styles as the rest of the app. Every rule that protects the
 // money (enough funds, no negative goal, ownership) is enforced again by the database; the checks here only give an early, clear message.
@@ -21,43 +21,67 @@ function GoalOptions({ goals, skip }) {
 }
 const bucketName = (goals, id) => (id ? goals.find((g) => g.id === id)?.name || 'that goal' : 'General Savings')
 
-// mode: 'add' (Current Balance -> Savings), 'withdraw' (Savings -> Current Balance), 'move' (inside Savings, balances do not change).
-export function MoveDialog({ mode, goalId = '', onClose }) {
-  const { ledger, activeGoals, settings, addTransfer, moveSavings, notify } = useApp()
-  const [f, setF] = useState({ amount: '', goal: goalId, to: '', date: TODAY, note: '' }), [err, setErr] = useState({}), busy = useRef(false), first = useRef()
+// Add money: ONE form for every movement of money. From and To can each be Current Balance, General Savings or an active goal; which database
+// write that needs (transfer or reallocation) is decided by transferPlan(). Opened from a goal (or General Savings) it starts as
+// Current Balance -> that place, and the person can change either side.
+export function TransferDialog({ goalId = '', onClose }) {
+  const { ledger, activeGoals, addTransfer, moveSavings, notify } = useApp()
+  const [f, setF] = useState(() => ({ ...transferDefaults(goalId), amount: '' })), [err, setErr] = useState({}), busy = useRef(false), first = useRef()
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setErr({}) }
-  // Move: the destination can never equal the source, so a clashing value falls back to the first valid choice.
-  const toValue = f.to !== f.goal ? f.to : f.goal === '' ? activeGoals[0]?.id || '' : ''
-  const text = { add: ['Add to Savings', 'Add to Savings'], withdraw: ['Withdraw to Current Balance', 'Withdraw'], move: ['Move money within Savings', 'Move money'] }[mode]
+  const label = (p) => (p === CURRENT ? 'Current Balance' : p === GENERAL ? 'General Savings' : activeGoals.find((g) => g.id === p)?.name || 'that goal')
+  const submit = async () => {
+    if (busy.current) return
+    const problem = transferProblem(ledger, activeGoals, f, money)
+    if (problem) { setErr({ [problem.field]: problem.message }); return focusFirstInvalid() }
+    const amt = toMoney(f.amount), plan = transferPlan(f.from, f.to)
+    busy.current = true
+    const error = plan.kind === 'transfer'
+      ? await addTransfer({ direction: plan.direction, amount: amt, date: TODAY, note: '', goalId: plan.goalId })
+      : await moveSavings({ fromGoalId: plan.fromGoalId, toGoalId: plan.toGoalId, amount: amt, date: TODAY, note: '' })
+    busy.current = false
+    if (error) return setErr({ form: error })
+    notify(`${money(amt)} moved from ${label(f.from)} to ${label(f.to)}.`)
+    onClose()
+  }
+  const places = (<><option value={CURRENT}>{`Current Balance (${money(ledger.current)})`}</option><option value={GENERAL}>{`General Savings (${money(ledger.unassigned)})`}</option>
+    {activeGoals.map((g) => <option key={g.id} value={g.id}>{`${g.name} (${money(bucketAmount(ledger, g.id))})`}</option>)}</>)
+  return (<ConfirmDialog title="Move money" confirmLabel="Transfer" danger={false} focusRef={first} onCancel={onClose} onConfirm={submit}>
+    <div className="sv-dialog" ref={first} onKeyDown={enterSubmits(submit)}>
+      <p className="muted small">Moves money you already have between your balances and goals. This is not income or an expense.</p>
+      <Field label="From" error={err.from} hint={`Available: ${money(Math.max(0, placeAmount(ledger, f.from)))}`}><select className="input" value={f.from} onChange={set('from')} aria-invalid={!!err.from} autoFocus>{places}</select></Field>
+      <Field label="To" error={err.to} hint={`Currently holds: ${money(placeAmount(ledger, f.to))}`}><select className="input" value={f.to} onChange={set('to')} aria-invalid={!!err.to}>{places}</select></Field>
+      <Field label="Amount" error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={!!err.amount} /></Field>
+      {err.form && <p className="field-error" role="alert">{err.form}</p>}
+    </div></ConfirmDialog>)
+}
+
+// Withdraw: Savings (General or one goal) -> Current Balance.
+export function WithdrawDialog({ goalId = '', onClose }) {
+  const { ledger, activeGoals, settings, addTransfer, notify } = useApp()
+  const [f, setF] = useState({ amount: '', goal: goalId, date: TODAY, note: '' }), [err, setErr] = useState({}), busy = useRef(false), first = useRef()
+  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setErr({}) }
   const submit = async () => {
     if (busy.current) return
     const amt = toMoney(f.amount), er = {}
-    if (!f.amount || Number.isNaN(Number(f.amount))) er.amount = 'Enter an amount.'
+    if (!f.amount || !Number.isFinite(Number(f.amount))) er.amount = 'Enter an amount.'
     else if (!(amt > 0)) er.amount = 'Enter an amount above zero.'
-    else if (mode === 'add' && amt > ledger.current) er.amount = `You only have ${money(ledger.current)} in Current Balance. Enter a smaller amount.`
-    else if (mode !== 'add' && amt > bucketAmount(ledger, f.goal)) er.amount = `${bucketName(activeGoals, f.goal)} only holds ${money(bucketAmount(ledger, f.goal))}. Enter a smaller amount.`
-    if (mode === 'move' && f.goal === toValue) er.to = 'Choose a different place to move the money to.'
-    if (mode !== 'move' && !f.date) er.date = 'Choose a date.'
+    else if (amt > bucketAmount(ledger, f.goal)) er.amount = `${bucketName(activeGoals, f.goal)} only holds ${money(bucketAmount(ledger, f.goal))}. Enter a smaller amount.`
+    if (!f.date) er.date = 'Choose a date.'
     setErr(er); if (Object.keys(er).length) return first.current?.querySelector('[aria-invalid="true"]')?.focus()
     busy.current = true
-    const error = mode === 'move'
-      ? await moveSavings({ fromGoalId: f.goal, toGoalId: toValue, amount: amt, date: TODAY, note: f.note })
-      : await addTransfer({ direction: mode === 'add' ? 'to_savings' : 'to_current', amount: amt, date: f.date, note: f.note, goalId: f.goal })
+    const error = await addTransfer({ direction: 'to_current', amount: amt, date: f.date, note: f.note, goalId: f.goal })
     busy.current = false
     if (error) return setErr({ form: error })
-    notify(mode === 'add' ? `${money(amt)} added to Savings.` : mode === 'withdraw' ? `${money(amt)} moved to Current Balance.` : `${money(amt)} moved.`)
+    notify(`${money(amt)} moved to Current Balance.`)
     onClose()
   }
-  return (<ConfirmDialog title={text[0]} confirmLabel={text[1]} danger={false} focusRef={first} onCancel={onClose} onConfirm={submit}>
+  return (<ConfirmDialog title="Withdraw to Current Balance" confirmLabel="Withdraw" danger={false} focusRef={first} onCancel={onClose} onConfirm={submit}>
     <div className="sv-dialog" ref={first} onKeyDown={enterSubmits(submit)}>
-      <p className="muted small">{mode === 'add' ? 'Moves money you already have from Current Balance into Savings. This is not income or an expense.' : mode === 'withdraw' ? 'Moves money from Savings back to Current Balance. This is not income or an expense.' : 'Changes which goal the money is set aside for. Current Balance and Savings stay the same.'}</p>
-      <Field label={`Amount (${settings.currency})`} error={err.amount} hint={mode === 'add' ? `Available in Current Balance: ${money(ledger.current)}` : undefined}>
+      <p className="muted small">Moves money from Savings back to Current Balance. This is not income or an expense.</p>
+      <Field label={`Amount (${settings.currency})`} error={err.amount}>
         <input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={!!err.amount} autoFocus /></Field>
-      <Field label={mode === 'add' ? 'Add to' : mode === 'withdraw' ? 'Withdraw from' : 'Move from'} hint={mode === 'add' ? 'Choose a goal, or keep it as General Savings.' : undefined}>
-        {mode === 'add' ? <select className="input" value={f.goal} onChange={set('goal')}><GoalOptions goals={activeGoals} /></select>
-          : <select className="input" value={f.goal} onChange={set('goal')}><BucketOptions goals={activeGoals} ledger={ledger} /></select>}</Field>
-      {mode === 'move' && <Field label="Move to" error={err.to}><select className="input" value={toValue} onChange={set('to')} aria-invalid={!!err.to}><GoalOptions goals={activeGoals} skip={f.goal} /></select></Field>}
-      {mode !== 'move' && <Field label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={!!err.date} /></Field>}
+      <Field label="Withdraw from"><select className="input" value={f.goal} onChange={set('goal')}><BucketOptions goals={activeGoals} ledger={ledger} /></select></Field>
+      <Field label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={!!err.date} /></Field>
       <Field label="Note (optional)"><input className="input" maxLength={120} value={f.note} onChange={set('note')} autoComplete="off" /></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
     </div></ConfirmDialog>)

@@ -55,3 +55,16 @@ Deployed on Vercel; `vercel.json` rewrites all routes to `index.html` for client
 ## Author
 
 Created by CJ, [www.workwithcj.digital](https://www.workwithcj.digital)
+
+## Release notes (About page update log)
+
+The update log in `src/data/changelog.js` is shown to people using the app, so it follows these rules. Check them before adding or editing an entry.
+
+1. Describe only features and improvements that were actually implemented and released. Never list unfinished work.
+2. Write for ordinary TrackMyKita users: what got better or easier, not how it was built.
+3. Leave out implementation detail (components, hooks, state, database triggers, functions, migrations, policies).
+4. Keep it short: about 2 to 5 short bullets per normal release, fewer for a small one. Do not repeat the same change in several bullets or pad to reach a number.
+5. Keep version numbers and release dates accurate. Use the real date a version ships; never invent or change a date without evidence.
+6. Put migration, testing and deployment notes in developer documentation (this README, `SUPABASE_SETUP.md`), not in the update log.
+
+Good: "Improved the reliability of savings transfers." Avoid: "Added a trigger that validates the goal foreign key."

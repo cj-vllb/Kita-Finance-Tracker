@@ -39,6 +39,8 @@ export default function Settings() {
         <Row label="Export transactions" action={<button className="btn" onClick={exportCsv}><Download size={16} aria-hidden="true" />Export CSV</button>}>Download all your transactions as a spreadsheet file</Row></section>
       </div>
       <div className="settings-col">
+      <section className="card" aria-labelledby="s-help"><h2 id="s-help">Help</h2>
+        <Link to="/help" className="setting-row setting-link"><div className="setting-text"><div>Help Center</div><div className="muted small">Answers about using TrackMyKita</div></div><ChevronRight size={18} aria-hidden="true" /></Link></section>
       <section className="card" aria-labelledby="s-about"><h2 id="s-about">About</h2>
         <Link to="/settings/about" className="setting-row setting-link"><div className="setting-text"><div>About TrackMyKita</div><div className="muted small">Version {APP_VERSION}, update log and creator</div></div><ChevronRight size={18} aria-hidden="true" /></Link>
         <Link to="/privacy" className="setting-row setting-link"><div className="setting-text"><div>Privacy Policy</div><div className="muted small">What information TrackMyKita collects and why</div></div><ChevronRight size={18} aria-hidden="true" /></Link>

@@ -39,7 +39,7 @@ export default function TransactionForm() {
   }
   const bad = (k) => !!err[k]
   return (<>
-    <PageHeader title={existing ? 'Edit transaction' : 'New transaction'} subtitle={existing ? 'Changes apply to your records and reports straight away.' : 'Record money coming in or going out.'} />
+    <PageHeader title={existing ? 'Edit transaction' : 'New transaction'} />
     <form className={'form tx-form' + (savingsReady ? ' has-bal' : '')} onSubmit={submit} noValidate>
       <Field label="Type"><Segmented label="Type" value={f.type} onChange={(type) => setF({ ...f, type, categoryId: '' })} options={[['expense', 'Expense'], ['income', 'Income']]} /></Field>
       {savingsReady && <Field className="f-bal" label={f.type === 'income' ? 'Add to' : 'Paid from'} hint={BALANCE_HINT[f.type][f.balance]}><Segmented label={f.type === 'income' ? 'Add to' : 'Paid from'} value={f.balance} onChange={(balance) => { setF({ ...f, balance, goalId: '' }); setErr(({ goal, ...rest }) => rest) }} options={[['current', 'Current Balance'], ['savings', 'Savings']]} /></Field>}

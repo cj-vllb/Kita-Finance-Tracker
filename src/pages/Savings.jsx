@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { money, formatDate, txLabel } from '../utils/format.js'
 import { bucketAmount, goalProgress, pctText, isSavings } from '../utils/ledger.js'
 import { PageHeader, EmptyState, RowMenu } from '../components/ui.jsx'
-import { MoveDialog, GoalDialog, DeleteGoalDialog, UndoDialog } from '../components/SavingsDialogs.jsx'
+import { TransferDialog, WithdrawDialog, GoalDialog, DeleteGoalDialog, UndoDialog } from '../components/SavingsDialogs.jsx'
 
 const PAGE = 10
 export default function Savings() {
@@ -22,26 +22,24 @@ export default function Savings() {
 
   const open = (kind, extra) => setDlg({ kind, ...extra })
   const hasGoals = activeGoals.length > 0
-  // Withdrawing or moving needs money in that bucket; moving out of General Savings also needs a goal to move it to.
+  // Add money (one form for every transfer) opens with this place as the destination. Withdrawing needs money in that place.
   const rowMenu = (id) => { const held = bucketAmount(ledger, id) > 0; return [
     { label: 'Add money', icon: Plus, onSelect: () => open('add', { goalId: id }) },
     ...(held ? [{ label: 'Withdraw to Current Balance', icon: ArrowUpRight, onSelect: () => open('withdraw', { goalId: id }) }] : []),
-    ...(held && (id !== '' || hasGoals) ? [{ label: 'Move money', icon: ArrowLeftRight, onSelect: () => open('move', { goalId: id }) }] : []),
   ] }
   const describe = (e) => e.kind === 'transfer'
     ? { Icon: e.t.direction === 'to_savings' ? ArrowDownLeft : ArrowUpRight, title: e.t.direction === 'to_savings' ? 'Added to Savings' : 'Withdrawn to Current Balance', kind: 'Transfer',
-      meta: e.t.direction === 'to_savings' ? `From Current Balance to ${name(e.t.goalId)}` : `From ${name(e.t.goalId)} to Current Balance`, amount: (e.t.direction === 'to_savings' ? '+' : '−') + money(e.t.amount), cls: '', note: e.t.note, dir: e.t.direction === 'to_savings' ? 'in' : 'out' }
+      meta: e.t.direction === 'to_savings' ? `Current Balance → ${name(e.t.goalId)}` : `${name(e.t.goalId)} → Current Balance`, amount: (e.t.direction === 'to_savings' ? '+' : '−') + money(e.t.amount), cls: '', note: e.t.note, dir: e.t.direction === 'to_savings' ? 'in' : 'out' }
     : e.kind === 'move'
-      ? { Icon: ArrowLeftRight, title: 'Moved within Savings', kind: 'Reallocation', meta: `${name(e.r.fromGoalId)} to ${name(e.r.toGoalId)}`, amount: money(e.r.amount), cls: '', note: e.r.note, dir: 'mid' }
+      ? { Icon: ArrowLeftRight, title: 'Moved within Savings', kind: 'Reallocation', meta: `${name(e.r.fromGoalId)} → ${name(e.r.toGoalId)}`, amount: money(e.r.amount), cls: '', note: e.r.note, dir: 'mid' }
       : { Icon: e.t.type === 'income' ? ArrowDownLeft : ArrowUpRight, title: txLabel(e.t, categories), kind: e.t.type === 'income' ? 'Income' : 'Expense', meta: `${e.t.type === 'income' ? 'Added to' : 'Paid from'} ${name(e.t.goalId)}`, amount: (e.t.type === 'income' ? '+' : '−') + money(e.t.amount), cls: e.t.type === 'income' ? 'pos' : 'neg', note: e.t.notes, dir: e.t.type === 'income' ? 'in' : 'out', to: `/transactions/${e.t.id}` }
   const summary = (e) => { const d = describe(e); return `${d.title}, ${d.amount}, ${formatDate(e.date)}. ${d.meta}.` }
   const delGoal = dlg?.kind === 'delete' ? goals.find((g) => g.id === dlg.id) : null
 
   return (<>
-    <PageHeader title="Savings" subtitle="Money you have put aside, kept separate from your Current Balance.">
+    <PageHeader title="Savings">
       <button className="btn btn-primary" onClick={() => open('add', { goalId: '' })}>Add to Savings</button>
-      <button className="btn" onClick={() => open('withdraw', { goalId: '' })} disabled={ledger.savings <= 0}>Withdraw</button>
-      <button className="btn" onClick={() => open('goal')}>New goal</button></PageHeader>
+      <button className="btn" onClick={() => open('withdraw', { goalId: '' })} disabled={ledger.savings <= 0}>Withdraw</button></PageHeader>
 
     <section className="card sv-overview" aria-label="Savings overview">
       <div><div className="balance-label">Savings balance</div><div className="sv-big">{money(ledger.savings)}</div></div>
@@ -51,11 +49,11 @@ export default function Savings() {
     <section className="card sv-section" aria-labelledby="sv-goals-h">
       <div className="sv-head"><h2 id="sv-goals-h">Goals</h2>{hasGoals && <button className="btn-link" onClick={() => open('goal')}>New goal</button>}</div>
       <ul className="sv-list">
-        <li className="sv-item sv-general"><div className="sv-top"><span className="sv-name">General Savings</span><span className="sv-amt">{money(ledger.unassigned)}</span>
+        <li className="sv-item sv-general"><div className="sv-top"><div className="sv-id"><span className="sv-name">General Savings</span><span className="sv-amt">{money(ledger.unassigned)}</span></div>
           <RowMenu label="Options for General Savings" items={rowMenu('')} /></div>
           <div className="muted small">Unassigned. Not set aside for a particular goal.</div></li>
         {activeGoals.map((g) => { const p = goalProgress(g, bucketAmount(ledger, g.id)); return (
-          <li key={g.id} className="sv-item"><div className="sv-top"><span className="sv-name">{g.name}</span><span className="muted small sv-amt">{money(p.saved)} of {money(p.target)}</span>
+          <li key={g.id} className="sv-item"><div className="sv-top"><div className="sv-id"><span className="sv-name">{g.name}</span><span className="muted small sv-amt">{money(p.saved)} of {money(p.target)}</span></div>
             <RowMenu label={`Options for ${g.name}`} items={[...rowMenu(g.id), { label: 'Edit goal', icon: Pencil, onSelect: () => open('goal', { id: g.id }) }, { label: 'Delete goal', icon: Trash2, danger: true, onSelect: () => open('delete', { id: g.id }) }]} /></div>
             <div className="bar" role="progressbar" aria-valuenow={Math.round(p.pct)} aria-valuemin="0" aria-valuemax="100" aria-label={`${g.name} progress`}><div className="bar-fill ok" style={{ width: p.pct + '%' }} /></div>
             <div className="small muted bp-note">{p.reached ? 'Goal reached' : `${money(p.remaining)} to go`} · {pctText(p.pct)} saved</div></li>) })}</ul>
@@ -74,7 +72,8 @@ export default function Savings() {
             <RowMenu label={`Actions for ${d.title}`} items={e.kind === 'tx' ? [{ label: 'View transaction', icon: Eye, to: d.to }] : [{ label: e.kind === 'transfer' ? 'Undo transfer' : 'Undo move', icon: Undo2, danger: true, onSelect: () => open('undo', { entry: e }) }]} /></div></li>) })}</ul>
         {activity.length > shown && <div className="sv-more"><button className="btn" onClick={() => setShown(shown + PAGE)}>Show more</button></div>}</>}</section>
 
-    {dlg?.kind && ['add', 'withdraw', 'move'].includes(dlg.kind) && <MoveDialog mode={dlg.kind} goalId={dlg.goalId || ''} onClose={() => setDlg(null)} />}
+    {dlg?.kind === 'add' && <TransferDialog goalId={dlg.goalId || ''} onClose={() => setDlg(null)} />}
+    {dlg?.kind === 'withdraw' && <WithdrawDialog goalId={dlg.goalId || ''} onClose={() => setDlg(null)} />}
     {dlg?.kind === 'goal' && <GoalDialog goal={dlg.id ? goals.find((g) => g.id === dlg.id) : null} onClose={() => setDlg(null)} />}
     {delGoal && <DeleteGoalDialog goal={delGoal} onClose={() => setDlg(null)} />}
     {dlg?.kind === 'undo' && <UndoDialog entry={dlg.entry} summary={summary(dlg.entry)} onClose={() => setDlg(null)} />}

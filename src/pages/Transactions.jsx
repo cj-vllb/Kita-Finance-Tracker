@@ -22,7 +22,7 @@ export default function Transactions() {
   const pages = Math.max(1, Math.ceil(rows.length / PAGE)), cur = Math.min(page, pages), view = rows.slice((cur - 1) * PAGE, cur * PAGE)
   const grouped = sort.key === 'date' // date headers only make sense when the list is in date order
   return (<>
-    <PageHeader title="Transactions" subtitle={`${rows.length} transaction${rows.length === 1 ? '' : 's'}${f.month === 'all' ? '' : ' in ' + monthLabel(f.month)}`}><Link to="/transactions/new" className="btn btn-primary">Add transaction</Link></PageHeader>
+    <PageHeader title="Transactions"><Link to="/transactions/new" className="btn btn-primary">Add transaction</Link></PageHeader>
     {transactions.length === 0 ? <EmptyState icon={ArrowLeftRight} title="No transactions yet" text="Your transactions will appear here once you add your first one." to="/transactions/new" action="Add transaction" /> : <>
       <div className="toolbar tx-toolbar">
         <div className="search"><Search size={16} aria-hidden="true" /><input className="input" type="search" placeholder="Search title or category" aria-label="Search transactions" value={f.q} onChange={set('q')} /></div>

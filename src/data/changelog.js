@@ -1,30 +1,34 @@
 // Newest first. User-facing only: short, general descriptions of what improved. No implementation detail.
+// Writing rules (see "Release notes" in README.md): 2 to 5 short bullets per version, written for people using the app, only for work that has shipped.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  { version: '1.3.3', date: 'October 16,2026', title: 'Smoother savings experience', items: [
+    'Simpler money transfers between balances and savings goals',
+    'Cleaner Savings and Dashboard layouts',
+    'Improved mobile layouts and page headers',
+    'Help Center now accessible from Settings',
+  ] },
   { version: '1.3.2', date: 'October 15, 2026', title: 'Easier navigation and private balances', items: [
-    'Switch between Balance and Savings on tablets and phones, and hide either amount with an eye button that remembers your choice',
-    'Transactions now open on all dates, and phones show a date heading above each day',
-    'A shorter More menu, with Help Center and Settings moved into your profile menu',
-    'A tidier two-column dashboard with money flow, reports, recent transactions and budgets side by side',
+    'Switch between Balance and Savings on tablets and phones',
+    'Hide or reveal each balance with an eye button that remembers your choice',
+    'Transactions open on all dates, with a date heading above each day on phones',
+    'A shorter More menu and a tidier two-column dashboard',
   ] },
   { version: '1.3.1', date: 'October 14, 2026', title: 'Savings and two balances', items: [
-    'A new Savings page to set money aside, track goals and see what is still unassigned',
-    'Your dashboard now shows Current Balance and Savings as two separate balances',
-    'Choose whether new income goes to Current Balance or Savings, and pay expenses from either one',
-    'Move money between Current Balance and Savings without it counting as income or spending',
-    'Savings goals with targets and progress, and an activity history you can undo',
+    'A new Savings page to set money aside and track goals with targets and progress',
+    'The dashboard shows Current Balance and Savings as two separate balances',
+    'Choose where income goes and which balance pays an expense',
+    'Move money between balances without it counting as income or spending, with a history you can undo',
   ] },
-  { version: '1.3', date: 'October 13, 2026', title: 'A new workspace design', items: [
-    'A redesigned workspace with a refined sidebar and a cleaner page layout',
-    'A reorganized dashboard with a clearer balance summary and a smoother money flow chart',
+  { version: '1.3', date: 'October 14, 2026', title: 'A new workspace design', items: [
+    'A redesigned workspace with a refined sidebar and cleaner pages',
+    'A reorganized dashboard with a clearer balance summary and money flow chart',
     'Cleaner lists, forms and dialogs, with a close button on every dialog',
-    'More consistent light and dark themes across every page',
+    'More consistent light and dark themes',
   ] },
   { version: '1.2.7', date: 'October 12, 2026', title: 'Mobile polish and Help Center', items: [
     'A shorter, better balanced landing page on phones and tablets',
-    'A more realistic 3D smartphone on the landing page',
-    'Simpler feature sections and footer on phones and tablets',
-    'A new Help Center with answers and search, found above Settings in the sidebar',
+    'A new Help Center with answers and search',
     'A calmer look, with the background glow removed from app pages',
   ] },
   { version: '1.2.6', date: 'October 12, 2026', title: 'Landing page refresh', items: [
@@ -34,19 +38,18 @@ export const CHANGELOG = [
   ] },
   { version: '1.2.5', date: 'October 12, 2026', title: 'Navigation and clarity', items: [
     'Search from the sidebar to find pages and transactions quickly',
-    'A collapsible sidebar, with Settings and your account kept at the bottom',
+    'A collapsible sidebar',
     'A clearer dashboard balance and an easier-to-read cash flow chart',
-    'Cleaner transaction filters, with notes shown in each transaction row',
+    'Cleaner transaction filters, with notes shown in each row',
     'Simpler month selection on Budgets and improved dropdown menus',
   ] },
   { version: '1.2.4', date: 'October 11, 2026', title: 'A darker, livelier look', items: [
-    'Refined the overall visual design',
-    'Introduced subtle ambient lighting and improved animations',
-    'Polished the landing page',
-    'Improved the mobile Settings layout',
+    'A refined, darker and livelier look with improved animations',
+    'A more polished landing page',
+    'A better mobile Settings layout',
   ] },
   { version: '1.2.3', date: 'October 11, 2026', title: 'Landing page', items: [
-    'Added a public landing page introducing TrackMyKita, with access to the existing login and signup pages',
+    'A public landing page introducing TrackMyKita, with links to log in or sign up',
   ] },
   { version: '1.2.2', date: 'October 10, 2026', title: 'Clarity and polish', items: [
     'Clearer transaction titles',

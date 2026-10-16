@@ -48,7 +48,3 @@
   .shell .sv-overview>div+div{border-left:0;border-top:1px solid var(--color-border)}
   .shell .sv-top{flex-wrap:wrap}.shell .sv-name{flex:1 1 60%}
 }
-@media (max-width:700px){
-  .shell .page-header .actions:has(>.btn:nth-child(3)){flex-wrap:wrap}
-  .shell .page-header .actions:has(>.btn:nth-child(3))>.btn{flex:1 1 calc(50% - 6px);width:auto}
-}

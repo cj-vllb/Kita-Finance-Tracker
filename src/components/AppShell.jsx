@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, Coins, PiggyBank, BarChart3, Tags, Settings, LifeBuoy, User, MoreHorizontal, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, Coins, PiggyBank, BarChart3, Tags, Settings, User, MoreHorizontal, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { ErrorState, Avatar, Presence, useDelayedFlag } from './ui.jsx'
 import PageSkeleton from './skeletons.jsx'
 import { Logo, LogoMark } from './Logo.jsx'
 import SidebarSearch, { useMedia } from './SidebarSearch.jsx'
 import { firstName } from '../utils/format.js'
-// Desktop shows every section in groups; Help Center and Settings live in the profile menu (all breakpoints). Tablet/phone use the compact bar: three main sections plus "More".
+// Desktop shows every section in groups; Settings lives in the profile menu (all breakpoints), and Help Center is reached from Settings. Tablet/phone use the compact bar: three main sections plus "More".
 const groups = [
   [['/dashboard', 'Dashboard', LayoutDashboard]],
   [['/transactions', 'Transactions', ArrowLeftRight], ['/reports', 'Reports', BarChart3]],
@@ -53,7 +53,6 @@ function ProfileMenu({ tile = false }) {
   return (<div ref={box} className={tile ? 'account-tile-wrap' : 'account-top'}>
     <button ref={btn} className={tile ? 'profile-btn account-tile' : 'profile-btn'} aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" title={tile ? user.fullName : undefined} onClick={() => setOpen(!open)} onKeyDown={(e) => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true) } }}>{tile ? <><Avatar user={user} size={34} /><span className="acct-text"><span className="acct-name">{user.fullName}</span><span className="acct-email">{user.email}</span></span><ChevronsUpDown size={16} aria-hidden="true" className="acct-chev" /></> : <><Avatar user={user} size={34} /><span className="pname">{firstName(user)}</span></>}</button>
     <Presence show={open}>{(state) => <div className={'menu' + (tile ? ' tile-menu' : '')} role="menu" data-state={state} onKeyDown={onMenuKey}><Link to="/profile" role="menuitem"><User size={16} strokeWidth={1.75} aria-hidden="true" />Profile</Link>
-      <Link to="/help" role="menuitem"><LifeBuoy size={16} strokeWidth={1.75} aria-hidden="true" />Help Center</Link>
       <Link to="/settings" role="menuitem"><Settings size={16} strokeWidth={1.75} aria-hidden="true" />Settings</Link>
       <button role="menuitem" className="menu-logout" onClick={async () => { await logout(); nav('/login') }}><LogOut size={16} strokeWidth={1.75} aria-hidden="true" />Log out</button></div>}</Presence></div>)
 }

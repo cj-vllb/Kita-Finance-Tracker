@@ -34,25 +34,34 @@
 }
 
 /* ---------- Dashboard Balance / Savings panels on tablet and phone ---------- */
+/* Why they used to differ: the Savings amount had its own mobile font-size (clamp(36px,12vw,48px)) while the Balance amount takes
+   clamp(36px,5vw,52px) from v128.css, and the Balance label/note take their line-height and size from the .hero-balance rules while the
+   Savings ones fell back to the generic .small/body rules. Both panels now share one set of rules below (.bal-head, .bal-amount, .bal-note).
+   Why Savings was too tall: both panels sat in one grid cell, so the cell was as tall as the Balance panel and Savings stretched to fill it. */
 @media (max-width:1100px){
-  /* Both panels share one grid cell, so the area is as tall as the taller panel and switching never moves the page. */
-  .shell .balances.is-selector>.bal-seg{grid-column:1;grid-row:1}
-  .shell .balances.is-selector>.bal-panel{grid-column:1;grid-row:2;margin:0}
-  /* Same box, padding, heading, amount and spacing for both panels. */
-  .shell .balances.is-selector>.savings-balance{padding:24px 28px;gap:16px;border-radius:var(--k-card)}
-  .shell .balances.is-selector .sb-amount{margin:8px 0 0;font:600 clamp(36px,5vw,52px)/1.08 var(--font-display);letter-spacing:-.01em}
-  .shell .balances.is-selector .savings-balance .sb-note{margin-top:12px}
-  .shell .balances.is-selector>.hero-balance{align-content:start}
-  /* Cross-fade without overlap: the old panel fades out first, then the new one fades in. Hidden panels are visibility:hidden, so they are
-     not focusable and are not read out, and no control exists twice for the user. */
-  .shell .balances.is-selector>.bal-panel{transition:opacity .1s ease,visibility 0s linear .1s}
-  .shell .balances.is-selector>.bal-panel[data-active=true]{opacity:1;visibility:visible;transition:opacity .1s ease .1s,visibility 0s}
-  .shell .balances.is-selector>.bal-panel[data-active=false]{opacity:0;visibility:hidden;pointer-events:none}
+  /* One shared look for the label, the amount and the supporting line in both panels. */
+  .shell .balances.is-selector .bal-panel .bal-head{font:500 14px/18px var(--font);color:var(--color-muted)}
+  .shell .balances.is-selector .bal-panel .bal-amount{margin:8px 0 0;font:600 clamp(36px,5vw,52px)/1.08 var(--font-display);letter-spacing:-.01em;color:var(--color-text);overflow-wrap:anywhere}
+  .shell .balances.is-selector .bal-panel .bal-note{margin:12px 0 0;font:400 13px/18px var(--font);color:var(--color-muted)}
+  /* Same box, padding and spacing; each box is only as tall as its own content. */
+  .shell .balances.is-selector .bal-panel{margin:0}
+  .shell .balances.is-selector>.bal-stage .savings-balance{padding:24px 28px;gap:16px;border-radius:var(--k-card)}
+  /* The two panels live in a two-row grid: the active one's row is 1fr, the other 0fr. Animating grid-template-rows animates the area between
+     the panels' natural heights, so everything below the selector moves up or down with it. No JavaScript measuring, no fixed heights. */
+  .shell .balances.is-selector>.bal-stage{display:grid;grid-template-rows:1fr 0fr;transition:grid-template-rows .32s cubic-bezier(.4,0,.2,1)}
+  .shell .balances.is-selector>.bal-stage[data-tab=savings]{grid-template-rows:0fr 1fr}
+  .shell .balances.is-selector .bal-slot{min-height:0;overflow:hidden}
+  /* The leaving panel fades quickly while it collapses, the arriving one fades in as it grows. Hidden slots are visibility:hidden (once
+     collapsed), so they are not focusable and are not read out. */
+  .shell .balances.is-selector .bal-slot[data-active=true]{opacity:1;visibility:visible;transition:opacity .2s ease .08s,visibility 0s}
+  .shell .balances.is-selector .bal-slot[data-active=false]{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease,visibility 0s linear .32s}
+}
+@media (min-width:901px) and (max-width:1100px){
+  .shell .balances.is-selector>.bal-stage .savings-balance{padding:28px 32px} /* matches .hero-main there (v128.css) */
 }
 @media (max-width:700px){
-  .shell .balances.is-selector>.savings-balance{padding:20px}
-  .shell .balances.is-selector .sb-amount{font-size:clamp(36px,12vw,48px)}
+  .shell .balances.is-selector>.bal-stage .savings-balance{padding:20px}
 }
 @media (prefers-reduced-motion:reduce){
-  .shell .balances.is-selector>.bal-panel,.shell .balances.is-selector>.bal-panel[data-active=true]{transition:none}
+  .shell .balances.is-selector>.bal-stage,.shell .balances.is-selector .bal-slot,.shell .balances.is-selector .bal-slot[data-active=true],.shell .balances.is-selector .bal-slot[data-active=false]{transition:none}
 }

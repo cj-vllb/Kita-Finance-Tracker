@@ -22,9 +22,11 @@ export default function Dashboard() {
   const compact = useMedia('(max-width:1100px)') // tablet and phone get the Balance/Savings selector; desktop shows both balances as before
   const [tab, setTab] = useState('balance') // deliberately not persisted: the dashboard always opens on Balance
   const [showCurrent, toggleCurrent] = useVisibility(VISIBILITY_KEYS.current), [showSavings, toggleSavings] = useVisibility(VISIBILITY_KEYS.savings)
-  // On tablet/phone both panels stay mounted in one grid cell and only the selected one is visible (CSS cross-fade). That keeps the area the same
-  // height for both views, needs no extra request, and the hidden panel is not focusable or read out (visibility:hidden).
+  // On tablet/phone both panels stay mounted, each in a slot inside one two-row grid. The selected slot's row is 1fr and the other is 0fr, so the
+  // area animates between each panel's own natural height (CSS only) and the dashboard below reflows with it. The hidden panel is not focusable or read out.
   const selector = compact && savingsReady, showBalance = true, showSavingsCard = savingsReady
+  const stage = (kids) => selector ? <div className="bal-stage" data-tab={tab}>{kids}</div> : kids
+  const slot = (id, node) => selector ? <div className="bal-slot" data-active={String(tab === id)}>{node}</div> : node
   const panel = (id) => (selector ? { role: 'tabpanel', id: 'bal-panel-' + id, 'aria-labelledby': 'bal-tab-' + id, 'data-active': String(tab === id) } : {})
   const onTabKey = (e) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
@@ -48,14 +50,16 @@ export default function Dashboard() {
     <>
       <div className={'balances' + (selector ? ' is-selector' : '')}>
       {selector && <div className="seg bal-seg" role="tablist" aria-label="Balance view" onKeyDown={onTabKey}>{TABS.map(([id, text]) => <button key={id} type="button" role="tab" id={'bal-tab-' + id} aria-selected={tab === id} aria-controls={'bal-panel-' + id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{text}</button>)}</div>}
-      {showBalance && <section aria-label="Current Balance" className={'hero-balance' + (selector ? ' bal-panel' : '')} {...panel('balance')}><div className="hero-main"><div className="balance-label bal-head">Current Balance<EyeButton name="Current Balance" visible={showCurrent} onToggle={toggleCurrent} /></div><div className="balance">{showCurrent ? money(ledger.current) : <Masked />}</div><div className="small hero-updated">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
+      {stage(<>
+      {showBalance && slot('balance', <section aria-label="Current Balance" className={'hero-balance' + (selector ? ' bal-panel' : '')} {...panel('balance')}><div className="hero-main"><div className="balance-label bal-head">Current Balance<EyeButton name="Current Balance" visible={showCurrent} onToggle={toggleCurrent} /></div><div className="balance bal-amount">{showCurrent ? money(ledger.current) : <Masked />}</div><div className="small hero-updated bal-note">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
         <div className="figures">
           <div><div className="muted">Monthly income</div><div className="v pos">+{money(income)}</div></div>
           <div><div className="muted">Monthly expenses</div><div className="v neg">−{money(expenses)}</div></div>
-          <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>}
-      {showSavingsCard && <section className={'savings-balance' + (selector ? ' bal-panel' : '')} aria-label="Savings" {...panel('savings')}><div><div className="balance-label bal-head">Savings<EyeButton name="Savings" visible={showSavings} onToggle={toggleSavings} /></div><div className="sb-amount">{showSavings ? money(ledger.savings) : <Masked />}</div>
-          <div className="muted small sb-note">{activeGoals.length ? (showSavings ? `${money(ledger.allocated)} set aside for goals` : 'Set aside for goals') : 'Money you have put aside'}</div></div>
-          <Link to="/savings" className="pv-link">Manage savings<ChevronRight size={16} aria-hidden="true" /></Link></section>}
+          <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>)}
+      {showSavingsCard && slot('savings', <section className={'savings-balance' + (selector ? ' bal-panel' : '')} aria-label="Savings" {...panel('savings')}><div><div className="balance-label bal-head">Savings<EyeButton name="Savings" visible={showSavings} onToggle={toggleSavings} /></div><div className="sb-amount bal-amount">{showSavings ? money(ledger.savings) : <Masked />}</div>
+          <div className="muted small sb-note bal-note">{activeGoals.length ? (showSavings ? `${money(ledger.allocated)} set aside for goals` : 'Set aside for goals') : 'Money you have put aside'}</div></div>
+          <Link to="/savings" className="pv-link">Manage savings<ChevronRight size={16} aria-hidden="true" /></Link></section>)}
+      </>)}
       </div>
       <div className="previews charts">
         <section className="preview flow-card" aria-label="Monthly money flow"><div className="pv-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>

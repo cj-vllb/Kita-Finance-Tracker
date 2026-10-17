@@ -5,7 +5,8 @@ export const calculateExpenses = (txs) => sum(txs.filter((t) => t.type === 'expe
 export const calculateNet = (txs) => calculateIncome(txs) - calculateExpenses(txs)
 // Income, expense and net totals always count EVERY income/expense row once, whichever balance it used. Transfers are not transactions, so they never reach here.
 // Current Balance and Savings are computed in utils/ledger.js (computeLedger), the single place that knows about both balances.
-const spentOf = (b, txs) => sum(inMonth(txs, b.month).filter((t) => t.type === 'expense' && t.categoryId === b.categoryId))
+// A budget-only custom budget has no category (categoryId ''), so it tracks no spending: without this guard it would match every uncategorized expense.
+const spentOf = (b, txs) => (b.categoryId ? sum(inMonth(txs, b.month).filter((t) => t.type === 'expense' && t.categoryId === b.categoryId)) : 0)
 export const calculateBudgetSpent = spentOf
 export const calculateBudgetRemaining = (b, txs) => b.amount - spentOf(b, txs)
 export const calculateBudgetPercentage = (b, txs) => Math.round((spentOf(b, txs) / b.amount) * 100)

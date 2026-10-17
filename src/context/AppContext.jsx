@@ -5,6 +5,11 @@ import * as txService from '../services/transactionService.js'
 import * as budgetService from '../services/budgetService.js'
 import * as categoryService from '../services/categoryService.js'
 import * as savingsService from '../services/savingsService.js'
+import * as dataService from '../services/dataService.js'
+import { buildBackup, backupFilename } from '../utils/backup.js'
+import { sortCategories } from '../data/presetCategories.js'
+import { APP_VERSION } from '../version.js'
+import { VISIBILITY_KEYS } from '../utils/balanceVisibility.js'
 import { computeLedger } from '../utils/ledger.js'
 import { friendlyError } from '../lib/errors.js'
 import { logError } from '../lib/log.js'
@@ -22,6 +27,7 @@ export function AppProvider({ children }) {
   const [session, setSession] = useState(null), [authLoading, setAuthLoading] = useState(true)
   const [profile, setProfile] = useState(null), [transactions, setTransactions] = useState([]), [budgets, setBudgets] = useState([]), [categories, setCategories] = useState([])
   const [goals, setGoals] = useState([]), [transfers, setTransfers] = useState([]), [reallocations, setReallocations] = useState([]), [savingsReady, setSavingsReady] = useState(false)
+  const [v134, setV134] = useState(false) // true once the 1.3.4 database update (category icons, backup and restore) is known to be in place
   const [dataLoading, setDataLoading] = useState(true), [dataError, setDataError] = useState(false), [loadedUid, setLoadedUid] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('kita:theme') || 'dark') // UI preference only
   const [toast, setToast] = useState(null), timer = useRef(), [avatarUrl, setAvatarUrl] = useState(null)
@@ -37,6 +43,9 @@ export function AppProvider({ children }) {
     if (!uid) { setProfile(null); setTransactions([]); setBudgets([]); setCategories([]); setGoals([]); setTransfers([]); setReallocations([]); setSavingsReady(false); setDataLoading(false); setLoadedUid(null); return }
     setDataLoading(true); setDataError(false)
     try {
+      // Gives the user their own copy of the built-in categories once (safe to repeat). Older databases without the update just skip this.
+      const provisioned = await categoryService.ensureDefaultCategories().catch((e) => { logError(e); return false })
+      setV134(provisioned)
       const [p, t, b, c, s] = await Promise.all([profiles.getProfile(), txService.getTransactions(), budgetService.getBudgets(), categoryService.getCategories(), savingsService.getSavingsData()])
       setProfile(p); setTransactions(t); setBudgets(b); setCategories(c); applySavings(s)
     } catch (e) { logError(e); setDataError(true) } finally { setDataLoading(false); setLoadedUid(uid) }
@@ -54,6 +63,10 @@ export function AppProvider({ children }) {
   }, [avatarPath])
   // Both balances and every goal amount come from one pure calculation over the loaded ledger rows (utils/ledger.js).
   const ledger = useMemo(() => computeLedger({ transactions, transfers, reallocations, goals }), [transactions, transfers, reallocations, goals])
+  // `categories` keeps EVERY category (including deleted ones that old transactions still use) so history always shows a name and icon.
+  // `activeCategories` is what pickers and the Categories page offer.
+  const sortedCategories = useMemo(() => sortCategories(categories), [categories])
+  const activeCategories = useMemo(() => sortedCategories.filter((c) => !c.archived), [sortedCategories])
   const activeGoals = useMemo(() => goals.filter((g) => !g.archived), [goals])
   // The database rejects a write that would break a balance or goal with a message starting "KITA: ". The write did not happen, but the screen may have
   // been built from stale data (another device, another tab), so re-read the ledger rows quietly; the user then sees the real balances, not stale ones.
@@ -71,7 +84,7 @@ export function AppProvider({ children }) {
   const remove = (setList, fn, label) => (id) => run(async () => { await fn(id); setList((l) => l.filter((i) => i.id !== id)) }, `We couldn't delete this ${label}. Please try again.`)
   const value = {
     session, loggedIn: !!session, authLoading, ready: !authLoading && (!uid || loadedUid === uid), user, settings: { currency: safeCurrency(profile?.currency), theme },
-    transactions, budgets, categories, goals, activeGoals, transfers, reallocations, ledger, savingsReady, dataLoading: dataLoading || (!!uid && loadedUid !== uid), dataError, reload, toast, notify,
+    transactions, budgets, categories: sortedCategories, activeCategories, dataToolsReady: v134, goals, activeGoals, transfers, reallocations, ledger, savingsReady, dataLoading: dataLoading || (!!uid && loadedUid !== uid), dataError, reload, toast, notify,
     signIn: (email, password) => attempt(() => auth.signIn(email, password), "We couldn't sign you in. Please try again."),
     signUp: async (name, email, password) => { let r; const error = await attempt(async () => { r = await auth.signUp(name, email, password) }, "We couldn't create your account. Please try again."); return { error, needsConfirmation: !error && !r.session } },
     logout: async () => { await attempt(() => auth.signOut()); setSession(null) },
@@ -117,13 +130,32 @@ export function AppProvider({ children }) {
     moveSavings: (x) => run(async () => { await savingsService.createReallocation(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't move this money. Please try again."),
     undoSavingsActivity: (kind, id) => run(async () => { await (kind === 'transfer' ? savingsService.deleteTransfer(id) : savingsService.deleteReallocation(id)); applySavings(await savingsService.getSavingsData()) }, "We couldn't undo this. Please try again."),
     deleteTransaction: remove(setTransactions, txService.deleteTransaction, 'transaction'),
-    saveBudget: save(budgets, setBudgets, { create: budgetService.createBudget, update: budgetService.updateBudget }, 'budget'),
+    saveBudget: (x) => save(budgets, setBudgets, { create: budgetService.createBudget, update: budgetService.updateBudget }, 'budget')({ ...x, withExtras: v134 }),
     deleteBudget: remove(setBudgets, budgetService.deleteBudget, 'budget'),
-    saveCategory: save(categories, setCategories, { create: categoryService.createCategory, update: categoryService.updateCategory }, 'category'),
-    deleteCategory: remove(setCategories, categoryService.deleteCategory, 'category'),
+    saveCategory: (x) => save(categories, setCategories, { create: categoryService.createCategory, update: categoryService.updateCategory }, 'category')({ ...x, withExtras: v134 }),
+    // Deleting a category never deletes or rewrites a transaction. A built-in preset, or any category that a transaction or budget still uses, is
+    // ARCHIVED (hidden from pickers; history keeps its name and icon). A custom category nothing uses is removed completely.
+    deleteCategory: (id) => run(async () => {
+      const cat = categories.find((c) => c.id === id); if (!cat) return
+      let archived = !!cat.presetKey
+      if (!archived) { try { await categoryService.deleteCategory(id) } catch (e) { if (e?.code === '23503') archived = true; else throw e } }
+      if (archived) { const saved = await categoryService.archiveCategory(id); setCategories((l) => l.map((x) => (x.id === id ? saved : x))) } else setCategories((l) => l.filter((x) => x.id !== id))
+    }, "We couldn't delete this category. Please try again."),
+    // Brings back built-in categories the user deleted. Names and icons the user changed are left alone.
+    restoreDefaultCategories: () => run(async () => { await categoryService.ensureDefaultCategories(true); setCategories(await categoryService.getCategories()) }, "We couldn't restore the default categories."),
     // Same service and same state update as saveCategory, but also hands back the saved row so a form can select it straight away.
-    createCategory: async (x) => { let category = null; const error = await attempt(async () => { category = await categoryService.createCategory(x); setCategories((l) => upsert(l, category, true)) }, "We couldn't save this category. Please try again."); return { error, category: error ? null : category } },
-    resetAll: async () => { // "Delete account" in Settings
+    createCategory: async (x) => { let category = null; const error = await attempt(async () => { category = await categoryService.createCategory({ ...x, withExtras: v134 }); setCategories((l) => upsert(l, category, true)) }, "We couldn't save this category. Please try again."); return { error, category: error ? null : category } },
+    // ---- Backup, restore, delete all data (Settings > Data). Each is a single database call; see services/dataService.js. ----
+    // Resolves { error, file, filename }. The file is only the signed-in user's own records.
+    backupData: async () => { let file = null; const error = await attempt(async () => { file = buildBackup(await dataService.exportMyData(), APP_VERSION) }, "We couldn't create the backup. Please try again."); return { error, file, filename: backupFilename() } },
+    // `payload` has already been validated by utils/backup.js. The database validates it again and replaces everything, or changes nothing.
+    restoreBackup: async (payload) => { let counts = null; const error = await attempt(async () => { counts = await dataService.restoreMyData(payload) }, "We couldn't restore the backup, so nothing was changed."); if (!error) await reload(); return { error, counts } },
+    deleteAllData: async () => {
+      const error = await attempt(() => dataService.deleteAllMyData(), "We couldn't delete your data, so nothing was changed.")
+      if (!error) { Object.values(VISIBILITY_KEYS).forEach((k) => { try { localStorage.removeItem(k) } catch { /* ignore */ } }); await reload() }
+      return error
+    },
+    resetAll: async () => { // "Delete account" (Profile page)
       // Remove every stored photo first: once the account is gone nobody is allowed to delete them. Account deletion removes every database row.
       await profiles.removeAllAvatarFiles().catch(logError)
       const e = await attempt(() => auth.deleteMyAccount(), "We couldn't delete your account. Please try again.")

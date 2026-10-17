@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Pencil, Trash2, Plus, Tags, Wallet, Receipt } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Plus, Tags, RotateCcw } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
-import { PageHeader, EmptyState, ConfirmDialog, RowMenu } from '../components/ui.jsx'
-import { colorHex, colorName } from '../utils/colors.js'
-const GROUPS = [
-  { type: 'income', title: 'Income categories', hint: 'Money coming in', icon: Wallet, empty: 'Create an income category, such as Salary, to organize what you earn.', add: 'Add income category' },
-  { type: 'expense', title: 'Expense categories', hint: 'Money going out', icon: Receipt, empty: 'Create an expense category, such as Food, to organize what you spend.', add: 'Add expense category' },
-]
+import { PageHeader, EmptyState, Segmented, CategoryIcon } from '../components/ui.jsx'
+import CategoryModal from '../components/CategoryModal.jsx'
+import { colorHex } from '../utils/colors.js'
+import { PRESETS } from '../data/presetCategories.js'
+import { isValidIconId } from '../utils/icons.js'
+// Icon grid, four per row. Presets come first (in their original order), then the user's own categories, oldest to newest, so a newly created
+// category lands at the end. The Add Category tile is always the last tile. Nothing is capped: the grid just keeps growing.
 export default function Categories() {
-  const { categories, transactions, budgets, deleteCategory, notify } = useApp(), [del, setDel] = useState(null)
-  // Only what the delete check needs: a category that transactions or budgets use cannot be deleted.
-  const stats = (cat) => ({ used: transactions.filter((t) => t.categoryId === cat.id).length, budgets: budgets.filter((b) => b.categoryId === cat.id).length })
-  const s = del && stats(del), blocked = s && (s.used > 0 || s.budgets > 0)
-  // The database only allows 'income' or 'expense', but an unexpected value must never hide a category: it is listed under "Other".
-  const other = categories.filter((c) => c.type !== 'income' && c.type !== 'expense')
-  // A plain render function (not a nested component) so rows are not remounted on every render; the row menu keeps its state and focus.
-  // Every row has one overflow menu (Edit category, Delete category) on every screen size.
-  const list = (rows, group) => (<ul className="cat-rows" aria-label={group.title}>{rows.map((cat) => <li className="cat-row" key={cat.id}>
-    <span className="cat-name"><span className="dot" style={{ background: colorHex(cat.color) }} title={colorName(cat.color)} aria-hidden="true" />{cat.name}</span>
-    <RowMenu label={`Category options for ${cat.name}`} items={[{ label: 'Edit category', icon: Pencil, to: `/categories/${cat.id}/edit` }, { label: 'Delete category', icon: Trash2, danger: true, onSelect: () => setDel(cat) }]} /></li>)}</ul>)
+  const { activeCategories, categories, restoreDefaultCategories, dataToolsReady, notify } = useApp(), [sp, setSp] = useSearchParams()
+  const [type, setType] = useState(sp.get('new') === 'income' || sp.get('type') === 'income' ? 'income' : 'expense')
+  const [modal, setModal] = useState(() => (sp.has('new') ? { mode: 'create' } : null)) // /categories?new=income comes from the old Create category links
+  useEffect(() => { if (sp.has('new') || sp.has('type')) setSp({}, { replace: true }) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const rows = activeCategories.filter((c) => c.type === type)
+  const missing = PRESETS.filter((p) => p.type === type && !categories.some((c) => c.presetKey === p.key && !c.archived)).length
+  // A category that predates icons (or has an unknown icon id) shows its preset's icon when it is one, else the generic tag icon.
+  const iconOf = (c) => (isValidIconId(c.icon) ? c.icon : PRESETS.find((p) => p.key === c.presetKey)?.icon)
+  const restore = async () => { const e = await restoreDefaultCategories(); notify(e || 'Default categories restored.') }
   return (<>
-    <PageHeader title="Categories"><Link className="btn btn-primary" to="/categories/new">Create category</Link></PageHeader>
-    {categories.length === 0 ? <EmptyState icon={Tags} title="No categories found" text="Create a category to start organizing your transactions." to="/categories/new" action="Create category" /> : <div className="cat-grid">
-      {GROUPS.map((g) => { const rows = categories.filter((c) => c.type === g.type); return (<section className="card cat-group" key={g.type} aria-labelledby={`cg-${g.type}`}>
-        <div className="cat-head"><div><h2 id={`cg-${g.type}`}>{g.title}</h2><p className="muted small">{rows.length} categor{rows.length === 1 ? 'y' : 'ies'}</p></div></div>
-        {rows.length === 0 ? <EmptyState compact icon={g.icon} title={`No ${g.type} categories yet`} text={g.empty} to={`/categories/new?type=${g.type}`} action={g.add} />
-          : <>{list(rows, g)}<Link className="add-link" to={`/categories/new?type=${g.type}`}><Plus size={16} aria-hidden="true" />{g.add}</Link></>}</section>) })}
-      {other.length > 0 && <section className="card cat-group" aria-labelledby="cg-other"><div className="cat-head"><div><h2 id="cg-other">Other categories</h2><p className="muted small">These need a type. Edit each one to choose Income or Expense.</p></div></div>
-        {list(other, { title: 'Other categories' })}</section>}</div>}
-    {del && (blocked ? <ConfirmDialog infoOnly title="This category is in use" onCancel={() => setDel(null)}><p>{del.name} is used by {s.used} transaction{s.used === 1 ? '' : 's'}{s.budgets ? ` and ${s.budgets} budget${s.budgets === 1 ? '' : 's'}` : ''}. Move or delete those first, then delete the category.</p></ConfirmDialog>
-      : <ConfirmDialog title="Delete category?" confirmLabel="Delete category" onCancel={() => setDel(null)} onConfirm={async () => { const e = await deleteCategory(del.id); setDel(null); notify(e || 'Category deleted.') }}><p className="muted">{del.name} is not used by any transactions or budgets.</p><p>This action cannot be undone.</p></ConfirmDialog>)}
+    <PageHeader title="Categories"><button type="button" className="btn btn-primary" onClick={() => setModal({ mode: 'create' })}>Create category</button></PageHeader>
+    <div className="cat-type-seg"><Segmented label="Category type" value={type} onChange={setType} options={[['income', 'Income'], ['expense', 'Expense']]} /></div>
+    {activeCategories.length === 0 && !dataToolsReady
+      ? <EmptyState icon={Tags} title="No categories found" text="Create a category to start organizing your transactions." />
+      : <ul className="catg" aria-label={type === 'income' ? 'Income categories' : 'Expense categories'}>
+        {rows.map((c) => (<li key={c.id}><button type="button" className="catg-tile" title={c.name} onClick={() => setModal({ mode: 'edit', category: c })} aria-label={`${c.name}. Edit category`}>
+          <span className="catg-icon" style={{ '--cat': colorHex(c.color) }}><CategoryIcon id={iconOf(c)} size={26} /></span><span className="catg-name">{c.name}</span></button></li>))}
+        <li><button type="button" className="catg-tile catg-add" onClick={() => setModal({ mode: 'create' })} aria-label={`Add ${type} category`}>
+          <span className="catg-icon"><Plus size={26} aria-hidden="true" /></span><span className="catg-name">Add Category</span></button></li></ul>}
+    {dataToolsReady && missing > 0 && <p className="muted small catg-restore">{missing} built-in {type} categor{missing === 1 ? 'y was' : 'ies were'} deleted. <button type="button" className="btn-link" onClick={restore}><RotateCcw size={14} aria-hidden="true" /> Restore default categories</button></p>}
+    {modal && <CategoryModal category={modal.category} defaultType={type} onClose={() => setModal(null)} />}
   </>)
 }

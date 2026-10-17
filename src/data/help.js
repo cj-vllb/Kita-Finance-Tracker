@@ -50,7 +50,7 @@ export const HELP = [
         'By default the list shows the current month, so choose All dates to see everything. The list shows 10 transactions at a time; use Previous and Next to move between pages.'],
       links: [{ to: '/transactions', label: 'Open Transactions' }], see: ['ts-missing-tx'] },
     { id: 'export', q: 'How do I export my transactions?', keys: 'csv download spreadsheet backup data',
-      p: ['Open Settings and choose Export CSV in the Data section. It downloads all of your transactions as a spreadsheet file. If you have no transactions yet, there is nothing to export.'],
+      p: ['Open Settings and choose Export CSV in the Data section. It downloads all of your transactions as a spreadsheet file. If you have no transactions yet, there is nothing to export.', 'For a complete copy of everything (transactions, categories, budgets and savings), choose Back Up Data in the same section. It saves a JSON file on your device. Restore Backup in that section puts a saved backup back, replacing your current data.'],
       links: [{ to: '/settings', label: 'Open Settings' }] },
   ] },
 
@@ -132,8 +132,8 @@ export const HELP = [
     { id: 'logout', q: 'How do I log out?', keys: 'sign out',
       p: ['Choose Log out from your account menu, or use the Log out button at the bottom of Settings.'] },
     { id: 'delete-account', q: 'How do I delete my account?', keys: 'close remove permanently danger',
-      p: ['In Settings, under Danger zone, choose Delete account and type DELETE to confirm. This permanently removes your profile, profile picture, transactions, budgets, categories, savings goals and transfers and cannot be undone. If you want a copy of your transactions, export them first.'],
-      links: [{ to: '/settings', label: 'Open Settings' }], see: ['export'] },
+      p: ['Open your Profile and scroll to the bottom. Choose Delete account and type DELETE to confirm. This permanently removes your profile, profile picture, transactions, budgets, categories, savings goals and transfers and cannot be undone. If you only want to clear your data and keep your account, use Delete All Data in Settings instead. If you want a copy first, use Back Up Data or Export CSV in Settings.'],
+      links: [{ to: '/profile', label: 'Open Profile' }], see: ['export'] },
   ] },
 
   { id: 'preferences', title: 'Currency and preferences', items: [

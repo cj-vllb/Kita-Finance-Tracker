@@ -15,7 +15,7 @@ export default function Terms() {
     <ul>
       <li>Give accurate sign-up details and keep your email address up to date.</li>
       <li>Keep your password private. You are responsible for activity under your account, so tell us promptly if you think someone else has gained access.</li>
-      <li>You can delete your account at any time in Settings. Deletion is permanent.</li>
+      <li>You can delete your account at any time on the Profile page. Deletion is permanent.</li>
     </ul>
 
     <h2>Acceptable use</h2>

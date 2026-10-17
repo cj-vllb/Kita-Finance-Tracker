@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, MoreVertical, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, X } from 'lucide-react'
 import { initials } from '../utils/format.js'
 import { colorHex } from '../utils/colors.js'
+import { iconComponent } from '../utils/icons.js'
 // Shared dialog behaviour: focus moves in, Tab stays inside, Escape closes, page behind does not scroll, focus returns on close.
 function useDialog(ref, onClose, focusRef) {
   const close = useRef(onClose); close.current = onClose // latest handler without re-running the effect (which would steal focus on every re-render)
@@ -154,3 +155,20 @@ export function RowMenu({ label = 'Options', items, icon: TriggerIcon = MoreVert
             : <button key={it.label} type="button" role="menuitem" className={cls} onClick={() => pick(it)}>{inner}</button> })}
         {note && <p className="row-menu-note">{note}</p>}</div></>)}</Presence>, document.body)}</>)
 }
+
+// Generic dialog for forms (category, budget, backup...). Same focus handling, Escape, scrim and exit animation as ConfirmDialog.
+// `footer` is rendered in the usual action row; `initialFocus` is a ref to the field that should receive focus first.
+export function Modal({ title, onClose, children, footer, initialFocus, wide = false, labelledBy = 'modal-title' }) {
+  const ref = useRef(), [state, dismiss] = useExit(onClose)
+  useDialog(ref, dismiss, initialFocus)
+  return (<div className="scrim" data-state={state} onMouseDown={(e) => e.target === e.currentTarget && dismiss()}>
+    <div className={'dialog modal' + (wide ? ' modal-wide' : '')} data-state={state} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} ref={ref}>
+      <div className="dialog-head"><h2 id={labelledBy}>{title}</h2><button type="button" className="icon-btn dialog-x" aria-label="Close dialog" onClick={dismiss}><X size={18} aria-hidden="true" /></button></div>
+      <div className="dialog-body modal-body">{children}</div>
+      {footer && <div className="dialog-actions">{typeof footer === 'function' ? footer(dismiss) : footer}</div>}</div></div>)
+}
+// The ONE way a category (or budget) icon is drawn. `id` is the stored icon id; anything missing or unknown falls back to a generic tag icon.
+export const CategoryIcon = ({ id, size = 20, strokeWidth = 1.9 }) => { const Icon = iconComponent(id); return <Icon size={size} strokeWidth={strokeWidth} aria-hidden="true" /> }
+// Transaction row icon: the transaction's category icon on a green (income) or red (expense) tile. A deleted, missing or icon-less category
+// falls back to the generic tag icon. The tile colour carries the type; the row's own text label says it in words as well.
+export const TxIcon = ({ type, category }) => <span className={'dir-icon tx-cat-icon ' + (type === 'income' ? 'in' : 'out')} aria-hidden="true"><CategoryIcon id={category?.icon} size={18} /></span>

@@ -43,3 +43,18 @@ Apply `supabase/migrations/20261014000000_savings_and_balances.sql` with `supaba
 If an earlier attempt to apply this migration failed (an older copy of this file had invalid PL/pgSQL variable declarations), first check staging for leftovers with the read-only queries in the project notes: `select to_regclass('public.savings_goals');`, `select column_name from information_schema.columns where table_schema='public' and table_name='transactions' and column_name in ('balance','goal_id');` and `select version from supabase_migrations.schema_migrations order by version desc limit 3;`. Then apply this corrected file; it is written to be re-runnable.
 
 Until the migration is applied the app still works exactly as in 1.3: the Savings page explains that the update is missing, and the dashboard and transaction form show no savings controls.
+
+## 1.3.4: category icons, presets, budget-only budgets, backup / restore, delete all data
+
+Apply `supabase/migrations/20261016000000_v134_categories_budgets_data_tools.sql` with `supabase db push` to **local or staging first**, and run `supabase test db` (file `06_v134.test.sql`; it has NOT been executed yet, so treat the first run as part of reviewing the migration). Never run `supabase db reset` against a real project.
+
+What it does (nothing is deleted or rewritten by the migration itself; safe to run twice):
+- `categories`: adds `icon`, `preset_key`, `archived_at`. The old `UNIQUE (user_id, name, type)` constraint is replaced by an equivalent unique index that only covers active categories, so a deleted (archived) category does not keep its name forever.
+- `budgets`: `category_id` becomes optional; adds `name` and `icon`. A budget either points at an expense category or is a budget-only custom budget.
+- Adds `ensure_default_categories`, `export_my_data`, `restore_user_data`, `delete_all_my_data` (all act only on the signed-in user) and an internal provisioning function. The 1.3.1 ledger trigger functions are re-created unchanged except for an early return while restore / delete-all run in their own transaction, which then re-checks the whole ledger.
+- The 38 preset categories are listed in the migration and in `src/data/presetCategories.js`; `npm test` fails if they ever differ.
+
+Until the migration is applied the app still works as in 1.3.3 (no presets, no icons stored, the new Data buttons are disabled with an explanation). Apply it **before** deploying the 1.3.4 frontend.
+
+Backups are JSON files saved to the person's device (format documented at the top of `src/utils/backup.js`). They hold the signed-in user's own records only: no user id, email, password or token. Profile pictures are not included.
+

@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import { formatDateLong } from '../utils/format.js'
-import { Pencil, Upload, Trash2 } from 'lucide-react'
+import { Pencil, Upload, Trash2, AlertTriangle } from 'lucide-react'
+import DeleteAccountDialog from '../components/DeleteAccountDialog.jsx'
 import { PageHeader, Field, PasswordInput, Avatar, ConfirmDialog, RowMenu, focusFirstInvalid } from '../components/ui.jsx'
 export const validEmail = (s) => /^\S+@\S+\.\S+$/.test(s)
 export default function Profile() {
-  const { user, updateUser, changePassword, notify, saveAvatar, removeAvatar, checkAvatar } = useApp(), [sp] = useSearchParams(), [mode, setMode] = useState(() => (sp.get('password') ? 'password' : null))
-  const [photo, setPhoto] = useState(null), [photoErr, setPhotoErr] = useState(''), [photoBusy, setPhotoBusy] = useState(false), [rmOpen, setRmOpen] = useState(false), fileRef = useRef()
+  const { user, updateUser, changePassword, notify, saveAvatar, removeAvatar, checkAvatar, resetAll } = useApp(), [sp] = useSearchParams(), [mode, setMode] = useState(() => (sp.get('password') ? 'password' : null))
+  const [photo, setPhoto] = useState(null), [photoErr, setPhotoErr] = useState(''), [photoBusy, setPhotoBusy] = useState(false), [rmOpen, setRmOpen] = useState(false), [delAcct, setDelAcct] = useState(false), fileRef = useRef()
   useEffect(() => () => photo && URL.revokeObjectURL(photo.previewUrl), [photo])
   const [f, setF] = useState({ fullName: user.fullName, email: user.email }), [p, setP] = useState({ current: '', next: '', confirm: '' }), [err, setErr] = useState({}), [busy, setBusy] = useState(false)
   const saveProfile = async (e) => { e.preventDefault(); const er = {}
@@ -46,6 +47,10 @@ export default function Profile() {
       <Field label="Confirm new password" error={err.confirm}><PasswordInput className="input" autoComplete="new-password" value={p.confirm} onChange={(e) => setP({ ...p, confirm: e.target.value })} aria-invalid={!!err.confirm} /></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
       <div className="form-actions"><button className="btn btn-primary" disabled={busy}>Update password</button><button type="button" className="btn" onClick={() => setMode(null)}>Cancel</button></div></form>}
+    <section className="danger-zone profile-danger" aria-labelledby="p-danger"><h2 id="p-danger"><AlertTriangle size={18} aria-hidden="true" />Delete account</h2>
+      <p>Deleting your account permanently removes your profile, transactions, budgets, categories and savings. This cannot be undone. To clear your data but keep your account, use Delete All Data in Settings.</p>
+      <button className="btn btn-danger-outline" onClick={() => setDelAcct(true)}>Delete account…</button></section>
+    {delAcct && <DeleteAccountDialog onCancel={() => setDelAcct(false)} onConfirm={resetAll} />}
     {rmOpen && <ConfirmDialog danger={false} title="Remove profile picture?" confirmLabel="Remove photo" onCancel={() => setRmOpen(false)} onConfirm={async () => { const e = await removeAvatar(); setRmOpen(false); notify(e || 'Profile picture removed.') }}><p>Your initials will be shown instead. You can add a photo again at any time.</p></ConfirmDialog>}
   </>)
 }

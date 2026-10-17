@@ -1,30 +1,29 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, Download, LogOut, AlertTriangle } from 'lucide-react'
+import { ChevronRight, Download, LogOut, DatabaseBackup, Upload, Trash2 } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { CURRENCY_CODES, currencyLabel } from '../utils/currency.js'
 import { buildCsv, csvFilename, downloadCsv } from '../utils/csv.js'
 import { APP_VERSION } from '../version.js'
-import { PageHeader, ConfirmDialog, Avatar } from '../components/ui.jsx'
+import { PageHeader, Avatar } from '../components/ui.jsx'
+import { RestoreDialog, DeleteAllDialog, downloadJson } from '../components/DataDialogs.jsx'
+import { backupToText } from '../utils/backup.js'
 const Row = ({ label, children, action, id }) => <div className="setting-row"><div className="setting-text"><div id={id}>{label}</div><div className="muted small">{children}</div></div>{action}</div>
-const CONFIRM_WORD = 'DELETE'
-function DeleteAccountDialog({ onCancel, onConfirm }) {
-  const [text, setText] = useState('')
-  return (<ConfirmDialog title="Delete your account?" confirmLabel="Delete account permanently" disabled={text !== CONFIRM_WORD} onCancel={onCancel} onConfirm={onConfirm}>
-    <p><strong>This permanently deletes your TrackMyKita account.</strong> Your profile, profile picture, transactions, budgets, categories, savings goals and transfers are permanently removed from our database and cannot be recovered. Copies in backups kept by our database provider may remain for a limited time.</p>
-    <p className="muted">If you want a copy of your transactions, cancel and use Export in Settings first.</p>
-    <label className="field" style={{ marginTop: 8 }}><span className="field-label">Type {CONFIRM_WORD} to confirm</span>
-      <input className="input" value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} aria-describedby="del-hint" /></label>
-    <span id="del-hint" className="muted small">The button turns on when the word matches exactly.</span></ConfirmDialog>)
-}
 export default function Settings() {
-  const { user, settings, updateSettings, transactions, categories, logout, resetAll, notify } = useApp(), nav = useNavigate(), [confirm, setConfirm] = useState(false), [out, setOut] = useState(false)
+  const { user, settings, updateSettings, transactions, categories, logout, notify, backupData, dataToolsReady } = useApp(), nav = useNavigate(), [out, setOut] = useState(false), [dialog, setDialog] = useState(null), [backing, setBacking] = useState(false)
   // Export is read-only: it turns the transactions already on screen into a file. Nothing is saved or changed.
   const exportCsv = () => {
     if (!transactions.length) return notify('There are no transactions to export yet.')
     downloadCsv(buildCsv(transactions, categories, settings.currency), csvFilename())
     notify(`Exported ${transactions.length} transaction${transactions.length === 1 ? '' : 's'}.`)
   }
+  // Backup: the database returns one consistent snapshot of THIS user's records; the file is created here and saved to the device. Nothing is uploaded anywhere.
+  const backUp = async () => {
+    if (backing) return; setBacking(true); const { error, file, filename } = await backupData(); setBacking(false)
+    if (error) return notify(error)
+    downloadJson(backupToText(file), filename); notify(`Backup saved as ${filename}.`)
+  }
+  const needsUpdate = dataToolsReady ? null : ' Not available until the latest database update is applied.'
   return (<>
     <PageHeader title="Settings" />
     <div className="settings settings-grid">
@@ -36,7 +35,10 @@ export default function Settings() {
         <Row id="lbl-currency" label="Currency" action={<select className="input" aria-labelledby="lbl-currency" value={settings.currency} onChange={async (e) => notify((await updateSettings({ currency: e.target.value })) || 'Currency updated.')}>{CURRENCY_CODES.map((k) => <option key={k} value={k}>{currencyLabel(k)}</option>)}</select>}>Changes the symbol shown for amounts. Amounts are not converted.</Row>
         <Row id="lbl-theme" label="Theme" action={<select className="input" aria-labelledby="lbl-theme" value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value })}><option value="light">Light</option><option value="dark">Dark</option></select>}>Applies to every page on this device.</Row></section>
       <section className="card" aria-labelledby="s-data"><h2 id="s-data">Data</h2>
-        <Row label="Export transactions" action={<button className="btn" onClick={exportCsv}><Download size={16} aria-hidden="true" />Export CSV</button>}>Download all your transactions as a spreadsheet file</Row></section>
+        <Row label="Export transactions" action={<button className="btn" onClick={exportCsv}><Download size={16} aria-hidden="true" />Export CSV</button>}>Download all your transactions as a spreadsheet file</Row>
+        <Row label="Back up data" action={<button className="btn" onClick={backUp} disabled={backing || !dataToolsReady}><DatabaseBackup size={16} aria-hidden="true" />{backing ? 'Preparing...' : 'Back Up Data'}</button>}>Save a complete copy of your TrackMyKita data as a JSON file on this device. It contains your financial records, so store it somewhere secure. It is not uploaded anywhere.{needsUpdate}</Row>
+        <Row label="Restore backup" action={<button className="btn" onClick={() => setDialog('restore')} disabled={!dataToolsReady}><Upload size={16} aria-hidden="true" />Restore Backup</button>}>Replace your current data with a backup file you saved earlier.{needsUpdate}</Row>
+        <Row label="Delete all data" action={<button className="btn btn-danger-outline" onClick={() => setDialog('delete')} disabled={!dataToolsReady}><Trash2 size={16} aria-hidden="true" />Delete All Data</button>}>Remove all your transactions, budgets, savings and categories, and start fresh. Your account is kept.{needsUpdate}</Row></section>
       </div>
       <div className="settings-col">
       <section className="card" aria-labelledby="s-help"><h2 id="s-help">Help</h2>
@@ -45,13 +47,11 @@ export default function Settings() {
         <Link to="/settings/about" className="setting-row setting-link"><div className="setting-text"><div>About TrackMyKita</div><div className="muted small">Version {APP_VERSION}, update log and creator</div></div><ChevronRight size={18} aria-hidden="true" /></Link>
         <Link to="/privacy" className="setting-row setting-link"><div className="setting-text"><div>Privacy Policy</div><div className="muted small">What information TrackMyKita collects and why</div></div><ChevronRight size={18} aria-hidden="true" /></Link>
         <Link to="/terms" className="setting-row setting-link"><div className="setting-text"><div>Terms of Service</div><div className="muted small">The rules for using TrackMyKita</div></div><ChevronRight size={18} aria-hidden="true" /></Link></section>
-      <section className="danger-zone" aria-labelledby="s-danger"><h2 id="s-danger"><AlertTriangle size={18} aria-hidden="true" />Danger zone</h2>
-        <p>Deleting your account permanently removes your profile, transactions, budgets, categories and savings. This cannot be undone.</p>
-        <button className="btn btn-danger-outline" onClick={() => setConfirm(true)}>Delete account…</button></section>
       <section className="logout-zone" aria-label="Session"><button className="btn btn-lg" disabled={out} onClick={async () => { setOut(true); await logout(); nav('/login') }}><LogOut size={18} aria-hidden="true" />Log out</button>
         <p className="muted small">Signed in as {user.email}</p></section>
       </div>
     </div>
-    {confirm && <DeleteAccountDialog onCancel={() => setConfirm(false)} onConfirm={resetAll} />}
+    {dialog === 'restore' && <RestoreDialog onClose={() => setDialog(null)} />}
+    {dialog === 'delete' && <DeleteAllDialog onClose={() => setDialog(null)} />}
   </>)
 }

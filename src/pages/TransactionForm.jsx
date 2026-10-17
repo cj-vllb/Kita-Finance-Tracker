@@ -4,8 +4,10 @@ import { useApp } from '../context/AppContext.jsx'
 import { TODAY } from '../utils/dates.js'
 import { formatDate, money, signed, txLabel } from '../utils/format.js'
 import { computeLedger, ledgerProblem, bucketAmount } from '../utils/ledger.js'
+import { evaluateAmount } from '../utils/expression.js'
 import { PageHeader, Field, Segmented, DeleteTransactionDialog, ErrorState, focusFirstInvalid } from '../components/ui.jsx'
 import CategoryDialog from '../components/CategoryDialog.jsx'
+const AMOUNT_TIP = 'Tip: You can enter a calculation, e.g. 100+200+430.'
 const NEW_CATEGORY = '__new__' // sentinel option value; it is never stored in the form state
 // What each choice of balance means, shown under the selector. Income: where the money goes. Expense: where it is paid from.
 const BALANCE_HINT = {
@@ -23,8 +25,10 @@ export default function TransactionForm() {
   const others = transactions.filter((t) => t.id !== existing?.id), base = computeLedger({ transactions: others, transfers, reallocations, goals })
   const goalChoices = activeGoals.concat(goals.filter((g) => g.archived && g.id === f.goalId)) // an old transaction can still point at a deleted goal
   const submit = async (e) => {
-    e.preventDefault(); if (saving) return; const er = {}, amt = Number(f.amount)
-    if (!f.amount || Number.isNaN(amt)) er.amount = 'Enter an amount.'; else if (amt <= 0) er.amount = 'Enter an amount above zero.'
+    e.preventDefault(); if (saving) return; const er = {}
+    // The amount box accepts a calculation. It is worked out here by a safe parser (no eval), rounded to cents, and only the resulting number is saved.
+    const calc = evaluateAmount(f.amount), amt = calc.ok ? calc.amount : 0
+    if (!calc.ok) er.amount = calc.error
     if (!f.date) er.date = 'Choose a date.'
     // Early, friendly version of the database check: would this leave a goal or General Savings below zero? (The database still decides.)
     if (!Object.keys(er).length && savingsReady && (f.balance === 'savings' || existing?.balance === 'savings')) {
@@ -38,14 +42,15 @@ export default function TransactionForm() {
     notify(existing ? 'Transaction updated successfully.' : 'Transaction saved successfully.'); nav(existing ? `/transactions/${existing.id}` : '/transactions')
   }
   const bad = (k) => !!err[k]
+  const preview = (() => { const c = evaluateAmount(f.amount); return c.ok && c.isExpression ? c.amount : null })()
   return (<>
     <PageHeader title={existing ? 'Edit transaction' : 'New transaction'} />
     <form className={'form tx-form' + (savingsReady ? ' has-bal' : '')} onSubmit={submit} noValidate>
       <Field label="Type"><Segmented label="Type" value={f.type} onChange={(type) => setF({ ...f, type, categoryId: '' })} options={[['expense', 'Expense'], ['income', 'Income']]} /></Field>
       {savingsReady && <Field className="f-bal" label={f.type === 'income' ? 'Add to' : 'Paid from'} hint={BALANCE_HINT[f.type][f.balance]}><Segmented label={f.type === 'income' ? 'Add to' : 'Paid from'} value={f.balance} onChange={(balance) => { setF({ ...f, balance, goalId: '' }); setErr(({ goal, ...rest }) => rest) }} options={[['current', 'Current Balance'], ['savings', 'Savings']]} /></Field>}
       {savingsReady && f.balance === 'savings' && <Field className="f-goal" label="Savings goal (optional)" error={err.goal} hint={goalChoices.length === 0 ? 'You have no savings goals yet, so this goes to General Savings. You can create goals on the Savings page.' : f.type === 'income' ? 'Leave as General Savings if this income is not for a particular goal.' : 'Choose the goal this expense uses. Without one, only unassigned Savings can be used.'}><select className="input" value={f.goalId} onChange={(e) => { set('goalId')(e); setErr(({ goal, ...rest }) => rest) }} aria-invalid={bad('goal')}><option value="">{f.type === 'expense' ? `General Savings / No specific goal (${money(base.unassigned)} unassigned)` : 'General Savings / No specific goal'}</option>{goalChoices.map((g) => <option key={g.id} value={g.id}>{g.name}{g.archived ? ' (deleted)' : ''}{f.type === 'expense' ? ` (${money(bucketAmount(base, g.id))} saved)` : ''}</option>)}</select></Field>}
-      <Field className="f-amount" label={`Amount (${settings.currency})`} error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
-      <Field className="f-cat" label="Category (optional)" hint="Leave as None if you do not need one."><select className="input" value={f.categoryId} onChange={(e) => (e.target.value === NEW_CATEGORY ? setAddCat(true) : set('categoryId')(e))}><option value="">None</option>{categories.filter((c) => c.type === f.type).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}<option value={NEW_CATEGORY}>+ Add category</option></select></Field>
+      <Field className="f-amount" label={`Amount (${settings.currency})`} error={err.amount} hint={<>{AMOUNT_TIP}{preview !== null && <strong className="calc-result"> = {money(preview)}</strong>}</>}><input className="input" type="text" inputMode="text" enterKeyHint="done" autoComplete="off" spellCheck={false} placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
+      <Field className="f-cat" label="Category (optional)" hint="Leave as None if you do not need one."><select className="input" value={f.categoryId} onChange={(e) => (e.target.value === NEW_CATEGORY ? setAddCat(true) : set('categoryId')(e))}><option value="">None</option>{categories.filter((c) => c.type === f.type && (!c.archived || c.id === f.categoryId)).map((c) => <option key={c.id} value={c.id}>{c.name}{c.archived ? ' (deleted)' : ''}</option>)}<option value={NEW_CATEGORY}>+ Add category</option></select></Field>
       <Field className="f-title" label="Transaction title (optional)" hint="A short name for this transaction. If left blank, the category name is shown."><input className="input" value={f.description} onChange={set('description')} /></Field>
       <Field className="f-date" label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={bad('date')} /></Field>
       <Field label="Notes (optional)"><textarea className="input" value={f.notes} onChange={set('notes')} placeholder="Add a note" /></Field>

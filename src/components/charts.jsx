@@ -104,3 +104,5 @@ export function MiniBars({ data }) {
       <rect x={cx + 1} y={H - B - h(d.expenses)} width={bw} height={h(d.expenses)} fill="var(--color-negative)" rx="2" />
       <text x={cx} y={H - 5} fontSize="12" textAnchor="middle" fill={TICK}>{monthShort(d.month)}</text></g> })}</svg></div>)
 }
+
+export { useWidth, compact, niceMax, padLeft }

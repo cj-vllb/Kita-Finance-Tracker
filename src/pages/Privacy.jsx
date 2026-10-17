@@ -49,7 +49,7 @@ export default function Privacy() {
 
     <h2>How long we keep information</h2>
     <p>We keep your information while your account exists. You can delete individual transactions, budgets and categories at any time. You can download your transactions as a CSV file from Settings.</p>
-    <p>If you delete your account in Settings, your profile, transactions, budgets, categories, profile pictures and sign-in account are permanently removed from our live systems. Our database provider may keep backups for a limited period, so copies of deleted information may remain in those backups until they expire. Analytics data is kept according to Vercel's own practices.</p>
+    <p>If you delete your account on the Profile page, your profile, transactions, budgets, categories, profile pictures and sign-in account are permanently removed from our live systems. Our database provider may keep backups for a limited period, so copies of deleted information may remain in those backups until they expire. Analytics data is kept according to Vercel's own practices.</p>
 
     <h2>Your choices and rights</h2>
     <p>In the app you can edit your name, email address, currency and profile picture, export your transactions, and delete your account. Depending on where you live, privacy laws such as the Philippines' Data Privacy Act of 2012 may give you additional rights, for example to ask what information we hold about you, to have it corrected, or to have it deleted. To make a request or ask a question, email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We will do our best to respond promptly.</p>

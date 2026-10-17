@@ -6,7 +6,7 @@ import { money, signed, txKind, greeting, firstName, monthLabel, monthName, mont
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
 import { CashFlowChart, MiniBars } from '../components/charts.jsx'
-import { CategoryLabel, CatLabel, DirIcon, PageHeader } from '../components/ui.jsx'
+import { CategoryLabel, CatLabel, TxIcon, PageHeader } from '../components/ui.jsx'
 import { useMedia } from '../components/SidebarSearch.jsx'
 import { VISIBILITY_KEYS, MASK, readVisibility, writeVisibility } from '../utils/balanceVisibility.js'
 // One independent show/hide preference per balance, remembered in this browser (see utils/balanceVisibility.js).
@@ -34,6 +34,7 @@ export default function Dashboard() {
     setTab(next); requestAnimationFrame(() => document.getElementById('bal-tab-' + next)?.focus())
   }
   const name = (id) => categories.find((x) => x.id === id)?.name ?? 'Uncategorized'
+  const bname = (b) => b.name || name(b.categoryId) // a budget-only custom budget has its own name
   const month = c.inMonth(transactions, CURRENT_MONTH), income = c.calculateIncome(month), expenses = c.calculateExpenses(month), net = income - expenses
   const [top] = c.groupExpensesByCategory(month), prev = c.inMonth(transactions, c.shiftMonth(CURRENT_MONTH, -1)), prevExp = c.calculateExpenses(prev)
   const diff = prevExp ? Math.round((1 - expenses / prevExp) * 100) : null
@@ -71,11 +72,11 @@ export default function Dashboard() {
       <div className="previews cards">
         <Preview title="Recent transactions" to="/transactions" action="View All Transaction History">
           {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
-            <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><DirIcon type={t.type} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{txKind(t)}</span></span></Link></li>)}</ul>}</Preview>
+            <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><TxIcon type={t.type} category={categories.find((c) => c.id === t.categoryId)} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{txKind(t)}</span></span></Link></li>)}</ul>}</Preview>
         <Preview title="Budgets" sub={monthLabel(CURRENT_MONTH)} to="/budgets" action="View All Budgets">
           {budgetTop.length === 0 ? <p className="muted pv-empty">No budgets set for this month. <Link to="/budgets/new">Create a budget</Link></p> :
-            <ul className="bp-list">{budgetTop.map(({ b, spent, remaining, pct }) => <li key={b.id}><div className="bp-top"><span>{name(b.categoryId)}</span><span className="muted small">{money(spent)} of {money(b.amount)}</span></div>
-              <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${name(b.categoryId)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
+            <ul className="bp-list">{budgetTop.map(({ b, spent, remaining, pct }) => <li key={b.id}><div className="bp-top"><span>{bname(b)}</span><span className="muted small">{money(spent)} of {money(b.amount)}</span></div>
+              <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${bname(b)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
               <div className={`small bp-note ${remaining < 0 ? 'neg' : 'muted'}`}>{remaining < 0 ? `${money(-remaining)} over budget` : `${money(remaining)} left`} · {pct}% used</div></li>)}</ul>}</Preview></div>
       <section className="section glance-section"><h2>This month at a glance</h2><div className="glance">
         <div><div className="muted">Highest spending category</div>{top ? <><div className="v"><CategoryLabel id={top.categoryId} categories={categories} /> · {money(top.amount)}</div><div className="muted small">{Math.round((top.amount / expenses) * 100)}% of this month's expenses</div></> : <div className="v">No expenses yet</div>}</div>

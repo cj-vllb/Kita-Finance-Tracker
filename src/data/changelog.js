@@ -2,6 +2,15 @@
 // Writing rules (see "Release notes" in README.md): 2 to 5 short bullets per version, written for people using the app, only for work that has shipped.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
+  // FINALIZE BEFORE RELEASE: set `date` below to the real day 1.3.4 ships, in the same format as the entries beneath it (for example 'October 20, 2026').
+  // While it is null the About page shows no date for this version, so nothing made-up is ever displayed.
+  { version: '1.3.4', date: "October 17, 2026", title: 'Reports, categories and your data', items: [
+    'Filter transactions by day, week or month, and see each transaction\'s category icon',
+    'Type a calculation like 100+200+430 straight into the amount',
+    'Reports now has Stats and Charts for any day, week, month, year or all time',
+    'Pick icons for categories, start from ready-made categories and budgets, and see them in a clearer grid',
+    'Back up, restore or clear your data from Settings, and send feedback from About',
+  ] },
   { version: '1.3.3', date: 'October 16,2026', title: 'Smoother savings experience', items: [
     'Simpler money transfers between balances and savings goals',
     'Cleaner Savings and Dashboard layouts',

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { money, monthShort } from '../utils/format.js'
+import { compact } from '../utils/compactAmount.js'
 // Charts draw at the real width of their container (no scaling of a fixed canvas), so text stays 12px and
 // readable on a phone. Layout choices (label thinning, value labels) adapt to the space available.
 function useWidth(fallback = 320) {
@@ -13,7 +14,6 @@ function useWidth(fallback = 320) {
   }, [])
   return [ref, w]
 }
-const compact = (v) => (v >= 1e9 ? `${+(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${+(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${+(v / 1e3).toFixed(0)}k` : v >= 1e3 ? `${+(v / 1e3).toFixed(1)}k` : String(+v.toFixed(0)))
 // Axis top = three equal steps of a "nice" size (1, 2, 2.5, 5 x 10^n), so ticks read cleanly for any currency.
 const niceMax = (m) => {
   if (!(m > 0)) return 3000

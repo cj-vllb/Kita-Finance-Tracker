@@ -2,7 +2,11 @@
 
 TrackMyKita is a personal finance tracker for recording income and expenses, setting monthly budgets and seeing where your money goes, all in one personal account.
 
-**Current version:** 1.3.4
+**Current version:** 1.3.5
+
+Version 1.3.5 adds: a compact monthly summary and (on desktop) a month calendar of real daily income and spending on the Dashboard; Income and Expense categories side by side on desktop; an icon grid for choosing a category; a live result inside the amount field; period pills and aligned controls on Reports, with charts sized to their cards; the month selector beside "Active budgets for" and custom expense categories in Available to budget; compact Settings rows; a stationary header separator during page transitions; fixed green/red category colors (the stored color is ignored, not deleted); and **savings contributions**: new money added directly to General Savings or a goal with no source balance (own table, never income, never touches Current Balance; transfers and re-allocations are unchanged). It needs the `20261018000000_v135_savings_contributions.sql` migration (additive; see SUPABASE_SETUP.md).
+
+
 
 Version 1.3.4 adds: transaction filters by day, week or month with weekday headings and category icons; calculations in the amount field (a safe parser, no eval); a Reports page with Stats and Charts for any day, week, month, year or all time; an icon-based Categories grid with 19 + 19 built-in presets and an icon picker (80+ icons); preset and budget-only custom budgets; Back Up Data, Restore Backup and Delete All Data in Settings; Delete account moved to Profile; Feedback on About. It needs migration `20261016000000_v134_categories_budgets_data_tools.sql` (see SUPABASE_SETUP.md). `npm test` runs the unit tests (Node's built-in runner).
 

@@ -2,7 +2,8 @@ import { supabase, unwrap, fetchAll } from '../lib/supabaseClient.js'
 // icon / preset_key / archived_at exist after the 1.3.4 migration. Older databases simply return rows without them, and the app falls back safely.
 const fromRow = (r) => ({ id: r.id, name: r.name, type: r.type, color: r.color, icon: r.icon || null, presetKey: r.preset_key || null, archived: !!r.archived_at, createdAt: r.created_at || '' })
 // `withExtras` is true once the 1.3.4 migration is known to exist, so an older database keeps working.
-const toRow = (x) => ({ name: x.name, type: x.type, color: x.color || 'grey', ...(x.withExtras ? { icon: x.icon || null } : {}) }) // user_id defaults to auth.uid() in the database
+// 1.3.5: the app no longer lets anyone pick a color, so none is sent: a new category gets the database default and an edit leaves the stored color exactly as it is.
+const toRow = (x) => ({ name: x.name, type: x.type, ...(x.color ? { color: x.color } : {}), ...(x.withExtras ? { icon: x.icon || null } : {}) }) // user_id defaults to auth.uid() in the database
 export const getCategories = async () => (await fetchAll(() => supabase.from('categories').select('*').order('created_at').order('id'))).map(fromRow)
 export const createCategory = (x) => supabase.from('categories').insert(toRow(x)).select().single().then(unwrap).then(fromRow)
 export const updateCategory = (x) => supabase.from('categories').update(toRow(x)).eq('id', x.id).select().single().then(unwrap).then(fromRow)

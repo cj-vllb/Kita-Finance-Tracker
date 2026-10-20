@@ -1,5 +1,4 @@
 import { money } from '../utils/format.js'
-import { colorHex } from '../utils/colors.js'
 import { useWidth, compact, padLeft } from './charts.jsx'
 import { CategoryIcon } from './ui.jsx'
 // Charts for the Reports > Charts view. All of them draw the rows they are given (nothing is demo data) and are plain SVG/HTML, so they inherit the theme
@@ -50,33 +49,34 @@ export function axisFor(values) {
   for (let v = lo; v <= hi + step / 1000; v += step) ticks.push(Math.round(v * 100) / 100)
   return { lo, hi, ticks }
 }
-// Wide series (a month of days, three years of months) scroll sideways inside the card instead of squeezing labels together.
-function Scroller({ children, slotMin, n }) {
-  const [ref, W] = useWidth(), inner = Math.max(W, n * slotMin)
-  return <div ref={ref} className="chart-box chart-scroll">{children(inner)}</div>
+// The chart is drawn at exactly the width of its container, so it can never be wider than the card (1.3.5). It used to be forced to a minimum width per data
+// point, which made a month of days wider than a phone and pushed the chart out of its card. Dense series now get thinner bars and fewer axis labels instead.
+function Fit({ children }) {
+  const [ref, W] = useWidth()
+  return <div ref={ref} className="chart-box">{children(W)}</div>
 }
 const every = (slot) => Math.max(1, Math.ceil(46 / slot))
 
 export function FlowBars({ series, title }) {
-  const slotMin = series.length > 12 ? 30 : 56, H = 280, B = 34, T = 14
+  const H = 280, B = 34, T = 14
   const ax = axisFor(series.flatMap((d) => [d.income, d.expenses]))
-  return (<figure style={{ margin: 0 }}><Scroller slotMin={slotMin} n={series.length}>{(W) => {
-    const L = padLeft(ax.hi) + 4, slot = (W - L - 6) / series.length, bw = Math.max(5, Math.min(26, slot / 2.6)), y = (v) => T + ((ax.hi - v) / (ax.hi - ax.lo)) * (H - B - T), step = every(slot)
+  return (<figure style={{ margin: 0 }}><Fit>{(W) => {
+    const L = padLeft(ax.hi) + 4, slot = (W - L - 6) / series.length, bw = Math.max(2, Math.min(26, (slot - 2) / 2.2)), y = (v) => T + ((ax.hi - v) / (ax.hi - ax.lo)) * (H - B - T), step = every(slot)
     return (<svg className="chart" width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}. ${series.map((d) => `${d.label}: income ${money(d.income)}, expenses ${money(d.expenses)}`).join('; ')}`}>
       {ax.ticks.map((v) => <g key={v}><line x1={L} x2={W - 4} y1={y(v)} y2={y(v)} stroke="var(--color-border)" /><text x={0} y={y(v) + 4} fontSize="12" fill={TICK}>{compact(v)}</text></g>)}
       {series.map((d, i) => { const cx = L + slot * i + slot / 2; return (<g key={d.key}><title>{`${d.label}: income ${money(d.income)}, expenses ${money(d.expenses)}`}</title>
         <rect x={cx - bw - 1} y={Math.min(y(d.income), y(0))} width={bw} height={Math.abs(y(0) - y(d.income))} fill="var(--color-primary)" rx="2" />
         <rect x={cx + 1} y={Math.min(y(d.expenses), y(0))} width={bw} height={Math.abs(y(0) - y(d.expenses))} fill="var(--color-negative)" rx="2" />
         {i % step === 0 && <text x={cx} y={H - 10} fontSize="12" textAnchor="middle" fill={TICK}>{d.label}</text>}</g>) })}</svg>)
-  }}</Scroller>
+  }}</Fit>
     <figcaption className="legend"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></figcaption></figure>)
 }
 
 const LINES = [['income', 'Income', 'var(--color-primary)', ''], ['expenses', 'Expenses', 'var(--color-negative)', '6 5'], ['net', 'Net cash flow', 'var(--color-text)', '2 4']]
 export function TrendLines({ series, title }) {
-  const slotMin = series.length > 12 ? 30 : 56, H = 280, B = 34, T = 14, ax = axisFor(series.flatMap((d) => [d.income, d.expenses, d.net]))
-  return (<figure style={{ margin: 0 }}><Scroller slotMin={slotMin} n={series.length}>{(W) => {
-    const L = padLeft(Math.max(Math.abs(ax.lo), ax.hi)) + 8, n = series.length, span = Math.max(1, n - 1), x = (i) => L + 8 + (i * (W - L - 20)) / span, y = (v) => T + ((ax.hi - v) / (ax.hi - ax.lo)) * (H - B - T), step = every((W - L - 20) / span)
+  const H = 280, B = 34, T = 14, ax = axisFor(series.flatMap((d) => [d.income, d.expenses, d.net]))
+  return (<figure style={{ margin: 0 }}><Fit>{(W) => {
+    const L = padLeft(Math.max(Math.abs(ax.lo), ax.hi)) + (ax.lo < 0 ? 7 : 0) + 8, n = series.length, span = Math.max(1, n - 1), x = (i) => L + 8 + (i * (W - L - 20)) / span, y = (v) => T + ((ax.hi - v) / (ax.hi - ax.lo)) * (H - B - T), step = every((W - L - 20) / span)
     return (<svg className="chart" width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}. ${series.map((d) => `${d.label}: income ${money(d.income)}, expenses ${money(d.expenses)}, net ${money(d.net)}`).join('; ')}`}>
       {ax.ticks.map((v) => <g key={v}><line x1={L} x2={W - 4} y1={y(v)} y2={y(v)} stroke={v === 0 ? 'var(--color-muted)' : 'var(--color-border)'} /><text x={0} y={y(v) + 4} fontSize="12" fill={TICK}>{compact(v)}</text></g>)}
       {LINES.map(([k, , color, dash]) => <path key={k} d={series.map((d, i) => `${i ? 'L' : 'M'}${x(i)},${y(d[k])}`).join(' ')} fill="none" stroke={color} strokeWidth="2.25" strokeDasharray={dash || undefined} strokeLinejoin="round" strokeLinecap="round" />)}
@@ -84,7 +84,7 @@ export function TrendLines({ series, title }) {
         {n <= 40 && LINES.map(([k, , color]) => <circle key={k} cx={x(i)} cy={y(d[k])} r="3" fill={color} />)}
         <rect x={x(i) - (W - L - 20) / span / 2} y={T} width={Math.max(8, (W - L - 20) / span)} height={H - B - T} fill="transparent" />
         {i % step === 0 && <text x={x(i)} y={H - 10} fontSize="12" textAnchor="middle" fill={TICK}>{d.label}</text>}</g>))}</svg>)
-  }}</Scroller>
+  }}</Fit>
     <figcaption className="legend">{LINES.map(([k, label, color]) => <span key={k}><span className="dot" style={{ background: color }} />{label}</span>)}</figcaption></figure>)
 }
 

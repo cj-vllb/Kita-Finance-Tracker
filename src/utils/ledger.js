@@ -5,12 +5,14 @@
 //   Savings balance = income(savings) - expenses(savings) + transfers to savings - transfers to current
 //   A goal's amount = the Savings flows tagged with that goal, +/- reallocations. "General" (unassigned) = the flows with no goal.
 //   Goals only earmark Savings: allocated + unassigned = Savings, so goals are never extra money.
+//   A CONTRIBUTION (1.3.5) is new money added straight to one Savings bucket (a goal, or General Savings). It needs no source balance and never touches
+//   Current Balance. It is not income, not an expense and not a transfer, so it never reaches the income/expense reports.
 // Transfers and reallocations are NOT income or expenses and are never passed to the income/expense reports (utils/calc.js).
 const cents = (n) => Math.round(Number(n) * 100)
 export const toMoney = (n) => Math.round(Number(n) * 100) / 100 // 2-decimal amount for storing/sending
 export const isSavings = (t) => t?.balance === 'savings' // rows saved before 1.3.1 have no balance and are Current Balance
 
-export function computeLedger({ transactions = [], transfers = [], reallocations = [], goals = [] } = {}) {
+export function computeLedger({ transactions = [], transfers = [], reallocations = [], contributions = [], goals = [] } = {}) {
   let current = 0, general = 0
   const by = {}
   goals.forEach((g) => { by[g.id] = 0 })
@@ -24,6 +26,7 @@ export function computeLedger({ transactions = [], transfers = [], reallocations
     if (t.direction === 'to_savings') { current -= a; bump(t.goalId, a) } else { current += a; bump(t.goalId, -a) }
   }
   for (const r of reallocations) { const a = cents(r.amount); bump(r.fromGoalId, -a); bump(r.toGoalId, a) }
+  for (const k of contributions) bump(k.goalId, cents(k.amount)) // adds to one bucket; nothing is taken from anywhere
   const goalSum = Object.values(by).reduce((s, v) => s + v, 0)
   return {
     current: current / 100,
@@ -54,7 +57,21 @@ export function goalProgress(goal, saved) {
 }
 export const pctText = (pct) => `${Number(pct.toFixed(1))}%`
 
-// ---- One transfer form for every movement of money (Savings > Add money) ----
+// ---- Adding NEW money to Savings (a contribution) ----
+// No source: nothing is checked against Current Balance or any existing bucket. The only rules are the ones the database also enforces:
+// the destination must be General Savings or an active goal, and the amount must be above zero and fit numeric(14,2).
+export const MAX_AMOUNT = 999999999999.99
+export function contributionProblem(activeGoals, { goalId, amount }) {
+  if (goalId && !activeGoals.some((g) => g.id === goalId)) return { field: 'to', message: 'Choose where the money goes. That goal may have been deleted.' }
+  const raw = typeof amount === 'string' ? amount.trim() : amount
+  if (raw === '' || raw == null || !Number.isFinite(Number(raw))) return { field: 'amount', message: 'Enter an amount.' }
+  const amt = toMoney(raw)
+  if (!(amt > 0)) return { field: 'amount', message: 'Enter an amount above zero.' }
+  if (amt > MAX_AMOUNT) return { field: 'amount', message: 'That amount is too large.' }
+  return null
+}
+
+// ---- One transfer form for every movement of EXISTING money (Savings > Add to Savings > Move existing money) ----
 // A "place" is Current Balance, General Savings (unassigned) or one active goal (its id). The same ledger tables as before do the work, nothing new:
 //   Current Balance -> General Savings / goal   savings_transfers  to_savings (goal NULL = General)
 //   General Savings / goal -> Current Balance   savings_transfers  to_current (goal NULL = General)

@@ -23,22 +23,22 @@ export default function Settings() {
     if (error) return notify(error)
     downloadJson(backupToText(file), filename); notify(`Backup saved as ${filename}.`)
   }
-  const needsUpdate = dataToolsReady ? null : ' Not available until the latest database update is applied.'
+  const needsUpdate = dataToolsReady ? null : ' Needs the latest database update.'
   return (<>
     <PageHeader title="Settings" />
     <div className="settings settings-grid">
       <div className="settings-col">
       <section className="card" aria-labelledby="s-account"><h2 id="s-account">Account</h2>
-        <div className="setting-row setting-id"><Avatar user={user} size={48} /><div className="setting-text"><div>{user.fullName}</div><div className="muted small">{user.email}</div></div><Link className="btn" to="/profile">Edit profile</Link></div>
-        <Row label="Password" action={<Link className="btn" to="/profile?password=1">Change password</Link>}>Update the password you sign in with</Row></section>
+        <div className="setting-row setting-id"><Avatar user={user} size={48} /><div className="setting-text"><div>{user.fullName}</div><div className="muted small">{user.email}</div></div><Link className="btn" to="/profile" aria-label="Edit profile">Edit</Link></div>
+        <Row label="Password" action={<Link className="btn" to="/profile?password=1" aria-label="Change password">Change</Link>}>The password you sign in with.</Row></section>
       <section className="card" aria-labelledby="s-pref"><h2 id="s-pref">Preferences</h2>
-        <Row id="lbl-currency" label="Currency" action={<select className="input" aria-labelledby="lbl-currency" value={settings.currency} onChange={async (e) => notify((await updateSettings({ currency: e.target.value })) || 'Currency updated.')}>{CURRENCY_CODES.map((k) => <option key={k} value={k}>{currencyLabel(k)}</option>)}</select>}>Changes the symbol shown for amounts. Amounts are not converted.</Row>
-        <Row id="lbl-theme" label="Theme" action={<select className="input" aria-labelledby="lbl-theme" value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value })}><option value="light">Light</option><option value="dark">Dark</option></select>}>Applies to every page on this device.</Row></section>
+        <Row id="lbl-currency" label="Currency" action={<select className="input" aria-labelledby="lbl-currency" value={settings.currency} onChange={async (e) => notify((await updateSettings({ currency: e.target.value })) || 'Currency updated.')}>{CURRENCY_CODES.map((k) => <option key={k} value={k}>{currencyLabel(k)}</option>)}</select>}>Symbol shown for amounts. Nothing is converted.</Row>
+        <Row id="lbl-theme" label="Theme" action={<select className="input" aria-labelledby="lbl-theme" value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value })}><option value="light">Light</option><option value="dark">Dark</option></select>}>Applies on this device.</Row></section>
       <section className="card" aria-labelledby="s-data"><h2 id="s-data">Data</h2>
-        <Row label="Export transactions" action={<button className="btn" onClick={exportCsv}><Download size={16} aria-hidden="true" />Export CSV</button>}>Download all your transactions as a spreadsheet file</Row>
-        <Row label="Back up data" action={<button className="btn" onClick={backUp} disabled={backing || !dataToolsReady}><DatabaseBackup size={16} aria-hidden="true" />{backing ? 'Preparing...' : 'Back Up Data'}</button>}>Save a complete copy of your TrackMyKita data as a JSON file on this device. It contains your financial records, so store it somewhere secure. It is not uploaded anywhere.{needsUpdate}</Row>
-        <Row label="Restore backup" action={<button className="btn" onClick={() => setDialog('restore')} disabled={!dataToolsReady}><Upload size={16} aria-hidden="true" />Restore Backup</button>}>Replace your current data with a backup file you saved earlier.{needsUpdate}</Row>
-        <Row label="Delete all data" action={<button className="btn btn-danger-outline" onClick={() => setDialog('delete')} disabled={!dataToolsReady}><Trash2 size={16} aria-hidden="true" />Delete All Data</button>}>Remove all your transactions, budgets, savings and categories, and start fresh. Your account is kept.{needsUpdate}</Row></section>
+        <Row label="Export transactions" action={<button className="btn" onClick={exportCsv} aria-label="Export transactions as CSV"><Download size={16} aria-hidden="true" />Export</button>}>Download your transactions as a CSV spreadsheet.</Row>
+        <Row label="Back up data" action={<button className="btn" onClick={backUp} disabled={backing || !dataToolsReady} aria-label="Back up data"><DatabaseBackup size={16} aria-hidden="true" />{backing ? 'Preparing...' : 'Export'}</button>}>Save a copy to this device. It holds your records, so keep it private.{needsUpdate}</Row>
+        <Row label="Restore backup" action={<button className="btn" onClick={() => setDialog('restore')} disabled={!dataToolsReady} aria-label="Restore backup"><Upload size={16} aria-hidden="true" />Restore</button>}>Replace your data with a saved backup.{needsUpdate}</Row>
+        <Row label="Delete all data" action={<button className="btn btn-danger-outline" onClick={() => setDialog('delete')} disabled={!dataToolsReady} aria-label="Delete all data"><Trash2 size={16} aria-hidden="true" />Delete</button>}>Erase your records and start fresh. Your account stays.{needsUpdate}</Row></section>
       </div>
       <div className="settings-col">
       <section className="card" aria-labelledby="s-help"><h2 id="s-help">Help</h2>

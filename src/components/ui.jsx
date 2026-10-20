@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, MoreVertical, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, X } from 'lucide-react'
 import { initials } from '../utils/format.js'
-import { colorHex } from '../utils/colors.js'
 import { iconComponent } from '../utils/icons.js'
 // Shared dialog behaviour: focus moves in, Tab stays inside, Escape closes, page behind does not scroll, focus returns on close.
 function useDialog(ref, onClose, focusRef) {
@@ -60,7 +59,7 @@ export const CategoryLabel = ({ id, categories }) => categories.find((c) => c.id
 // Direction icon for a transaction row: arrow up-right for money out, down-left for money in. Paired with a text label, so colour is never the only cue.
 export const DirIcon = ({ type }) => <span className={'dir-icon ' + (type === 'income' ? 'in' : 'out')} aria-hidden="true">{type === 'income' ? <ArrowDownLeft size={16} strokeWidth={2} /> : <ArrowUpRight size={16} strokeWidth={2} />}</span>
 // Category name with its colour dot (display only). A missing category shows the italic "Uncategorized" with a neutral dot.
-export const CatLabel = ({ id, categories }) => { const c = categories.find((x) => x.id === id); return <span className="cat-label"><span className="dot" style={{ background: c ? colorHex(c.color) : 'var(--color-muted)' }} aria-hidden="true" />{c ? c.name : <em className="uncat">Uncategorized</em>}</span> }
+export const CatLabel = ({ id, categories }) => { const c = categories.find((x) => x.id === id); return <span className="cat-label"><span className="dot" style={{ background: c ? (c.type === 'income' ? 'var(--color-positive)' : 'var(--color-negative)') : 'var(--color-muted)' }} aria-hidden="true" />{c ? c.name : <em className="uncat">Uncategorized</em>}</span> }
 export const PageHeader = ({ title, subtitle, children }) => (
   <div className="page-header"><div><h1>{title}</h1>{subtitle && <p className="muted">{subtitle}</p>}</div>{children && <div className="actions">{children}</div>}</div>)
 // Moves keyboard/screen-reader focus to the first field with an error after a failed submit.

@@ -44,6 +44,20 @@ If an earlier attempt to apply this migration failed (an older copy of this file
 
 Until the migration is applied the app still works exactly as in 1.3: the Savings page explains that the update is missing, and the dashboard and transaction form show no savings controls.
 
+## 1.3.5: savings contributions (new money added to Savings without a source balance)
+
+Apply `supabase/migrations/20261018000000_v135_savings_contributions.sql` with `supabase db push` to **local or staging first**, then run `supabase test db` (file `07_v135_contributions.test.sql`). Never run `supabase db reset` against a real project. It is additive and safe to run twice: no row is deleted or rewritten and no existing table, column or policy is changed.
+
+What it does:
+- Adds the table `savings_contributions` (`goal_id` NULL = General Savings, `amount > 0`, a date, an optional note) with RLS (select / insert / delete own rows only; no update, like transfers), a composite foreign key so a row can only point at the same user's goal, a ledger check trigger and the deleted-goal guard.
+- Re-creates `kita_bucket` and `kita_ledger_check` with one extra branch so contributions count toward a goal's or General Savings' balance (Savings = income to savings - expenses from savings + transfers in - transfers out + contributions). Everything else in those functions is unchanged.
+- Narrows the new table's privileges to `select, insert, delete` for signed-in users and nothing for `anon` (Supabase otherwise grants every privilege and relies on RLS, which does not cover TRUNCATE). `service_role` is untouched. `kita_lock_user` stays internal (owner only).
+- Re-creates `export_my_data`, `restore_user_data` and `delete_all_my_data` to include contributions. Restore treats the section as optional, so backups made by 1.3.4 and earlier still restore exactly as before.
+
+A contribution is not income, an expense, a transfer or a re-allocation: it never touches Current Balance and never appears in Monthly income or the income reports. Transfers still need a source balance and re-allocations still never change the total.
+
+Until the migration is applied the app keeps working: "Add to Savings > New money" is disabled with an explanation, and moving existing money is unchanged. Apply it **before** deploying the 1.3.5 frontend.
+
 ## 1.3.4: category icons, presets, budget-only budgets, backup / restore, delete all data
 
 Apply `supabase/migrations/20261016000000_v134_categories_budgets_data_tools.sql` with `supabase db push` to **local or staging first**, and run `supabase test db` (file `06_v134.test.sql`; it has NOT been executed yet, so treat the first run as part of reviewing the migration). Never run `supabase db reset` against a real project.

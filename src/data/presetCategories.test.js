@@ -33,7 +33,7 @@ test('the icon library offers at least 80 distinct icons with unique ids', () =>
 })
 test('the database provisioning function lists exactly the same presets', () => {
   const dir = new URL('../../supabase/migrations/', import.meta.url)
-  const file = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort().reverse().find((f) => readFileSync(new URL(f, dir), 'utf8').includes('kita_provision_categories'))
+  const file = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort().reverse().find((f) => /create or replace function public\.kita_provision_categories/.test(readFileSync(new URL(f, dir), 'utf8'))) // the file that DEFINES it (later migrations only call it)
   assert.ok(file, 'migration with kita_provision_categories not found')
   const sql = readFileSync(new URL(file, dir), 'utf8')
   const rows = [...sql.matchAll(/\('(income|expense)', '([a-z0-9:-]+)', '((?:[^']|'')+)', '([a-z0-9-]+)', '([a-z]+)'\)/g)].map((m) => ({ type: m[1], key: m[2], name: m[3].replace(/''/g, "'"), icon: m[4], color: m[5] }))

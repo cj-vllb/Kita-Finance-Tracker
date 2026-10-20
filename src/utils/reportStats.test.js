@@ -109,11 +109,20 @@ test('savings transfers are reported separately and never touch income or expens
   const transfers = [{ date: '2026-10-05', direction: 'to_savings', amount: 3000 }, { date: '2026-10-09', direction: 'to_current', amount: 500.5 }, { date: '2026-09-30', direction: 'to_savings', amount: 999 }]
   const re = [{ date: '2026-10-10', amount: 700 }]
   const f = r.savingsFlows(oct, transfers, re)
-  assert.deepEqual(f, { toSavings: 3000, toCurrent: 500.5, net: 2499.5, reallocated: 700, count: 2 })
+  assert.deepEqual(f, { toSavings: 3000, toCurrent: 500.5, net: 2499.5, reallocated: 700, added: 0, count: 2 })
   const before = r.totalsOf(r.filterByPeriod(data, oct))
   assert.equal(r.totalsOf(r.filterByPeriod(data, oct)).income, before.income) // transfers are not an input to totals at all
   assert.equal(before.income, 25000.3); assert.equal(before.expenses, 6950)
   assert.equal(r.savingsFlows({ kind: 'all' }, transfers, re).toSavings, 3999)
+})
+
+test('savings contributions are reported as new money, apart from transfers, and never touch income or expense totals', () => {
+  const transfers = [{ date: '2026-10-05', direction: 'to_savings', amount: 3000 }]
+  const contributions = [{ date: '2026-10-06', amount: 500 }, { date: '2026-10-20', amount: 0.1 }, { date: '2026-10-21', amount: 0.2 }, { date: '2026-09-30', amount: 999 }]
+  const f = r.savingsFlows(oct, transfers, [], contributions)
+  assert.equal(f.added, 500.3); assert.equal(f.toSavings, 3000); assert.equal(f.net, 3000) // a contribution is not a transfer: net moved is unchanged
+  assert.equal(r.savingsFlows({ kind: 'all' }, [], [], contributions).added, 1499.3)
+  const before = r.totalsOf(r.filterByPeriod(data, oct)); assert.equal(before.income, 25000.3); assert.equal(before.expenses, 6950)
 })
 
 test('series: month has one bucket per day and the buckets sum to the totals', () => {

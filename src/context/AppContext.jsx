@@ -26,7 +26,7 @@ const attempt = async (fn, fallback, onError) => { try { await fn(); return null
 export function AppProvider({ children }) {
   const [session, setSession] = useState(null), [authLoading, setAuthLoading] = useState(true)
   const [profile, setProfile] = useState(null), [transactions, setTransactions] = useState([]), [budgets, setBudgets] = useState([]), [categories, setCategories] = useState([])
-  const [goals, setGoals] = useState([]), [transfers, setTransfers] = useState([]), [reallocations, setReallocations] = useState([]), [savingsReady, setSavingsReady] = useState(false)
+  const [goals, setGoals] = useState([]), [transfers, setTransfers] = useState([]), [reallocations, setReallocations] = useState([]), [contributions, setContributions] = useState([]), [savingsReady, setSavingsReady] = useState(false), [contributionsReady, setContributionsReady] = useState(false) // contributionsReady: the 1.3.5 database update is in place
   const [v134, setV134] = useState(false) // true once the 1.3.4 database update (category icons, backup and restore) is known to be in place
   const [dataLoading, setDataLoading] = useState(true), [dataError, setDataError] = useState(false), [loadedUid, setLoadedUid] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('kita:theme') || 'dark') // UI preference only
@@ -38,9 +38,9 @@ export function AppProvider({ children }) {
     const sub = auth.onAuthChange((_event, s) => setSession(s))
     return () => { live = false; sub.unsubscribe() }
   }, [])
-  const applySavings = (s) => { setSavingsReady(s.ready); setGoals(s.goals); setTransfers(s.transfers); setReallocations(s.reallocations) }
+  const applySavings = (s) => { setSavingsReady(s.ready); setContributionsReady(!!s.contributionsReady); setGoals(s.goals); setTransfers(s.transfers); setReallocations(s.reallocations); setContributions(s.contributions || []) }
   const reload = useCallback(async () => {
-    if (!uid) { setProfile(null); setTransactions([]); setBudgets([]); setCategories([]); setGoals([]); setTransfers([]); setReallocations([]); setSavingsReady(false); setDataLoading(false); setLoadedUid(null); return }
+    if (!uid) { setProfile(null); setTransactions([]); setBudgets([]); setCategories([]); setGoals([]); setTransfers([]); setReallocations([]); setContributions([]); setSavingsReady(false); setContributionsReady(false); setDataLoading(false); setLoadedUid(null); return }
     setDataLoading(true); setDataError(false)
     try {
       // Gives the user their own copy of the built-in categories once (safe to repeat). Older databases without the update just skip this.
@@ -62,7 +62,7 @@ export function AppProvider({ children }) {
     sign(); return () => { live = false; clearTimeout(t) }
   }, [avatarPath])
   // Both balances and every goal amount come from one pure calculation over the loaded ledger rows (utils/ledger.js).
-  const ledger = useMemo(() => computeLedger({ transactions, transfers, reallocations, goals }), [transactions, transfers, reallocations, goals])
+  const ledger = useMemo(() => computeLedger({ transactions, transfers, reallocations, contributions, goals }), [transactions, transfers, reallocations, contributions, goals])
   // `categories` keeps EVERY category (including deleted ones that old transactions still use) so history always shows a name and icon.
   // `activeCategories` is what pickers and the Categories page offer.
   const sortedCategories = useMemo(() => sortCategories(categories), [categories])
@@ -84,7 +84,7 @@ export function AppProvider({ children }) {
   const remove = (setList, fn, label) => (id) => run(async () => { await fn(id); setList((l) => l.filter((i) => i.id !== id)) }, `We couldn't delete this ${label}. Please try again.`)
   const value = {
     session, loggedIn: !!session, authLoading, ready: !authLoading && (!uid || loadedUid === uid), user, settings: { currency: safeCurrency(profile?.currency), theme },
-    transactions, budgets, categories: sortedCategories, activeCategories, dataToolsReady: v134, goals, activeGoals, transfers, reallocations, ledger, savingsReady, dataLoading: dataLoading || (!!uid && loadedUid !== uid), dataError, reload, toast, notify,
+    transactions, budgets, categories: sortedCategories, activeCategories, dataToolsReady: v134, goals, activeGoals, transfers, reallocations, contributions, contributionsReady, ledger, savingsReady, dataLoading: dataLoading || (!!uid && loadedUid !== uid), dataError, reload, toast, notify,
     signIn: (email, password) => attempt(() => auth.signIn(email, password), "We couldn't sign you in. Please try again."),
     signUp: async (name, email, password) => { let r; const error = await attempt(async () => { r = await auth.signUp(name, email, password) }, "We couldn't create your account. Please try again."); return { error, needsConfirmation: !error && !r.session } },
     logout: async () => { await attempt(() => auth.signOut()); setSession(null) },
@@ -127,8 +127,10 @@ export function AppProvider({ children }) {
     saveGoal: (x) => run(async () => { if (goals.some((g) => g.id === x.id)) await savingsService.updateGoal(x); else await savingsService.createGoal(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't save this goal. Please try again."),
     deleteGoal: (id, moveTo, date) => run(async () => { await savingsService.archiveGoal(id, moveTo, date); applySavings(await savingsService.getSavingsData()) }, "We couldn't delete this goal. Please try again."),
     addTransfer: (x) => run(async () => { await savingsService.createTransfer(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't move this money. Please try again."),
+    // New money added straight to Savings (General or one goal). One insert; nothing is deducted from Current Balance or any bucket.
+    addContribution: (x) => run(async () => { await savingsService.createContribution(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't add this to Savings. Please try again."),
     moveSavings: (x) => run(async () => { await savingsService.createReallocation(x); applySavings(await savingsService.getSavingsData()) }, "We couldn't move this money. Please try again."),
-    undoSavingsActivity: (kind, id) => run(async () => { await (kind === 'transfer' ? savingsService.deleteTransfer(id) : savingsService.deleteReallocation(id)); applySavings(await savingsService.getSavingsData()) }, "We couldn't undo this. Please try again."),
+    undoSavingsActivity: (kind, id) => run(async () => { await (kind === 'transfer' ? savingsService.deleteTransfer(id) : kind === 'contribution' ? savingsService.deleteContribution(id) : savingsService.deleteReallocation(id)); applySavings(await savingsService.getSavingsData()) }, "We couldn't undo this. Please try again."),
     deleteTransaction: remove(setTransactions, txService.deleteTransaction, 'transaction'),
     saveBudget: (x) => save(budgets, setBudgets, { create: budgetService.createBudget, update: budgetService.updateBudget }, 'budget')({ ...x, withExtras: v134 }),
     deleteBudget: remove(setBudgets, budgetService.deleteBudget, 'budget'),
@@ -149,7 +151,10 @@ export function AppProvider({ children }) {
     // Resolves { error, file, filename }. The file is only the signed-in user's own records.
     backupData: async () => { let file = null; const error = await attempt(async () => { file = buildBackup(await dataService.exportMyData(), APP_VERSION) }, "We couldn't create the backup. Please try again."); return { error, file, filename: backupFilename() } },
     // `payload` has already been validated by utils/backup.js. The database validates it again and replaces everything, or changes nothing.
-    restoreBackup: async (payload) => { let counts = null; const error = await attempt(async () => { counts = await dataService.restoreMyData(payload) }, "We couldn't restore the backup, so nothing was changed."); if (!error) await reload(); return { error, counts } },
+    restoreBackup: async (payload) => { let counts = null; const error = await attempt(async () => {
+      // A database without the 1.3.5 update would ignore the contributions in this file and quietly drop that money, so refuse instead.
+      if ((payload.savings_contributions?.length || 0) > 0 && !contributionsReady) throw Object.assign(new Error('KITA: This backup includes money added directly to Savings, which needs the latest database update. Nothing was changed.'), { userMessage: 'This backup includes money added directly to Savings, which needs the latest database update. Nothing was changed.' })
+      counts = await dataService.restoreMyData(payload) }, "We couldn't restore the backup, so nothing was changed."); if (!error) await reload(); return { error, counts } },
     deleteAllData: async () => {
       const error = await attempt(() => dataService.deleteAllMyData(), "We couldn't delete your data, so nothing was changed.")
       if (!error) { Object.values(VISIBILITY_KEYS).forEach((k) => { try { localStorage.removeItem(k) } catch { /* ignore */ } }); await reload() }

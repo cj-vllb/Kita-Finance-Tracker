@@ -89,11 +89,14 @@ export function budgetProgress(period, budgets, txs, categories = []) {
 
 // ---- Savings -------------------------------------------------------------------------------------------------------------------------------
 // Transfers and reallocations are INTERNAL moves of the user's own money. They are reported here and nowhere else.
-export function savingsFlows(period, transfers = [], reallocations = []) {
-  let toSavings = 0, toCurrent = 0, moved = 0, nIn = 0, nOut = 0
+// `added` (1.3.5) is NEW money put straight into Savings (contributions). It is reported next to, never inside, the transfer figures: a transfer moves
+// money that was already tracked, a contribution brings in money that was not, so adding them together would blur what each number means.
+export function savingsFlows(period, transfers = [], reallocations = [], contributions = []) {
+  let toSavings = 0, toCurrent = 0, moved = 0, nIn = 0, nOut = 0, added = 0
   for (const t of transfers) { if (!inPeriod(t.date, period)) continue; if (t.direction === 'to_savings') { toSavings += cents(t.amount); nIn++ } else { toCurrent += cents(t.amount); nOut++ } }
   for (const r of reallocations) if (inPeriod(r.date, period)) moved += cents(r.amount)
-  return { toSavings: money2(toSavings), toCurrent: money2(toCurrent), net: money2(toSavings - toCurrent), reallocated: money2(moved), count: nIn + nOut }
+  for (const k of contributions) if (inPeriod(k.date, period)) added += cents(k.amount)
+  return { toSavings: money2(toSavings), toCurrent: money2(toCurrent), net: money2(toSavings - toCurrent), reallocated: money2(moved), added: money2(added), count: nIn + nOut }
 }
 
 // ---- Time series ---------------------------------------------------------------------------------------------------------------------------

@@ -2,10 +2,10 @@
 
 /* ---- transaction rows: category icon on a green (income) or red (expense) tile ---- */
 .dir-icon.tx-cat-icon{color:#fff}
-.dir-icon.tx-cat-icon.in{background:#1F7A45;color:#fff}
-.dir-icon.tx-cat-icon.out{background:#C23B3B;color:#fff}
-[data-theme=dark] .dir-icon.tx-cat-icon.in{background:#2E9E5B;color:#06140B}
-[data-theme=dark] .dir-icon.tx-cat-icon.out{background:#E0645F;color:#1A0606}
+.dir-icon.tx-cat-icon.in{background:var(--cat-in-bg);color:var(--cat-in-fg)}
+.dir-icon.tx-cat-icon.out{background:var(--cat-out-bg);color:var(--cat-out-fg)}
+[data-theme=dark] .dir-icon.tx-cat-icon.in{background:var(--cat-in-bg);color:var(--cat-in-fg)}
+[data-theme=dark] .dir-icon.tx-cat-icon.out{background:var(--cat-out-bg);color:var(--cat-out-fg)}
 .date-head{overflow-wrap:anywhere}
 .tx-showing{margin:0 0 var(--space-3)}
 .calc-result{color:var(--color-text);white-space:nowrap}

@@ -6,6 +6,7 @@ import { money, signed, txKind, greeting, firstName, monthLabel, monthName, mont
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
 import { CashFlowChart, MiniBars } from '../components/charts.jsx'
+import MonthCalendar from '../components/MonthCalendar.jsx'
 import { CategoryLabel, CatLabel, TxIcon, PageHeader } from '../components/ui.jsx'
 import { useMedia } from '../components/SidebarSearch.jsx'
 import { VISIBILITY_KEYS, MASK, readVisibility, writeVisibility } from '../utils/balanceVisibility.js'
@@ -53,10 +54,11 @@ export default function Dashboard() {
       {selector && <div className="seg bal-seg" role="tablist" aria-label="Balance view" onKeyDown={onTabKey}>{TABS.map(([id, text]) => <button key={id} type="button" role="tab" id={'bal-tab-' + id} aria-selected={tab === id} aria-controls={'bal-panel-' + id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{text}</button>)}</div>}
       {stage(<>
       {showBalance && slot('balance', <section aria-label="Current Balance" className={'hero-balance' + (selector ? ' bal-panel' : '')} {...panel('balance')}><div className="hero-main"><div className="balance-label bal-head">Current Balance<EyeButton name="Current Balance" visible={showCurrent} onToggle={toggleCurrent} /></div><div className="balance bal-amount">{showCurrent ? money(ledger.current) : <Masked />}</div><div className="small hero-updated bal-note">Updated today, {formatDateLong(TODAY).replace(/, \d+$/, '')}</div></div>
-        <div className="figures">
-          <div><div className="muted">Monthly income</div><div className="v pos">+{money(income)}</div></div>
-          <div><div className="muted">Monthly expenses</div><div className="v neg">−{money(expenses)}</div></div>
-          <div><div className="muted">Net change</div><div className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</div>{income > 0 && <div className="muted small">{Math.round((net / income) * 100)}% of income kept this month</div>}</div></div></section>)}
+        {/* Compact monthly summary: three label/amount pairs, secondary to the Current Balance. Same income, expenses and net as before. */}
+        <dl className="mfig" aria-label={`Summary for ${monthLabel(CURRENT_MONTH)}`}>
+          <div><dt className="muted">Monthly income</dt><dd className="v pos">+{money(income)}</dd></div>
+          <div><dt className="muted">Monthly expenses</dt><dd className="v neg">−{money(expenses)}</dd></div>
+          <div><dt className="muted">Net change</dt><dd className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</dd>{income > 0 && <dd className="muted mfig-note">{Math.round((net / income) * 100)}% of income kept</dd>}</div></dl></section>)}
       {showSavingsCard && slot('savings', <section className={'savings-balance' + (selector ? ' bal-panel' : '')} aria-label="Savings" {...panel('savings')}><div><div className="balance-label bal-head">Savings<EyeButton name="Savings" visible={showSavings} onToggle={toggleSavings} /></div><div className="sb-amount bal-amount">{showSavings ? money(ledger.savings) : <Masked />}</div>
           <div className="muted small sb-note bal-note">{activeGoals.length ? (showSavings ? `${money(ledger.allocated)} set aside for goals` : 'Set aside for goals') : 'Money you have put aside'}</div></div>
           <Link to="/savings" className="pv-link">Manage savings<ChevronRight size={16} aria-hidden="true" /></Link></section>)}
@@ -64,11 +66,13 @@ export default function Dashboard() {
       </div>
       <div className="previews charts">
         <section className="preview flow-card" aria-label="Monthly money flow"><div className="pv-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
-        <Preview title="Reports" to="/reports" action="View Reports" pad>
+        {!compact ? <Preview title="Calendar" sub={monthLabel(CURRENT_MONTH)} to="/reports" action="View Reports" calendar>
+          <MonthCalendar transactions={transactions} month={CURRENT_MONTH} today={TODAY} /></Preview>
+        : <Preview title="Reports" to="/reports" action="View Reports" pad>
           {transactions.length === 0 ? <p className="muted pv-empty">Add transactions and your reports will fill in.</p> : <>
             <MiniBars data={trend} />
             <div className="legend small"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></div>
-            {top && <p className="small muted" style={{ marginTop: 8 }}>{name(top.categoryId)} is {Math.round((top.amount / expenses) * 100)}% of this month's expenses.</p>}</>}</Preview></div>
+            {top && <p className="small muted" style={{ marginTop: 8 }}>{name(top.categoryId)} is {Math.round((top.amount / expenses) * 100)}% of this month's expenses.</p>}</>}</Preview>}</div>
       <div className="previews cards">
         <Preview title="Recent transactions" to="/transactions" action="View All Transaction History">
           {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
@@ -85,6 +89,6 @@ export default function Dashboard() {
 </>
   </>)
 }
-const Preview = ({ title, sub, to, action, pad, children }) => (
+const Preview = ({ title, sub, to, action, pad, calendar, children }) => (
   <section className="preview" aria-label={title}><div className="pv-head"><div className="pv-title"><h2>{title}</h2>{sub && <p className="muted small">{sub}</p>}</div>
-    <Link to={to} className="pv-link">{action}<ChevronRight size={16} aria-hidden="true" /></Link></div><div className={'pv-body' + (pad ? ' pad' : '')}>{children}</div></section>)
+    <Link to={to} className="pv-link">{action}<ChevronRight size={16} aria-hidden="true" /></Link></div><div className={'pv-body' + (pad ? ' pad' : '') + (calendar ? ' cal' : '')}>{children}</div></section>)

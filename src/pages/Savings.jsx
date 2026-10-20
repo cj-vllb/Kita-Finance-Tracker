@@ -9,25 +9,29 @@ import { TransferDialog, WithdrawDialog, GoalDialog, DeleteGoalDialog, UndoDialo
 
 const PAGE = 10
 export default function Savings() {
-  const { savingsReady, ledger, goals, activeGoals, transactions, transfers, reallocations, categories } = useApp()
+  const { savingsReady, ledger, goals, activeGoals, transactions, transfers, reallocations, contributions, categories } = useApp()
   const [dlg, setDlg] = useState(null), [shown, setShown] = useState(PAGE)
   const name = (id) => { if (!id) return 'General Savings'; const g = goals.find((x) => x.id === id); return g ? g.name + (g.archived ? ' (deleted)' : '') : 'a goal' }
   // Everything that touched Savings, newest first: transfers and moves (undoable here) and income/expenses that used Savings (opened in Transactions).
   const activity = useMemo(() => [
     ...transfers.map((t) => ({ kind: 'transfer', id: t.id, date: t.date, createdAt: t.createdAt, t })),
     ...reallocations.map((r) => ({ kind: 'move', id: r.id, date: r.date, createdAt: r.createdAt, r })),
+    ...contributions.map((k) => ({ kind: 'contribution', id: k.id, date: k.date, createdAt: k.createdAt, k })),
     ...transactions.filter(isSavings).map((t) => ({ kind: 'tx', id: t.id, date: t.date, createdAt: t.createdAt, t })),
-  ].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || '')), [transfers, reallocations, transactions])
+  ].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || '')), [transfers, reallocations, contributions, transactions])
   if (!savingsReady) return (<><PageHeader title="Savings" /><EmptyState icon={Coins} title="Savings is not set up yet" text="The latest database update has not been applied to this project. Apply it with supabase db push, then reload this page. Everything else keeps working." /></>)
 
   const open = (kind, extra) => setDlg({ kind, ...extra })
   const hasGoals = activeGoals.length > 0
   // Add money (one form for every transfer) opens with this place as the destination. Withdrawing needs money in that place.
   const rowMenu = (id) => { const held = bucketAmount(ledger, id) > 0; return [
-    { label: 'Add money', icon: Plus, onSelect: () => open('add', { goalId: id }) },
+    { label: 'Add money', icon: Plus, onSelect: () => open('add', { goalId: id, mode: 'new' }) },
+    { label: 'Move money', icon: ArrowLeftRight, onSelect: () => open('add', { goalId: id, mode: 'move' }) },
     ...(held ? [{ label: 'Withdraw to Current Balance', icon: ArrowUpRight, onSelect: () => open('withdraw', { goalId: id }) }] : []),
   ] }
-  const describe = (e) => e.kind === 'transfer'
+  const describe = (e) => e.kind === 'contribution'
+    ? { Icon: ArrowDownLeft, title: 'Added to Savings', kind: 'Contribution', meta: `New money → ${name(e.k.goalId)}`, amount: '+' + money(e.k.amount), cls: '', note: e.k.note, dir: 'in' }
+    : e.kind === 'transfer'
     ? { Icon: e.t.direction === 'to_savings' ? ArrowDownLeft : ArrowUpRight, title: e.t.direction === 'to_savings' ? 'Added to Savings' : 'Withdrawn to Current Balance', kind: 'Transfer',
       meta: e.t.direction === 'to_savings' ? `Current Balance → ${name(e.t.goalId)}` : `${name(e.t.goalId)} → Current Balance`, amount: (e.t.direction === 'to_savings' ? '+' : '−') + money(e.t.amount), cls: '', note: e.t.note, dir: e.t.direction === 'to_savings' ? 'in' : 'out' }
     : e.kind === 'move'
@@ -38,7 +42,7 @@ export default function Savings() {
 
   return (<>
     <PageHeader title="Savings">
-      <button className="btn btn-primary" onClick={() => open('add', { goalId: '' })}>Add to Savings</button>
+      <button className="btn btn-primary" onClick={() => open('add', { goalId: '', mode: 'new' })} aria-label="Add to Savings"><span className="lbl-full">Add to Savings</span><span className="lbl-short" aria-hidden="true">Add</span></button>
       <button className="btn" onClick={() => open('withdraw', { goalId: '' })} disabled={ledger.savings <= 0}>Withdraw</button></PageHeader>
 
     <section className="card sv-overview" aria-label="Savings overview">
@@ -63,16 +67,16 @@ export default function Savings() {
 
     <section className="card sv-section" aria-labelledby="sv-act-h">
       <div className="sv-head"><h2 id="sv-act-h">Savings activity</h2></div>
-      {activity.length === 0 ? <div className="empty compact"><h2>No savings activity yet</h2><p className="muted empty-text">Add money to Savings, or record income straight into Savings from <Link to="/transactions/new">a new transaction</Link>.</p></div> : <>
+      {activity.length === 0 ? <div className="empty compact"><h2>No savings activity yet</h2><p className="muted empty-text">Use Add to Savings to record money you set aside, or record income straight into Savings from <Link to="/transactions/new">a new transaction</Link>.</p></div> : <>
         <ul className="sv-act" aria-label="Savings activity">{activity.slice(0, shown).map((e) => { const d = describe(e); return (
           <li key={e.kind + e.id} className="tx-li"><div className={'tx-row' + (d.note?.trim() ? ' has-note' : '')}>
             <span className={'dir-icon ' + (d.dir === 'in' ? 'in' : d.dir === 'out' ? 'out' : '')} aria-hidden="true"><d.Icon size={16} strokeWidth={2} /></span>
             <div className="tx-main">{d.to ? <Link className="tx-link" to={d.to}>{d.title}</Link> : <span className="tx-link">{d.title}</span>}<span className="muted small meta">{d.meta} · {formatDate(e.date)}</span></div>
             <div className="tx-amt"><span className={`amount ${d.cls}`}>{d.amount}</span><span className="small muted tx-kind">{d.kind}</span></div>
-            <RowMenu label={`Actions for ${d.title}`} items={e.kind === 'tx' ? [{ label: 'View transaction', icon: Eye, to: d.to }] : [{ label: e.kind === 'transfer' ? 'Undo transfer' : 'Undo move', icon: Undo2, danger: true, onSelect: () => open('undo', { entry: e }) }]} /></div></li>) })}</ul>
+            <RowMenu label={`Actions for ${d.title}`} items={e.kind === 'tx' ? [{ label: 'View transaction', icon: Eye, to: d.to }] : [{ label: e.kind === 'transfer' ? 'Undo transfer' : e.kind === 'contribution' ? 'Undo contribution' : 'Undo move', icon: Undo2, danger: true, onSelect: () => open('undo', { entry: e }) }]} /></div></li>) })}</ul>
         {activity.length > shown && <div className="sv-more"><button className="btn" onClick={() => setShown(shown + PAGE)}>Show more</button></div>}</>}</section>
 
-    {dlg?.kind === 'add' && <TransferDialog goalId={dlg.goalId || ''} onClose={() => setDlg(null)} />}
+    {dlg?.kind === 'add' && <TransferDialog goalId={dlg.goalId || ''} mode={dlg.mode || 'new'} onClose={() => setDlg(null)} />}
     {dlg?.kind === 'withdraw' && <WithdrawDialog goalId={dlg.goalId || ''} onClose={() => setDlg(null)} />}
     {dlg?.kind === 'goal' && <GoalDialog goal={dlg.id ? goals.find((g) => g.id === dlg.id) : null} onClose={() => setDlg(null)} />}
     {delGoal && <DeleteGoalDialog goal={delGoal} onClose={() => setDlg(null)} />}

@@ -40,7 +40,7 @@ test('the file name follows TrackMyKita-Backup-YYYY-MM-DD.json using the local d
 test('a built backup carries metadata, every section and counts', () => {
   const file = b.buildBackup(withG2(), '1.3.4', new Date('2026-10-16T08:00:00Z'))
   assert.equal(file.format, 'trackmykita-backup'); assert.equal(file.version, 1); assert.equal(file.appVersion, '1.3.4'); assert.equal(file.exportedAt, '2026-10-16T08:00:00.000Z')
-  assert.deepEqual(file.counts, { categories: 4, budgets: 2, transactions: 3, savings_goals: 2, savings_transfers: 2, savings_reallocations: 1 })
+  assert.deepEqual(file.counts, { categories: 4, budgets: 2, transactions: 3, savings_goals: 2, savings_transfers: 2, savings_reallocations: 1, savings_contributions: 0 })
   assert.equal(file.profile.currency, 'PHP')
 })
 test('a backup contains no user id, email, password, token or key', () => {
@@ -71,7 +71,7 @@ test('unsupported or corrupted files are rejected cleanly', () => {
   fails({ ...f, version: 2 }, /newer version/)
   fails({ ...f, version: 0 }, /no longer supported/)
   fails({ ...f, version: '1' }, /no longer supported/)
-  for (const s of b.SECTIONS) { const x = clone(f); delete x[s]; fails(x, /damaged/); x[s] = {}; fails(x, /damaged/) }
+  for (const s of b.REQUIRED_SECTIONS) { const x = clone(f); delete x[s]; fails(x, /damaged/); x[s] = {}; fails(x, /damaged/) }
 })
 test('invalid records are rejected before anything could be restored', () => {
   const f = () => clone(b.buildBackup(withG2(), '1.3.4'))
@@ -116,9 +116,45 @@ test('the restore payload is rebuilt from known fields only: user ids and unknow
   for (const s of b.SECTIONS) for (const rec of x[s]) { rec.user_id = '11111111-1111-1111-1111-111111111111'; rec.extra = 'x'; rec.updated_at = 'x' }
   const r = ok(x), text = JSON.stringify(r.payload)
   for (const word of ['user_id', 'someone-else', 'a@b.c', 'access_token', 'secret', 'extra', 'updated_at', '1111-1111']) assert.equal(text.includes(word), false, word)
-  assert.deepEqual(Object.keys(r.payload).sort(), ['budgets', 'categories', 'format', 'profile', 'savings_goals', 'savings_reallocations', 'savings_transfers', 'transactions', 'version'])
+  assert.deepEqual(Object.keys(r.payload).sort(), ['budgets', 'categories', 'format', 'profile', 'savings_contributions', 'savings_goals', 'savings_reallocations', 'savings_transfers', 'transactions', 'version'])
 })
 test('an empty account makes a valid empty backup', () => {
   const r = ok(b.buildBackup({ profile: { currency: 'USD' } }, '1.3.4'))
-  assert.deepEqual(r.counts, { categories: 0, budgets: 0, transactions: 0, savings_goals: 0, savings_transfers: 0, savings_reallocations: 0 })
+  assert.deepEqual(r.counts, { categories: 0, budgets: 0, transactions: 0, savings_goals: 0, savings_transfers: 0, savings_reallocations: 0, savings_contributions: 0 })
+})
+
+// ---- 1.3.5: savings contributions are an OPTIONAL section ----
+const contrib = (over = {}) => ({ id: 'k1', goal_id: 'g1', amount: 250, contribution_date: '2026-10-07', note: null, created_at: '2026-10-07T10:00:00+00:00', ...over })
+test('a 1.3.4 backup without the contributions section is still valid and means "none"', () => {
+  const f = b.buildBackup(withG2(), '1.3.4'); delete f.savings_contributions
+  const r = ok(f); assert.deepEqual(r.payload.savings_contributions, []); assert.equal(r.counts.savings_contributions, 0)
+})
+test('contributions round-trip into the restore payload and counts', () => {
+  const d = withG2(); d.savings_contributions = [contrib(), contrib({ id: 'k2', goal_id: null, amount: 40.5 })]
+  const file = b.buildBackup(d, '1.3.5'); assert.equal(file.counts.savings_contributions, 2)
+  const r = ok(file); assert.deepEqual(r.payload.savings_contributions.map((k) => [k.id, k.goal_id, k.amount]), [['k1', 'g1', 250], ['k2', null, 40.5]])
+})
+test('a contribution can fund spending in the savings check (without it the same backup would not add up)', () => {
+  const d = withG2(); d.transactions.push({ id: 't9', category_id: null, amount: 100, type: 'expense', description: 'x', transaction_date: '2026-10-09', notes: null, balance: 'savings', goal_id: 'g1', created_at: '2026-10-09T09:00:00+00:00' })
+  d.savings_transfers[0].amount = 700 // g1: 700 - 800 (gym) = -100, then -100 more: negative without help
+  fails(b.buildBackup(d, '1.3.5'), /do not add up/)
+  d.savings_contributions = [contrib({ amount: 300 })]
+  ok(b.buildBackup(d, '1.3.5'))
+})
+test('invalid contributions are rejected before anything is restored', () => {
+  const f = () => { const d = withG2(); d.savings_contributions = [contrib()]; return b.buildBackup(d, '1.3.5') }
+  let x = f(); x.savings_contributions[0].amount = 0; fails(x, /above zero/)
+  x = f(); x.savings_contributions[0].amount = -3; fails(x, /above zero/)
+  x = f(); x.savings_contributions[0].amount = 1.234; fails(x, /decimal places/)
+  x = f(); x.savings_contributions[0].amount = '5'; fails(x, /not a number/)
+  x = f(); x.savings_contributions[0].goal_id = 'nope'; fails(x, /not in the backup/)
+  x = f(); x.savings_contributions[0].contribution_date = 'soon'; fails(x, /date is invalid/)
+  x = f(); x.savings_contributions = {}; fails(x, /unreadable/)
+  x = f(); x.savings_contributions.push(contrib()); fails(x, /twice/)
+  x = f(); x.savings_contributions[0].goal_id = 'g2'; fails(x, /do not add up/) // g2 is a deleted goal: it must stay empty
+})
+test('contribution records keep only known fields (no user ids get through)', () => {
+  const d = withG2(); d.savings_contributions = [{ ...contrib(), user_id: '11111111-1111-1111-1111-111111111111', extra: 'x' }]
+  const text = JSON.stringify(ok(b.buildBackup(d, '1.3.5')).payload.savings_contributions)
+  for (const w of ['user_id', '1111-1111', 'extra']) assert.equal(text.includes(w), false, w)
 })

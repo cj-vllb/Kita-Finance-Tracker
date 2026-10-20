@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { useApp } from '../context/AppContext.jsx'
-import { ConfirmDialog, Field, focusFirstInvalid } from './ui.jsx'
+import { ConfirmDialog, Field, Segmented, focusFirstInvalid } from './ui.jsx'
 import { money } from '../utils/format.js'
 import { TODAY } from '../utils/dates.js'
-import { bucketAmount, toMoney, CURRENT, GENERAL, transferDefaults, transferPlan, transferProblem, placeAmount } from '../utils/ledger.js'
+import { bucketAmount, toMoney, CURRENT, GENERAL, transferDefaults, transferPlan, transferProblem, placeAmount, contributionProblem } from '../utils/ledger.js'
 
 // Dialogs for the Savings page. They use the same ConfirmDialog, Field and input styles as the rest of the app. Every rule that protects the
 // money (enough funds, no negative goal, ownership) is enforced again by the database; the checks here only give an early, clear message.
@@ -21,16 +21,29 @@ function GoalOptions({ goals, skip }) {
 }
 const bucketName = (goals, id) => (id ? goals.find((g) => g.id === id)?.name || 'that goal' : 'General Savings')
 
-// Add money: ONE form for every movement of money. From and To can each be Current Balance, General Savings or an active goal; which database
-// write that needs (transfer or reallocation) is decided by transferPlan(). Opened from a goal (or General Savings) it starts as
-// Current Balance -> that place, and the person can change either side.
-export function TransferDialog({ goalId = '', onClose }) {
-  const { ledger, activeGoals, addTransfer, moveSavings, notify } = useApp()
-  const [f, setF] = useState(() => ({ ...transferDefaults(goalId), amount: '' })), [err, setErr] = useState({}), busy = useRef(false), first = useRef()
+// Add to Savings. The DEFAULT is "New money": it records money that is entering your Savings from somewhere you do not track here, so it needs no source,
+// takes nothing out of Current Balance or any goal, and is not income (one insert into savings_contributions). The other choice, "Move existing money",
+// is the original form: From and To can each be Current Balance, General Savings or an active goal; which database write that needs (transfer or
+// reallocation) is decided by transferPlan(). Opened from a goal (or General Savings) the destination starts as that place.
+export function TransferDialog({ goalId = '', mode: startMode = 'new', onClose }) {
+  const { ledger, activeGoals, addTransfer, moveSavings, addContribution, contributionsReady, notify } = useApp()
+  const [mode, setMode] = useState(startMode), [f, setF] = useState(() => ({ ...transferDefaults(goalId), amount: '' })), [err, setErr] = useState({}), busy = useRef(false), first = useRef()
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setErr({}) }
+  const fresh = mode === 'new'
   const label = (p) => (p === CURRENT ? 'Current Balance' : p === GENERAL ? 'General Savings' : activeGoals.find((g) => g.id === p)?.name || 'that goal')
   const submit = async () => {
     if (busy.current) return
+    if (fresh) {
+      const goal = f.to === GENERAL ? '' : f.to, problem = contributionProblem(activeGoals, { goalId: goal, amount: f.amount })
+      if (problem) { setErr({ [problem.field]: problem.message }); return focusFirstInvalid() }
+      const amt = toMoney(f.amount)
+      busy.current = true
+      const error = await addContribution({ goalId: goal, amount: amt, date: TODAY, note: '' })
+      busy.current = false
+      if (error) return setErr({ form: error })
+      notify(`${money(amt)} added to ${label(f.to)}.`)
+      return onClose()
+    }
     const problem = transferProblem(ledger, activeGoals, f, money)
     if (problem) { setErr({ [problem.field]: problem.message }); return focusFirstInvalid() }
     const amt = toMoney(f.amount), plan = transferPlan(f.from, f.to)
@@ -43,14 +56,23 @@ export function TransferDialog({ goalId = '', onClose }) {
     notify(`${money(amt)} moved from ${label(f.from)} to ${label(f.to)}.`)
     onClose()
   }
-  const places = (<><option value={CURRENT}>{`Current Balance (${money(ledger.current)})`}</option><option value={GENERAL}>{`General Savings (${money(ledger.unassigned)})`}</option>
-    {activeGoals.map((g) => <option key={g.id} value={g.id}>{`${g.name} (${money(bucketAmount(ledger, g.id))})`}</option>)}</>)
-  return (<ConfirmDialog title="Move money" confirmLabel="Transfer" danger={false} focusRef={first} onCancel={onClose} onConfirm={submit}>
+  const savingsPlaces = (<><option value={GENERAL}>{`General Savings (${money(ledger.unassigned)})`}</option>{activeGoals.map((g) => <option key={g.id} value={g.id}>{`${g.name} (${money(bucketAmount(ledger, g.id))})`}</option>)}</>)
+  const places = (<><option value={CURRENT}>{`Current Balance (${money(ledger.current)})`}</option>{savingsPlaces}</>)
+  // "Move existing money" always has a savings destination, so it can never start from a Current Balance -> Current Balance pair.
+  const pickMode = (m) => { setMode(m); setErr({}); setF((x) => (m === 'new' && x.to === CURRENT ? { ...x, to: GENERAL } : x)) }
+  return (<ConfirmDialog title={fresh ? 'Add to Savings' : 'Move money'} confirmLabel={fresh ? 'Add' : 'Transfer'} danger={false} focusRef={first} disabled={fresh && !contributionsReady} onCancel={onClose} onConfirm={submit}>
     <div className="sv-dialog" ref={first} onKeyDown={enterSubmits(submit)}>
-      <p className="muted small">Moves money you already have between your balances and goals. This is not income or an expense.</p>
-      <Field label="From" error={err.from} hint={`Available: ${money(Math.max(0, placeAmount(ledger, f.from)))}`}><select className="input" value={f.from} onChange={set('from')} aria-invalid={!!err.from} autoFocus>{places}</select></Field>
-      <Field label="To" error={err.to} hint={`Currently holds: ${money(placeAmount(ledger, f.to))}`}><select className="input" value={f.to} onChange={set('to')} aria-invalid={!!err.to}>{places}</select></Field>
-      <Field label="Amount" error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={!!err.amount} /></Field>
+      <Field label="What are you adding?"><Segmented label="What are you adding?" value={mode} onChange={pickMode} options={[['new', 'New money'], ['move', 'Move existing money']]} /></Field>
+      {fresh ? <>
+        <p className="muted small">Records money that is newly added to your Savings. It is not taken from Current Balance or another goal, and it is not counted as income.</p>
+        {!contributionsReady && <p className="field-error" role="alert">Adding new money needs the latest database update, which has not been applied to this project yet. You can still move existing money.</p>}
+        <Field label="Add to" error={err.to} hint={`Currently holds: ${money(placeAmount(ledger, f.to))}`}><select className="input" value={f.to === CURRENT ? GENERAL : f.to} onChange={set('to')} aria-invalid={!!err.to} autoFocus>{savingsPlaces}</select></Field>
+        <Field label="Amount" error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={!!err.amount} /></Field></>
+      : <>
+        <p className="muted small">Moves money you already have between your balances and goals. This is not income or an expense.</p>
+        <Field label="From" error={err.from} hint={`Available: ${money(Math.max(0, placeAmount(ledger, f.from)))}`}><select className="input" value={f.from} onChange={set('from')} aria-invalid={!!err.from} autoFocus>{places}</select></Field>
+        <Field label="To" error={err.to} hint={`Currently holds: ${money(placeAmount(ledger, f.to))}`}><select className="input" value={f.to} onChange={set('to')} aria-invalid={!!err.to}>{places}</select></Field>
+        <Field label="Amount" error={err.amount}><input className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={set('amount')} aria-invalid={!!err.amount} /></Field></>}
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
     </div></ConfirmDialog>)
 }
@@ -133,17 +155,22 @@ export function DeleteGoalDialog({ goal, onClose }) {
   </ConfirmDialog>)
 }
 
-// Undo a transfer or a reallocation. The database refuses it if the money has since been spent or moved on, and says why.
+// Undo a contribution, a transfer or a reallocation. The database refuses it if the money has since been spent or moved on, and says why.
+const UNDO = {
+  contribution: { title: 'Undo this contribution?', done: 'Contribution undone.', text: 'The money is taken back out of Savings, and Current Balance is not affected.' },
+  transfer: { title: 'Undo this transfer?', done: 'Transfer undone.', text: 'The money goes back where it came from.' },
+  move: { title: 'Undo this move?', done: 'Move undone.', text: 'The money goes back to where it was set aside before.' },
+}
 export function UndoDialog({ entry, summary, onClose }) {
-  const { undoSavingsActivity, notify } = useApp(), [err, setErr] = useState(null)
+  const { undoSavingsActivity, notify } = useApp(), [err, setErr] = useState(null), u = UNDO[entry.kind] || UNDO.move
   const submit = async () => {
     const error = await undoSavingsActivity(entry.kind, entry.id)
     if (error) return setErr(error)
-    notify(entry.kind === 'transfer' ? 'Transfer undone.' : 'Move undone.'); onClose()
+    notify(u.done); onClose()
   }
-  return (<ConfirmDialog title={entry.kind === 'transfer' ? 'Undo this transfer?' : 'Undo this move?'} confirmLabel="Undo" onCancel={onClose} onConfirm={submit}>
+  return (<ConfirmDialog title={u.title} confirmLabel="Undo" onCancel={onClose} onConfirm={submit}>
     <p className="muted">{summary}</p>
-    <p>{entry.kind === 'transfer' ? 'The money goes back where it came from.' : 'The money goes back to where it was set aside before.'} If it has already been spent or moved on, this will not be allowed.</p>
+    <p>{u.text} If it has already been spent or moved on, this will not be allowed.</p>
     {err && <p className="field-error" role="alert">{err}</p>}
   </ConfirmDialog>)
 }

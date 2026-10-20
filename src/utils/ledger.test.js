@@ -190,3 +190,60 @@ test('history rows: a General Savings to goal move is a reallocation, not income
   assert.deepEqual(d.reallocations, [{ ...d.reallocations[0], fromGoalId: '', toGoalId: 'emerg', amount: 500 }])
   assert.equal(d.transactions.length, 4)
 })
+
+// ---- 1.3.5: contributions (new money added straight to Savings, no source balance) ----
+import { contributionProblem, MAX_AMOUNT } from './ledger.js'
+const ct = (amount, goalId = '') => ({ id: Math.random().toString(36), amount, goalId })
+
+test('contribution: with Current Balance 0 and Savings 0, adding 500 makes Savings 500 and leaves Current Balance at 0', () => {
+  const l = computeLedger({ contributions: [ct(500)] })
+  assert.equal(l.savings, 500); assert.equal(l.unassigned, 500); assert.equal(l.current, 0); assert.equal(l.allocated, 0)
+})
+test('contribution: straight to a goal raises that goal and Savings, nothing else', () => {
+  const l = computeLedger({ goals: [phone, fund], contributions: [ct(300, 'phone')] })
+  assert.equal(l.goals.phone, 300); assert.equal(l.goals.fund, 0); assert.equal(l.unassigned, 0); assert.equal(l.savings, 300); assert.equal(l.current, 0)
+})
+test('contribution: is not income or an expense, so reports never see it', () => {
+  const t = [inc(1000)], l = computeLedger({ transactions: t, contributions: [ct(500), ct(200, 'phone')], goals: [phone] })
+  assert.equal(calculateIncome(t), 1000); assert.equal(calculateExpenses(t), 0); assert.equal(calculateNet(t), 1000)
+  assert.equal(l.current, 1000); assert.equal(l.savings, 700)
+})
+test('contribution: is counted once (savings = general + goals, never double)', () => {
+  const l = computeLedger({ goals: [phone], contributions: [ct(100), ct(50, 'phone')] })
+  assert.equal(l.savings, 150); assert.equal(l.unassigned + l.allocated, l.savings)
+})
+test('contribution: a transfer still deducts from the source and creates no money', () => {
+  const l = computeLedger({ transactions: [inc(1000)], transfers: [tr('to_savings', 400)] })
+  assert.equal(l.current, 600); assert.equal(l.savings, 400); assert.equal(l.current + l.savings, 1000)
+})
+test('contribution: a reallocation of contributed money changes the split but never the total', () => {
+  const before = computeLedger({ goals: [phone], contributions: [ct(500)] })
+  const after = computeLedger({ goals: [phone], contributions: [ct(500)], reallocations: [mv('', 'phone', 200)] })
+  assert.equal(after.savings, before.savings); assert.equal(after.goals.phone, 200); assert.equal(after.unassigned, 300)
+})
+test('contribution: spending it is an ordinary expense from Savings; the balances follow', () => {
+  const l = computeLedger({ transactions: [exp(120, 'savings')], contributions: [ct(500)] })
+  assert.equal(l.savings, 380); assert.equal(l.current, 0)
+})
+test('contribution: the same early checks as the database (an undo that leaves a goal below zero is a problem)', () => {
+  const l = computeLedger({ goals: [phone], transactions: [exp(250, 'savings', 'phone')], contributions: [] })
+  assert.match(ledgerProblem(l, [phone]), /less than zero/)
+  const fine = computeLedger({ goals: [phone], transactions: [exp(250, 'savings', 'phone')], contributions: [ct(300, 'phone')] })
+  assert.equal(ledgerProblem(fine, [phone]), null)
+})
+test('contribution: cents never drift (0.1 + 0.2)', () => {
+  assert.equal(computeLedger({ contributions: [ct(0.1), ct(0.2)] }).savings, 0.3)
+})
+test('contributionProblem: needs no source, only a valid destination and amount', () => {
+  const goals = [phone]
+  assert.equal(contributionProblem(goals, { goalId: '', amount: '500' }), null)
+  assert.equal(contributionProblem(goals, { goalId: 'phone', amount: 0.01 }), null)
+  assert.equal(contributionProblem(goals, { goalId: '', amount: MAX_AMOUNT }), null)
+  assert.equal(contributionProblem(goals, { goalId: '', amount: '' }).field, 'amount')
+  assert.equal(contributionProblem(goals, { goalId: '', amount: 'abc' }).field, 'amount')
+  assert.equal(contributionProblem(goals, { goalId: '', amount: 0 }).field, 'amount')
+  assert.equal(contributionProblem(goals, { goalId: '', amount: -5 }).field, 'amount')
+  assert.equal(contributionProblem(goals, { goalId: '', amount: 0.004 }).field, 'amount') // rounds to 0.00
+  assert.equal(contributionProblem(goals, { goalId: '', amount: MAX_AMOUNT + 1 }).message, 'That amount is too large.')
+  assert.equal(contributionProblem(goals, { goalId: 'gone', amount: 5 }).field, 'to') // a deleted / unknown goal
+})

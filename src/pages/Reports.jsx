@@ -9,12 +9,11 @@ import { PieChart, FlowBars, TrendLines, BudgetBars, pct1 } from '../components/
 import { localToday, periodFor, periodLabel, previousPeriod, previousWord } from '../utils/dateRange.js'
 import * as rs from '../utils/reportStats.js'
 import { goalProgress, bucketAmount, pctText } from '../utils/ledger.js'
-import { colorHex } from '../utils/colors.js'
 const KINDS = ['day', 'week', 'month', 'year', 'all']
 const signedMoney = (n) => (n < 0 ? '−' : n > 0 ? '+' : '') + money(Math.abs(n))
 // One selected period and one set of calculations feed BOTH views, so Stats and Charts can never disagree, and switching views keeps the period.
 export default function Reports() {
-  const { transactions, categories, budgets, transfers, reallocations, goals, ledger, savingsReady } = useApp()
+  const { transactions, categories, budgets, transfers, reallocations, contributions, goals, ledger, savingsReady } = useApp()
   const today = localToday(), [view, setView] = useState('stats'), [period, setPeriod] = useState(() => periodFor('month', today)) // default: the current month
   const R = useMemo(() => {
     const txs = rs.filterByPeriod(transactions, period), prevP = previousPeriod(period), prevTxs = prevP ? rs.filterByPeriod(transactions, prevP) : []
@@ -22,17 +21,17 @@ export default function Reports() {
     return {
       txs, totals, prevP, prevCount: prevTxs.length, cmp: prevP ? rs.compareTotals(totals, rs.totalsOf(prevTxs), prevTxs.length) : null,
       expense: rs.breakdownByCategory(txs, 'expense', categories), income: rs.breakdownByCategory(txs, 'income', categories),
-      summary: rs.spendingSummary(txs, period), series: rs.seriesFor(period, txs), budget: rs.budgetProgress(period, budgets, transactions, categories), savings: rs.savingsFlows(period, transfers, reallocations),
+      summary: rs.spendingSummary(txs, period), series: rs.seriesFor(period, txs), budget: rs.budgetProgress(period, budgets, transactions, categories), savings: rs.savingsFlows(period, transfers, reallocations, contributions),
     }
-  }, [period, transactions, categories, budgets, transfers, reallocations])
+  }, [period, transactions, categories, budgets, transfers, reallocations, contributions])
   const firstYear = transactions.reduce((m, t) => Math.min(m, +t.date.slice(0, 4)), +today.slice(0, 4))
   const hasAnything = transactions.length > 0 || budgets.length > 0 || goals.length > 0
   if (!hasAnything) return <><PageHeader title="Reports" /><EmptyState icon={BarChart3} title="No report data available" text="Reports become available once you have added some transactions." to="/transactions/new" action="Add transaction" /></>
   return (<>
     <PageHeader title="Reports" />
     <div className="rpt-top">
+      <DateFilter idPrefix="rp" period={period} onChange={setPeriod} today={today} firstYear={firstYear} kinds={KINDS} allLabel="All time" pills />
       <Segmented label="Report view" value={view} onChange={setView} options={[['stats', 'Stats'], ['charts', 'Charts']]} />
-      <DateFilter idPrefix="rp" period={period} onChange={setPeriod} today={today} firstYear={firstYear} kinds={KINDS} allLabel="All time" />
     </div>
     {view === 'stats' ? <Stats R={R} period={period} categories={categories} goals={goals} ledger={ledger} savingsReady={savingsReady} /> : <Charts R={R} period={period} />}
   </>)
@@ -68,12 +67,12 @@ function Stats({ R, period, categories, goals, ledger, savingsReady }) {
       {expense.rows.length === 0 ? <p className="muted">No expenses in this period.</p> : <>
         <div className="rpt-facts"><div><div className="muted small">Total expenses</div><strong>{money(expense.total)}</strong></div><div><div className="muted small">Transactions</div><strong>{summary.count}</strong></div><div><div className="muted small">Average expense</div><strong>{money(summary.average)}</strong></div>{summary.perDay !== null && period.kind !== 'day' && <div><div className="muted small">Average per day</div><strong>{money(summary.perDay)}</strong></div>}</div>
         {summary.largest && <p className="muted small">Largest expense: <strong>{money(summary.largest.amount)}</strong>{summary.largest.description ? ` (${summary.largest.description})` : ''} on {summary.largest.date.slice(0, 10)}.</p>}
-        <CatTable rows={expense.rows} caption="Spending by category" /></>}</section>
+        <CatTable rows={expense.rows} caption="Spending by category" tone="out" /></>}</section>
 
     <section className="card rpt-sec" aria-labelledby="st-inc"><h2 id="st-inc">Income analysis</h2>
       {income.rows.length === 0 ? <p className="muted">No income in this period.</p> : <>
         <div className="rpt-facts"><div><div className="muted small">Total income</div><strong>{money(income.total)}</strong></div><div><div className="muted small">Largest source</div><strong>{income.rows[0].name}</strong></div></div>
-        <CatTable rows={income.rows} caption="Income by category" /></>}</section>
+        <CatTable rows={income.rows} caption="Income by category" tone="in" /></>}</section>
 
     <section className="card rpt-sec" aria-labelledby="st-bud"><h2 id="st-bud">Budgets</h2>
       {budget.rows.length === 0 ? <p className="muted">{period.kind === 'month' ? 'No budgets are set for this month.' : 'No budgets cover this period.'} <Link className="btn-link" to="/budgets">Go to Budgets</Link></p> : <>
@@ -90,8 +89,8 @@ function Stats({ R, period, categories, goals, ledger, savingsReady }) {
     <section className="card rpt-sec" aria-labelledby="st-sav"><h2 id="st-sav">Savings</h2>
       {!savingsReady ? <p className="muted">Savings is not available yet.</p> : <>
         <div className="rpt-facts"><div><div className="muted small">Savings balance now</div><strong>{money(ledger.savings)}</strong></div><div><div className="muted small">Current Balance now</div><strong>{money(ledger.current)}</strong></div></div>
-        <p className="muted small rpt-note"><Info size={14} aria-hidden="true" /> Moves between your balances and goals are not income or expenses, so they are not in the totals above.</p>
-        <div className="rpt-facts"><div><div className="muted small">Moved into Savings, {label}</div><strong>{money(savings.toSavings)}</strong></div><div><div className="muted small">Moved out of Savings</div><strong>{money(savings.toCurrent)}</strong></div><div><div className="muted small">Net moved to Savings</div><strong>{signedMoney(savings.net)}</strong></div>{savings.reallocated > 0 && <div><div className="muted small">Moved between goals</div><strong>{money(savings.reallocated)}</strong></div>}</div>
+        <p className="muted small rpt-note"><Info size={14} aria-hidden="true" /> Moves between your balances and goals, and money added directly to Savings, are not income or expenses, so they are not in the totals above.</p>
+        <div className="rpt-facts"><div><div className="muted small">Moved into Savings, {label}</div><strong>{money(savings.toSavings)}</strong></div><div><div className="muted small">Moved out of Savings</div><strong>{money(savings.toCurrent)}</strong></div><div><div className="muted small">Net moved to Savings</div><strong>{signedMoney(savings.net)}</strong></div>{savings.added > 0 && <div><div className="muted small">New money added to Savings</div><strong>{money(savings.added)}</strong></div>}{savings.reallocated > 0 && <div><div className="muted small">Moved between goals</div><strong>{money(savings.reallocated)}</strong></div>}</div>
         {goals.filter((g) => !g.archived).length === 0 ? <p className="muted">No savings goals yet. <Link className="btn-link" to="/savings">Create one</Link></p> : <ul className="rpt-bud">{goals.filter((g) => !g.archived).map((g) => { const p = goalProgress(g, bucketAmount(ledger, g.id)); return (<li key={g.id}><div className="rpt-bud-top"><span className="rpt-name">{g.name}</span><span className="small muted">{money(p.saved)} of {money(p.target)}</span></div>
           <div className="bar" role="progressbar" aria-valuenow={Math.min(p.pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${g.name} progress`}><div className="bar-fill ok" style={{ width: Math.min(p.pct, 100) + '%' }} /></div>
           <div className="small muted">{p.reached ? 'Goal reached' : `${money(p.remaining)} to go`} · {pctText(p.pct)}</div></li>) })}</ul>}</>}</section>
@@ -108,10 +107,10 @@ function Stats({ R, period, categories, goals, ledger, savingsReady }) {
 }
 
 // Exact amounts in a table, so nobody has to read a value off a chart.
-function CatTable({ rows, caption }) {
+function CatTable({ rows, caption, tone }) {
   return (<div className="table-wrap"><table className="table rpt-table"><caption className="sr-only">{caption}</caption>
     <thead><tr><th className="label">Category</th><th className="label amount">Amount</th><th className="label amount">Share</th></tr></thead>
-    <tbody>{rows.map((r) => (<tr key={r.categoryId || 'none'}><td><span className="rpt-name"><span className="rpt-ic" style={{ '--cat': colorHex(r.color) }}><CategoryIcon id={r.icon} size={16} /></span>{r.known ? r.name : <em className="uncat">Uncategorized</em>}<span className="muted small"> · {r.count}</span></span></td><td className="amount">{money(r.amount)}</td>
+    <tbody>{rows.map((r) => (<tr key={r.categoryId || 'none'}><td><span className="rpt-name"><span className={'rpt-ic ' + tone}><CategoryIcon id={r.icon} size={16} /></span>{r.known ? r.name : <em className="uncat">Uncategorized</em>}<span className="muted small"> · {r.count}</span></span></td><td className="amount">{money(r.amount)}</td>
       <td className="amount"><span className="share-cell"><span className="share-mini" aria-hidden="true"><span style={{ width: r.share + '%' }} /></span>{pct1(r.share)}</span></td></tr>))}</tbody></table></div>)
 }
 

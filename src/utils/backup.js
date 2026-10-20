@@ -9,6 +9,7 @@
 //     "savings_goals": [{ id, name, target_amount, archived_at | null, created_at }],
 //     "savings_transfers": [{ id, direction, amount, transfer_date, note | null, goal_id | null, created_at }],
 //     "savings_reallocations": [{ id, from_goal_id | null, to_goal_id | null, amount, allocation_date, note | null, created_at }],
+//     "savings_contributions": [{ id, goal_id | null, amount, contribution_date, note | null, created_at }],   (1.3.5, OPTIONAL: older backups simply lack it)
 //     "counts": { <section>: <number> }
 //   }
 //
@@ -21,8 +22,10 @@ import { isDay } from './dateRange.js'
 export const BACKUP_FORMAT = 'trackmykita-backup'
 export const BACKUP_VERSION = 1
 export const MAX_BACKUP_BYTES = 25 * 1024 * 1024
-export const SECTIONS = ['categories', 'budgets', 'transactions', 'savings_goals', 'savings_transfers', 'savings_reallocations']
-export const SECTION_LABELS = { categories: 'Categories', budgets: 'Budgets', transactions: 'Transactions', savings_goals: 'Savings goals', savings_transfers: 'Savings transfers', savings_reallocations: 'Savings re-allocations' }
+export const SECTIONS = ['categories', 'budgets', 'transactions', 'savings_goals', 'savings_transfers', 'savings_reallocations', 'savings_contributions']
+// Sections a valid backup must contain. savings_contributions arrived in 1.3.5 (still backup format version 1), so a 1.3.4 file without it is valid and means "none".
+export const REQUIRED_SECTIONS = SECTIONS.filter((s) => s !== 'savings_contributions')
+export const SECTION_LABELS = { categories: 'Categories', budgets: 'Budgets', transactions: 'Transactions', savings_goals: 'Savings goals', savings_transfers: 'Savings transfers', savings_reallocations: 'Savings re-allocations', savings_contributions: 'Money added to Savings' }
 const COLORS = ['green', 'amber', 'brick', 'slate', 'grey', 'red', 'orange', 'yellow', 'blue', 'cyan', 'teal', 'purple', 'violet', 'pink', 'brown', 'gray']
 const MAX_CENTS = 99999999999999
 const ICON_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -61,7 +64,9 @@ export function validateBackup(input) {
   try {
     if (!isObj(input) || input.format !== BACKUP_FORMAT) bad('This file is not a TrackMyKita backup.')
     if (input.version !== BACKUP_VERSION) bad(input.version > BACKUP_VERSION ? 'This backup was made by a newer version of TrackMyKita and cannot be restored here.' : 'This backup uses a format that is no longer supported.')
-    for (const s of SECTIONS) { if (!Array.isArray(input[s])) bad(`This backup is damaged: the ${SECTION_LABELS[s].toLowerCase()} section is missing.`); if (input[s].length > 200000) bad('This backup is too large to restore.') }
+    for (const s of REQUIRED_SECTIONS) { if (!Array.isArray(input[s])) bad(`This backup is damaged: the ${SECTION_LABELS[s].toLowerCase()} section is missing.`); if (input[s].length > 200000) bad('This backup is too large to restore.') }
+    if (input.savings_contributions != null) { if (!Array.isArray(input.savings_contributions)) bad('This backup is damaged: the money added to savings section is unreadable.'); if (input.savings_contributions.length > 200000) bad('This backup is too large to restore.') }
+    const rawContributions = Array.isArray(input.savings_contributions) ? input.savings_contributions : []
     const ids = {}
     const unique = (section, id, where) => { if (!str(id) || !id) bad(`${where}: a record has no id.`); const seen = (ids[section] ||= new Set()); if (seen.has(id)) bad(`${where}: the same record appears twice.`); seen.add(id) }
 
@@ -149,11 +154,22 @@ export function validateBackup(input) {
       return { id: r.id, from_goal_id: from, to_goal_id: to, amount: r.amount, allocation_date: r.allocation_date.slice(0, 10), note: optText(r.note), created_at: optText(r.created_at) }
     })
 
+    const contributions = rawContributions.map((k, i) => {
+      const w = `Savings contribution ${i + 1}`
+      if (!isObj(k)) bad(`${w} is unreadable.`)
+      unique('savings_contributions', k.id, w); money(k.amount, w)
+      if (!str(k.contribution_date) || !isDay(k.contribution_date.slice(0, 10))) bad(`${w}: the date is invalid.`)
+      const gid = optText(k.goal_id); needGoal(gid, w)
+      if (!optIso(k.created_at)) bad(`${w}: a date is invalid.`)
+      return { id: k.id, goal_id: gid, amount: k.amount, contribution_date: k.contribution_date.slice(0, 10), note: optText(k.note), created_at: optText(k.created_at) }
+    })
+
     // The same savings rule the database enforces: no goal and no General Savings below zero, and a deleted goal holds nothing.
     const ledger = computeLedger({
       transactions: transactions.map((t) => ({ amount: t.amount, type: t.type, balance: t.balance, goalId: t.goal_id || '' })),
       transfers: transfers.map((t) => ({ amount: t.amount, direction: t.direction, goalId: t.goal_id || '' })),
       reallocations: reallocations.map((r) => ({ amount: r.amount, fromGoalId: r.from_goal_id || '', toGoalId: r.to_goal_id || '' })),
+      contributions: contributions.map((k) => ({ amount: k.amount, goalId: k.goal_id || '' })),
       goals: goals.map((g) => ({ id: g.id })),
     })
     const problem = ledgerProblem(ledger, goals.map((g) => ({ id: g.id, name: g.name, archived: !!g.archived_at })))
@@ -164,7 +180,7 @@ export function validateBackup(input) {
       if (!isObj(input.profile)) bad('This backup is damaged: the settings section is unreadable.')
       if (input.profile.currency != null && input.profile.currency !== '') { if (!CURRENCY_CODES.includes(input.profile.currency)) bad('The currency in this backup is not supported.'); currency = input.profile.currency }
     }
-    const payload = { format: BACKUP_FORMAT, version: BACKUP_VERSION, profile: { currency }, categories, budgets, transactions, savings_goals: goals, savings_transfers: transfers, savings_reallocations: reallocations }
+    const payload = { format: BACKUP_FORMAT, version: BACKUP_VERSION, profile: { currency }, categories, budgets, transactions, savings_goals: goals, savings_transfers: transfers, savings_reallocations: reallocations, savings_contributions: contributions }
     const counts = Object.fromEntries(SECTIONS.map((s) => [s, payload[s].length]))
     return { ok: true, payload, counts, meta: { appVersion: str(input.appVersion) ? input.appVersion.slice(0, 20) : '', exportedAt: iso(input.exportedAt) ? input.exportedAt : '', currency } }
   } catch (e) {

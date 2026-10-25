@@ -4,7 +4,7 @@
 export const CHANGELOG = [
   // FINALIZE BEFORE RELEASE: set `date` below to the real day 1.3.6 ships, in the same format as the entries beneath it (for example 'October 27, 2026').
   // While it is null the About page shows no date for this version, so nothing made-up is ever displayed.
-  { version: '1.3.6', date: null, title: 'Simpler screens and phone menu', items: [
+  { version: '1.3.6', date: "October 25, 2026", title: 'Simpler screens and phone menu', items: [
     'Shorter buttons and descriptions, with small info icons for the details',
     'A tidier transaction form with the amount and date side by side',
     'Add to Savings now also moves existing money, including back to Current Balance',

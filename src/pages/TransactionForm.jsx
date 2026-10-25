@@ -9,17 +9,14 @@ import { PageHeader, Field, Segmented, DeleteTransactionDialog, ErrorState, focu
 import CategoryDialog from '../components/CategoryDialog.jsx'
 import CategoryPicker from '../components/CategoryPicker.jsx'
 import AmountInput from '../components/AmountInput.jsx'
-const AMOUNT_TIP = 'Tip: You can enter a calculation, e.g. 100+200+430.'
-// What each choice of balance means, shown under the selector. Income: where the money goes. Expense: where it is paid from.
-const BALANCE_HINT = {
-  income: { current: 'Add this income to your available spending balance.', savings: 'Send this income directly to your savings balance.' },
-  expense: { current: 'Pay this expense from your available spending balance.', savings: 'Pay this expense from Savings. It still counts as an expense in your reports and budgets.' },
-}
+const AMOUNT_TIP = 'You can type a calculation, for example 100+200.'
+// Only the non-obvious case needs a note: money that goes to or comes from Savings still counts as income or an expense in reports and budgets.
+const SAVINGS_HINT = { income: 'Still counts as income in your reports.', expense: 'Still counts as an expense in your reports and budgets.' }
 export default function TransactionForm() {
   const { id } = useParams(), nav = useNavigate(), { transactions, categories, saveTransaction, deleteTransaction, notify, settings, goals, activeGoals, transfers, reallocations, savingsReady } = useApp()
   const existing = id ? transactions.find((t) => t.id === id) : null
   const [f, setF] = useState(() => (existing ? { ...existing, amount: String(existing.amount) } : { type: 'expense', amount: '', categoryId: '', description: '', date: TODAY, notes: '', balance: 'current', goalId: '' }))
-  const [err, setErr] = useState({}), [saving, setSaving] = useState(false), [confirm, setConfirm] = useState(false), [addCat, setAddCat] = useState(false)
+  const [err, setErr] = useState({}), [saving, setSaving] = useState(false), [confirm, setConfirm] = useState(false), [addCat, setAddCat] = useState(false), [showNotes, setShowNotes] = useState(!!existing?.notes?.trim())
   if (id && !existing) return <ErrorState title="Transaction not found" text="It may have been deleted." />
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   // The ledger without this transaction: what each bucket holds before it is applied (so editing never counts the old version twice).
@@ -46,18 +43,19 @@ export default function TransactionForm() {
   return (<>
     <PageHeader title={existing ? 'Edit transaction' : 'New transaction'} />
     <form className={'form tx-form' + (savingsReady ? ' has-bal' : '')} onSubmit={submit} noValidate>
-      <Field label="Type"><Segmented label="Type" value={f.type} onChange={(type) => setF({ ...f, type, categoryId: '' })} options={[['expense', 'Expense'], ['income', 'Income']]} /></Field>
-      {savingsReady && <Field className="f-bal" label={f.type === 'income' ? 'Add to' : 'Paid from'} hint={BALANCE_HINT[f.type][f.balance]}><Segmented label={f.type === 'income' ? 'Add to' : 'Paid from'} value={f.balance} onChange={(balance) => { setF({ ...f, balance, goalId: '' }); setErr(({ goal, ...rest }) => rest) }} options={[['current', 'Current Balance'], ['savings', 'Savings']]} /></Field>}
-      {savingsReady && f.balance === 'savings' && <Field className="f-goal" label="Savings goal (optional)" error={err.goal} hint={goalChoices.length === 0 ? 'You have no savings goals yet, so this goes to General Savings. You can create goals on the Savings page.' : f.type === 'income' ? 'Leave as General Savings if this income is not for a particular goal.' : 'Choose the goal this expense uses. Without one, only unassigned Savings can be used.'}><select className="input" value={f.goalId} onChange={(e) => { set('goalId')(e); setErr(({ goal, ...rest }) => rest) }} aria-invalid={bad('goal')}><option value="">{f.type === 'expense' ? `General Savings / No specific goal (${money(base.unassigned)} unassigned)` : 'General Savings / No specific goal'}</option>{goalChoices.map((g) => <option key={g.id} value={g.id}>{g.name}{g.archived ? ' (deleted)' : ''}{f.type === 'expense' ? ` (${money(bucketAmount(base, g.id))} saved)` : ''}</option>)}</select></Field>}
-      <Field className="f-amount" label={`Amount (${settings.currency})`} error={err.amount} hint={AMOUNT_TIP}><AmountInput value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
+      {/* Order: what it is (type, where the money is), how much and when, then the category and optional details. The goal only appears once Savings is chosen. */}
+      <Field className={savingsReady ? 'f-half' : ''} label="Type"><Segmented label="Type" value={f.type} onChange={(type) => setF({ ...f, type, categoryId: '' })} options={[['expense', 'Expense'], ['income', 'Income']]} /></Field>
+      {savingsReady && <Field className="f-bal f-half" label={f.type === 'income' ? 'Add to' : 'Paid from'} info={f.balance === 'savings' ? SAVINGS_HINT[f.type] : undefined}><Segmented label={f.type === 'income' ? 'Add to' : 'Paid from'} value={f.balance} onChange={(balance) => { setF({ ...f, balance, goalId: '' }); setErr(({ goal, ...rest }) => rest) }} options={[['current', 'Current Balance'], ['savings', 'Savings']]} /></Field>}
+      {savingsReady && f.balance === 'savings' && <Field className="f-goal" label="Savings goal (optional)" error={err.goal} info={goalChoices.length === 0 ? 'No goals yet, so this uses General Savings.' : f.type === 'expense' ? 'Without a goal, only unassigned Savings can be used.' : undefined}><select className="input" value={f.goalId} onChange={(e) => { set('goalId')(e); setErr(({ goal, ...rest }) => rest) }} aria-invalid={bad('goal')}><option value="">{f.type === 'expense' ? `General Savings / No specific goal (${money(base.unassigned)} unassigned)` : 'General Savings / No specific goal'}</option>{goalChoices.map((g) => <option key={g.id} value={g.id}>{g.name}{g.archived ? ' (deleted)' : ''}{f.type === 'expense' ? ` (${money(bucketAmount(base, g.id))} saved)` : ''}</option>)}</select></Field>}
+      <Field className="f-amount f-half" label={`Amount (${settings.currency})`} error={err.amount} info={AMOUNT_TIP}><AmountInput value={f.amount} onChange={set('amount')} aria-invalid={bad('amount')} autoFocus={!existing} /></Field>
+      <Field className="f-date f-half" label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={bad('date')} /></Field>
       <div className="field f-cat"><span className="field-label" id="tx-cat-label">Category (optional)</span>
-        <CategoryPicker type={f.type} categories={categories} value={f.categoryId} onChange={(categoryId) => setF((x) => ({ ...x, categoryId }))} onAdd={() => setAddCat(true)} labelledBy="tx-cat-label" />
-        <span className="muted small">Leave as None if you do not need one.</span></div>
-      <Field className="f-title" label="Transaction title (optional)" hint="A short name for this transaction. If left blank, the category name is shown."><input className="input" value={f.description} onChange={set('description')} /></Field>
-      <Field className="f-date" label="Date" error={err.date}><input className="input" type="date" value={f.date} onChange={set('date')} aria-invalid={bad('date')} /></Field>
-      <Field label="Notes (optional)"><textarea className="input" value={f.notes} onChange={set('notes')} placeholder="Add a note" /></Field>
+        <CategoryPicker type={f.type} categories={categories} value={f.categoryId} onChange={(categoryId) => setF((x) => ({ ...x, categoryId }))} onAdd={() => setAddCat(true)} labelledBy="tx-cat-label" /></div>
+      <Field className="f-title" label="Transaction title (optional)"><input className="input" value={f.description} onChange={set('description')} placeholder="Defaults to the category name" /></Field>
+      {showNotes ? <Field label="Notes (optional)"><textarea className="input" value={f.notes} onChange={set('notes')} autoFocus={!existing?.notes?.trim()} /></Field>
+        : <button type="button" className="btn-link tx-more" onClick={() => setShowNotes(true)}>Add a note</button>}
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
-      <div className="form-actions"><button className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : existing ? 'Save changes' : 'Save transaction'}</button>
+      <div className="form-actions"><button className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
         <button type="button" className="btn" onClick={() => nav(-1)}>Cancel</button>
         {existing && <button type="button" className="btn btn-danger push" onClick={() => setConfirm(true)}>Delete transaction</button>}</div></form>
     {addCat && <CategoryDialog type={f.type} onClose={() => setAddCat(false)} onCreated={(c) => { setF((x) => ({ ...x, categoryId: c.id })); setAddCat(false) }} />}

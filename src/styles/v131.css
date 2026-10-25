@@ -12,11 +12,7 @@
 @media (max-width:700px){.shell .balances{margin-top:var(--space-6)}.shell .savings-balance{padding:var(--space-5)}}
 
 /* ---------- transaction form: balance + goal ---------- */
-.shell .tx-form.has-bal>.f-bal{grid-row:2}
-.shell .tx-form.has-bal>.f-amount,.shell .tx-form.has-bal>.f-date{grid-row:3}
-.shell .tx-form.has-bal>.f-cat,.shell .tx-form.has-bal>.f-title{grid-row:4}
-.shell .tx-form.has-bal>.f-goal{grid-row:5}
-@media (max-width:700px){.shell .tx-form.has-bal>:is(.f-bal,.f-amount,.f-date,.f-cat,.f-title,.f-goal){grid-row:auto}}
+/* field placement for the transaction form lives in v136.css */
 
 /* ---------- Savings page ---------- */
 .shell .sv-overview{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(2,minmax(0,1fr));gap:0;padding:0;overflow:hidden}

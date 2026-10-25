@@ -26,13 +26,7 @@
 .catpick-opt.selected .catg-name{font-weight:700;color:var(--color-text)}
 .catpick-opt:has(input:focus-visible){outline:3px solid var(--brand);outline-offset:1px}
 @media (max-width:340px){.catpick{grid-template-columns:repeat(3,minmax(0,1fr))}}
-/* the category grid needs the whole form width, so on larger screens it (and the title under it) take a full row */
-@media (min-width:701px){
-  .shell .tx-form>.f-cat,.shell .tx-form>.f-title{grid-column:1/-1}
-  .shell .tx-form>.f-cat{grid-row:3}.shell .tx-form>.f-title{grid-row:4}
-  .shell .tx-form>.f-date,.shell .tx-form>.f-amount{align-self:start}
-  .shell .tx-form.has-bal>.f-cat{grid-row:4}.shell .tx-form.has-bal>.f-title{grid-row:5}.shell .tx-form.has-bal>.f-goal{grid-row:6}
-}
+/* the category grid needs the whole form width: see the transaction form rules in v136.css */
 
 /* 4) Amount input with a live result on the right. The label has the input's own background; the input reserves exactly its width (see AmountInput.jsx) */
 .amt{position:relative;min-width:0}

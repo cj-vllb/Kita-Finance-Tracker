@@ -13,7 +13,7 @@ export function downloadJson(text, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 const Typed = ({ word, value, onChange, id }) => (<label className="field" style={{ marginTop: 8 }}><span className="field-label">Type {word} to confirm</span>
-  <input className="input" value={value} onChange={(e) => onChange(e.target.value)} autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} aria-describedby={id} /><span id={id} className="muted small">The button turns on when this matches exactly.</span></label>)
+  <input className="input" value={value} onChange={(e) => onChange(e.target.value)} autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} /></label>)
 
 // Restore: choose file -> validated here (nothing changes yet) -> preview with counts -> typed confirmation -> one all-or-nothing database call.
 export function RestoreDialog({ onClose }) {

@@ -2,8 +2,15 @@
 // Writing rules (see "Release notes" in README.md): 2 to 5 short bullets per version, written for people using the app, only for work that has shipped.
 // `date` is the full release date shown beside the version. Historical dates are fixed; a new release uses the actual date it ships.
 export const CHANGELOG = [
-  // FINALIZE BEFORE RELEASE: set `date` below to the real day 1.3.5 ships, in the same format as the entries beneath it (for example 'October 20, 2026').
+  // FINALIZE BEFORE RELEASE: set `date` below to the real day 1.3.6 ships, in the same format as the entries beneath it (for example 'October 27, 2026').
   // While it is null the About page shows no date for this version, so nothing made-up is ever displayed.
+  { version: '1.3.6', date: null, title: 'Simpler screens and phone menu', items: [
+    'Shorter buttons and descriptions, with small info icons for the details',
+    'A tidier transaction form with the amount and date side by side',
+    'Add to Savings now also moves existing money, including back to Current Balance',
+    'On phones, the profile tab opens one menu from the right, and the Dashboard shows the calendar',
+    'Reports is tidier, with the calendar and Income and Expenses charts side by side',
+  ] },
   { version: '1.3.5', date: "October 20, 2026", title: 'Interface refinements and savings improvements', items: [
     'A compact monthly summary, and a calendar of daily income and spending on the desktop Dashboard',
     'Pick categories from an icon grid, view Income and Expense side by side, and see calculations as you type',

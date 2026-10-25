@@ -32,12 +32,12 @@ export default function CategoryModal({ category, defaultType = 'expense', lockT
   const remove = async () => { const e = await deleteCategory(category.id); setConfirm(false); if (e) { setErr({ form: e }); return } notify('Category deleted.'); onClose() }
   const hint = typeLocked && edit && !lockType ? 'Type is locked because transactions or budgets use this category.' : f.type === 'income' ? 'Income categories are for money coming in, like salary.' : 'Expense categories are for money going out, like food or rent.'
   return (<>
-    {!confirm && <Modal title={edit ? 'Edit category' : 'Create category'} onClose={onClose} initialFocus={input} wide labelledBy="cat-modal-title"
+    {!confirm && <Modal title={edit ? 'Edit category' : 'Add category'} onClose={onClose} initialFocus={input} wide labelledBy="cat-modal-title"
       footer={(dismiss) => (<>
         {edit && <button type="button" className="btn btn-danger modal-delete" onClick={() => setConfirm(true)} disabled={saving}>Delete</button>}
         <button type="button" className="btn" onClick={dismiss}>Cancel</button>
-        <button type="button" className="btn btn-primary" disabled={saving} onClick={() => submit(dismiss)}>{saving ? 'Saving...' : edit ? 'Save' : 'Create'}</button></>)}>
-      <Field label="Category type" hint={hint}><Segmented label="Category type" disabled={typeLocked} value={f.type} onChange={(type) => setF({ ...f, type })} options={[['income', 'Income'], ['expense', 'Expense']]} /></Field>
+        <button type="button" className="btn btn-primary" disabled={saving} onClick={() => submit(dismiss)}>{saving ? 'Saving...' : edit ? 'Save' : 'Add'}</button></>)}>
+      <Field label="Category type" hint={typeLocked && edit && !lockType ? hint : undefined} info={typeLocked && edit && !lockType ? undefined : hint}><Segmented label="Category type" disabled={typeLocked} value={f.type} onChange={(type) => setF({ ...f, type })} options={[['income', 'Income'], ['expense', 'Expense']]} /></Field>
       <Field label="Category name" error={err.name}><input ref={input} className="input" value={f.name} maxLength={60} onChange={(e) => { setF({ ...f, name: e.target.value }); setErr({}) }} aria-invalid={!!err.name} autoComplete="off" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.closest('.modal')?.querySelector('.dialog-actions .btn-primary')?.click() } }} /></Field>
       <div className="field"><span className="field-label">Icon</span><IconPicker value={f.icon} onChange={(icon) => { setF({ ...f, icon }); setErr({}) }} />{err.icon && <span className="field-error" role="alert">{err.icon}</span>}</div>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}

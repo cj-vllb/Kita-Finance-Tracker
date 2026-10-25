@@ -42,13 +42,13 @@ export default function BudgetModal({ budget, preset, month, onClose }) {
     notify('Budget saved successfully.'); dismiss()
   }
   const linked = !!f.categoryId
-  return (<Modal title={edit ? 'Edit budget' : 'Create budget'} onClose={onClose} initialFocus={preset ? amountRef : input} wide labelledBy="bud-modal-title"
-    footer={(dismiss) => (<><button type="button" className="btn" onClick={dismiss}>Cancel</button><button type="button" className="btn btn-primary" disabled={saving} onClick={() => submit(dismiss)}>{saving ? 'Saving...' : edit ? 'Save' : 'Create'}</button></>)}>
-    <Field label="Budget name" error={err.name} hint={linked ? 'Leave as is to use the category name.' : undefined}><input ref={input} className="input" value={f.name} maxLength={60} onChange={(e) => { setTouched(true); setF({ ...f, name: e.target.value }); setErr({}) }} aria-invalid={!!err.name} autoComplete="off" /></Field>
+  return (<Modal title={edit ? 'Edit budget' : 'Add budget'} onClose={onClose} initialFocus={preset ? amountRef : input} wide labelledBy="bud-modal-title"
+    footer={(dismiss) => (<><button type="button" className="btn" onClick={dismiss}>Cancel</button><button type="button" className="btn btn-primary" disabled={saving} onClick={() => submit(dismiss)}>{saving ? 'Saving...' : edit ? 'Save' : 'Add'}</button></>)}>
+    <Field label="Budget name" error={err.name} info={linked ? 'Leave as is to use the category name.' : undefined}><input ref={input} className="input" value={f.name} maxLength={60} onChange={(e) => { setTouched(true); setF({ ...f, name: e.target.value }); setErr({}) }} aria-invalid={!!err.name} autoComplete="off" /></Field>
     <Field label={`Monthly amount (${settings.currency})`} error={err.amount}><input ref={amountRef} className="input" type="number" step="0.01" inputMode="decimal" placeholder="0.00" value={f.amount} onChange={(e) => { setF({ ...f, amount: e.target.value }); setErr({}) }} aria-invalid={!!err.amount} /></Field>
     <Field label="Month"><select className="input" value={f.month} onChange={(e) => setF({ ...f, month: e.target.value })}>{budgetMonths(transactions, budgets).concat(f.month).filter((m, i, a) => a.indexOf(m) === i).sort().reverse().map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}</select></Field>
     <Field label="Track spending from (optional)" error={err.category}
-      hint={linked ? 'Spending in this expense category counts against the budget. No category is created or changed.' : 'Not linked: this budget stays at its full amount because no spending is counted. Pick an expense category to track its spending.'}>
+      info={linked ? 'Spending in this category counts against the budget.' : 'Not linked, so spending is not tracked. Pick an expense category to track it.'}>
       <select className="input" value={f.categoryId} onChange={(e) => pickCategory(e.target.value)} aria-invalid={!!err.category}><option value="">None (budget only)</option>{expenseCats.map((c) => <option key={c.id} value={c.id}>{c.name}{c.archived ? ' (deleted)' : ''}</option>)}</select></Field>
     <div className="field"><span className="field-label">Icon</span><IconPicker value={f.icon} onChange={(icon) => setF({ ...f, icon })} /></div>
     {err.form && <p className="field-error" role="alert">{err.form}</p>}</Modal>)

@@ -30,15 +30,15 @@ export default function Categories() {
         {rows.map((c) => (<li key={c.id}><button type="button" className="catg-tile" title={c.name} onClick={() => setModal({ mode: 'edit', category: c })} aria-label={`${c.name}. Edit category`}>
           <span className={'catg-icon ' + tone}><CategoryIcon id={iconOf(c)} size={26} /></span><span className="catg-name">{c.name}</span></button></li>))}
         <li><button type="button" className="catg-tile catg-add" onClick={() => setModal({ mode: 'create', type: t })} aria-label={`Add ${t} category`}>
-          <span className="catg-icon"><Plus size={26} aria-hidden="true" /></span><span className="catg-name">Add Category</span></button></li></ul>
+          <span className="catg-icon"><Plus size={26} aria-hidden="true" /></span><span className="catg-name">Add</span></button></li></ul>
       {dataToolsReady && missing > 0 && <p className="muted small catg-restore">{missing} built-in {t} categor{missing === 1 ? 'y was' : 'ies were'} deleted. <button type="button" className="btn-link" onClick={restore}><RotateCcw size={14} aria-hidden="true" /> Restore default categories</button></p>}
     </section>)
   }
   return (<>
-    <PageHeader title="Categories"><button type="button" className="btn btn-primary" onClick={() => setModal({ mode: 'create', type: sideBySide ? undefined : type })}>Create category</button></PageHeader>
+    <PageHeader title="Categories"><button type="button" className="btn btn-primary" onClick={() => setModal({ mode: 'create', type: sideBySide ? undefined : type })} aria-label="Add category">Add</button></PageHeader>
     {!sideBySide && <div className="cat-type-seg"><Segmented label="Category type" value={type} onChange={setType} options={[['income', 'Income'], ['expense', 'Expense']]} /></div>}
     {activeCategories.length === 0 && !dataToolsReady
-      ? <EmptyState icon={Tags} title="No categories found" text="Create a category to start organizing your transactions." />
+      ? <EmptyState icon={Tags} title="No categories found" text="Add a category to get started." />
       : <div className={sideBySide ? 'catg-cols' : undefined}>{(sideBySide ? ['income', 'expense'] : [type]).map(group)}</div>}
     {modal && <CategoryModal category={modal.category} defaultType={modal.type || type} onClose={() => setModal(null)} />}
   </>)

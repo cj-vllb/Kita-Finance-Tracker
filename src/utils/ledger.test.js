@@ -247,3 +247,15 @@ test('contributionProblem: needs no source, only a valid destination and amount'
   assert.equal(contributionProblem(goals, { goalId: '', amount: MAX_AMOUNT + 1 }).message, 'That amount is too large.')
   assert.equal(contributionProblem(goals, { goalId: 'gone', amount: 5 }).field, 'to') // a deleted / unknown goal
 })
+
+// 1.3.6: the separate Withdraw form is gone. "Move existing money" from a goal or General Savings to Current Balance must be the same to_current transfer
+// the old form wrote, and it must still refuse more than the place holds.
+test('moving from a goal to Current Balance is a to_current transfer and is limited to what the goal holds', () => {
+  assert.deepEqual(transferPlan('phone', CURRENT), { kind: 'transfer', direction: 'to_current', goalId: 'phone' })
+  assert.deepEqual(transferPlan(GENERAL, CURRENT), { kind: 'transfer', direction: 'to_current', goalId: '' })
+  const l = computeLedger({ transfers: [tr('to_savings', 500, 'phone')], goals: [phone] })
+  assert.equal(transferProblem(l, [phone], { from: 'phone', to: CURRENT, amount: '500' }), null)
+  assert.equal(transferProblem(l, [phone], { from: 'phone', to: CURRENT, amount: '500.01' }).field, 'amount')
+  const after = computeLedger({ transfers: [tr('to_savings', 500, 'phone'), tr('to_current', 200, 'phone')], goals: [phone] })
+  assert.equal(after.current, -300); assert.equal(after.savings, 300); assert.equal(after.goals.phone, 300) // nothing becomes income or an expense
+})

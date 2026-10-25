@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { money, monthLabel } from '../utils/format.js'
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH } from '../utils/dates.js'
-import { PageHeader, EmptyState, ConfirmDialog, RowMenu, CategoryIcon } from '../components/ui.jsx'
+import { PageHeader, EmptyState, ConfirmDialog, RowMenu, CategoryIcon, InfoTip } from '../components/ui.jsx'
 import BudgetModal from '../components/BudgetModal.jsx'
 import { categoryIconId } from '../utils/categories.js'
 import { budgetMonths } from '../utils/budgetMonths.js'
@@ -29,21 +29,20 @@ export default function Budgets() {
   const editing = modal?.mode === 'edit' ? budgets.find((b) => b.id === modal.id) : null
   const open = (m) => setModal(m)
   return (<>
-    <PageHeader title="Budget"><button type="button" className="btn btn-primary" onClick={() => open({ mode: 'create' })}>Create budget</button></PageHeader>
+    <PageHeader title="Budget"><button type="button" className="btn btn-primary" onClick={() => open({ mode: 'create' })} aria-label="Add budget">Add</button></PageHeader>
     {rows.length > 0 && <section className="card budget-summary" aria-label="Budget summary"><div className="bs-remaining"><div className="muted small">Remaining</div><div className={'bs-big' + (total('remaining') < 0 ? ' neg' : '')}>{total('remaining') < 0 ? '−' : ''}{money(Math.abs(total('remaining')))}</div></div>
       <div className="bs-totals muted"><span>Budgeted <strong>{money(total('b'))}</strong></span><span>Spent <strong>{money(total('spent'))}</strong></span></div></section>}
     {warn.length > 0 && <div className="alert-strip" role="status"><AlertTriangle size={18} aria-hidden="true" /><div>{warn.map((r) => <p key={r.b.id} className={r.pct > 100 ? 'neg' : 'warnline'}>{nameOf(r.b)} {r.pct > 100 ? `is over budget by ${money(-r.remaining)}.` : `has used ${r.pct}% of its budget.`}</p>)}</div></div>}
     <div className="bud-active-head"><h2 className="bud-section-title" id="bud-active-h">Active budgets for</h2>
       <label className="fsel bud-month"><span className="sr-only">Month</span><select className="input" aria-label="Month" value={month} onChange={(e) => setMonth(e.target.value)}>{budgetMonths(transactions, budgets).reverse().map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}</select></label></div>
-    {rows.length === 0 ? <EmptyState compact icon={PiggyBank} title="No budgets for this month" text="Pick a category below, or create your own budget, to set a monthly limit." /> :
+    {rows.length === 0 ? <EmptyState compact icon={PiggyBank} title="No budgets for this month" text="Pick a category below, or add your own." /> :
       <section className="card budget-list" aria-label={`Budgets for ${monthLabel(month)}`}><ul className="bud-rows">{rows.map(({ b, spent, remaining, pct }) => <li key={b.id} className="bud-row">
         <div className="bud-top"><span className="bud-name"><span className="bud-icon out"><CategoryIcon id={iconOf(b)} size={18} /></span><span className="bud-name-text">{nameOf(b)}</span></span><span className="muted small bud-amt">{money(spent)} of {money(b.amount)}</span>
           <RowMenu label={`Budget options for ${nameOf(b)}`} items={[{ label: 'Edit budget', icon: Pencil, onSelect: () => open({ mode: 'edit', id: b.id }) }, { label: 'Delete budget', icon: Trash2, danger: true, onSelect: () => setDel(b) }]} /></div>
         <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${nameOf(b)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
         {b.categoryId ? <div className={`small bp-note ${remaining < 0 ? 'neg' : 'muted'}`}>{remaining < 0 ? `${money(-remaining)} over budget` : `${money(remaining)} left`} · {pct}% used</div>
-          : <div className="small bp-note muted"><Info size={13} aria-hidden="true" /> Budget only: spending is not tracked. Edit it to link an expense category.</div>}</li>)}</ul></section>}
+          : <div className="small bp-note muted"><Info size={13} aria-hidden="true" /> Spending not tracked<InfoTip>This is a budget-only entry. Edit it and link an expense category to track spending.</InfoTip></div>}</li>)}</ul></section>}
     {available.length > 0 && <section aria-labelledby="bud-avail"><h2 className="bud-section-title" id="bud-avail">Available to budget</h2>
-      <p className="muted small bud-avail-note">These categories have no budget in {monthLabel(month)}. They only count once you set an amount.</p>
       <ul className="bud-avail">{available.map((cat) => <li key={cat.id}><button type="button" className="bud-avail-item" title={cat.name} onClick={() => open({ mode: 'create', preset: { categoryId: cat.id, name: cat.name, icon: categoryIconId(cat) || 'piggy-bank' } })}>
         <span className="bud-icon out"><CategoryIcon id={categoryIconId(cat)} size={18} /></span><span className="bud-avail-name">{cat.name}</span><span className="bud-avail-cta"><Plus size={14} aria-hidden="true" />Set budget</span></button></li>)}</ul></section>}
     {modal && (modal.mode === 'create' || editing) && <BudgetModal budget={editing || undefined} preset={modal.preset} month={month} onClose={() => setModal(null)} />}

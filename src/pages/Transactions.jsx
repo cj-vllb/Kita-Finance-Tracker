@@ -24,8 +24,8 @@ export default function Transactions() {
   const today = localToday(), firstYear = transactions.reduce((m, t) => Math.min(m, +t.date.slice(0, 4)), +today.slice(0, 4))
   const grouped = sort.key === 'date' // date headers only make sense when the list is in date order
   return (<>
-    <PageHeader title="Transactions"><Link to="/transactions/new" className="btn btn-primary">Add transaction</Link></PageHeader>
-    {transactions.length === 0 ? <EmptyState icon={ArrowLeftRight} title="No transactions yet" text="Your transactions will appear here once you add your first one." to="/transactions/new" action="Add transaction" /> : <>
+    <PageHeader title="Transactions"><Link to="/transactions/new" className="btn btn-primary" aria-label="Add transaction">Add</Link></PageHeader>
+    {transactions.length === 0 ? <EmptyState icon={ArrowLeftRight} title="No transactions yet" text="Add your first one to get started." to="/transactions/new" action="Add" /> : <>
       <div className="toolbar tx-toolbar">
         <div className="search"><Search size={16} aria-hidden="true" /><input className="input" type="search" placeholder="Search title or category" aria-label="Search transactions" value={f.q} onChange={set('q')} /></div>
         <button type="button" className="btn filter-btn" aria-expanded={fOpen} aria-controls="tx-filters" onClick={() => setFOpen(!fOpen)}><SlidersHorizontal size={16} aria-hidden="true" />Filter{active > 0 && <span className="count" aria-label={`${active} active`}>{active}</span>}</button>

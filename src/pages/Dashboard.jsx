@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { money, signed, txKind, greeting, firstName, monthLabel, monthName, monthShort, formatDate, formatDateLong, txLabel } from '../utils/format.js'
 import * as c from '../utils/calc.js'
 import { CURRENT_MONTH, TODAY } from '../utils/dates.js'
-import { CashFlowChart, MiniBars } from '../components/charts.jsx'
+import { CashFlowChart } from '../components/charts.jsx'
 import MonthCalendar from '../components/MonthCalendar.jsx'
 import { CategoryLabel, CatLabel, TxIcon, PageHeader } from '../components/ui.jsx'
 import { useMedia } from '../components/SidebarSearch.jsx'
@@ -44,11 +44,10 @@ export default function Dashboard() {
   // Previews: all derived from the same in-memory data the other pages use. Nothing is written or duplicated.
   const recent = [...transactions].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 5)
   const budgetTop = [...rows].sort((a, b) => b.pct - a.pct).slice(0, 3)
-  const trend = c.groupTransactionsByMonth(transactions, c.allMonths(transactions, [CURRENT_MONTH]).filter((m) => m <= CURRENT_MONTH).slice(-6))
   const days = Number(TODAY.slice(8))
   const chart = c.runningTotals(transactions, CURRENT_MONTH, days).map((d) => ({ ...d, label: `${monthShort(CURRENT_MONTH)} ${d.day}` }))
   return (<>
-    <PageHeader title={`${greeting()}, ${firstName(user)}`} subtitle={`Here is your financial overview for ${monthLabel(CURRENT_MONTH)}.`} />
+    <PageHeader title={`${greeting()}, ${firstName(user)}`} />
     <>
       <div className={'balances' + (selector ? ' is-selector' : '')}>
       {selector && <div className="seg bal-seg" role="tablist" aria-label="Balance view" onKeyDown={onTabKey}>{TABS.map(([id, text]) => <button key={id} type="button" role="tab" id={'bal-tab-' + id} aria-selected={tab === id} aria-controls={'bal-panel-' + id} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{text}</button>)}</div>}
@@ -60,24 +59,20 @@ export default function Dashboard() {
           <div><dt className="muted">Monthly expenses</dt><dd className="v neg">−{money(expenses)}</dd></div>
           <div><dt className="muted">Net change</dt><dd className="v">{net >= 0 ? '+' : '−'}{money(Math.abs(net))}</dd>{income > 0 && <dd className="muted mfig-note">{Math.round((net / income) * 100)}% of income kept</dd>}</div></dl></section>)}
       {showSavingsCard && slot('savings', <section className={'savings-balance' + (selector ? ' bal-panel' : '')} aria-label="Savings" {...panel('savings')}><div><div className="balance-label bal-head">Savings<EyeButton name="Savings" visible={showSavings} onToggle={toggleSavings} /></div><div className="sb-amount bal-amount">{showSavings ? money(ledger.savings) : <Masked />}</div>
-          <div className="muted small sb-note bal-note">{activeGoals.length ? (showSavings ? `${money(ledger.allocated)} set aside for goals` : 'Set aside for goals') : 'Money you have put aside'}</div></div>
+          {activeGoals.length > 0 && <div className="muted small sb-note bal-note">{showSavings ? `${money(ledger.allocated)} set aside for goals` : 'Set aside for goals'}</div>}</div>
           <Link to="/savings" className="pv-link">Manage savings<ChevronRight size={16} aria-hidden="true" /></Link></section>)}
       </>)}
       </div>
       <div className="previews charts">
         <section className="preview flow-card" aria-label="Monthly money flow"><div className="pv-body"><CashFlowChart title="Monthly money flow" data={chart} /></div></section>
-        {!compact ? <Preview title="Calendar" sub={monthLabel(CURRENT_MONTH)} to="/reports" action="View Reports" calendar>
-          <MonthCalendar transactions={transactions} month={CURRENT_MONTH} today={TODAY} /></Preview>
-        : <Preview title="Reports" to="/reports" action="View Reports" pad>
-          {transactions.length === 0 ? <p className="muted pv-empty">Add transactions and your reports will fill in.</p> : <>
-            <MiniBars data={trend} />
-            <div className="legend small"><span><span className="dot" style={{ background: 'var(--color-primary)' }} />Income</span><span><span className="dot" style={{ background: 'var(--color-negative)' }} />Expenses</span></div>
-            {top && <p className="small muted" style={{ marginTop: 8 }}>{name(top.categoryId)} is {Math.round((top.amount / expenses) * 100)}% of this month's expenses.</p>}</>}</Preview>}</div>
+        {/* One calendar for every screen size (it replaced the phone/tablet Reports card); the Reports page itself is unchanged. */}
+        <Preview title="Calendar" sub={monthLabel(CURRENT_MONTH)} to="/reports" action="Reports" calendar>
+          <MonthCalendar transactions={transactions} month={CURRENT_MONTH} today={TODAY} /></Preview></div>
       <div className="previews cards">
-        <Preview title="Recent transactions" to="/transactions" action="View All Transaction History">
+        <Preview title="Recent transactions" to="/transactions" action="View all">
           {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
             <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><TxIcon type={t.type} category={categories.find((c) => c.id === t.categoryId)} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{txKind(t)}</span></span></Link></li>)}</ul>}</Preview>
-        <Preview title="Budgets" sub={monthLabel(CURRENT_MONTH)} to="/budgets" action="View All Budgets">
+        <Preview title="Budgets" sub={monthLabel(CURRENT_MONTH)} to="/budgets" action="View all">
           {budgetTop.length === 0 ? <p className="muted pv-empty">No budgets set for this month. <Link to="/budgets/new">Create a budget</Link></p> :
             <ul className="bp-list">{budgetTop.map(({ b, spent, remaining, pct }) => <li key={b.id}><div className="bp-top"><span>{bname(b)}</span><span className="muted small">{money(spent)} of {money(b.amount)}</span></div>
               <div className="bar" role="progressbar" aria-valuenow={Math.min(pct, 100)} aria-valuemin="0" aria-valuemax="100" aria-label={`${bname(b)} budget used`}><div className={`bar-fill ${c.budgetLevel(pct)}`} style={{ width: Math.min(pct, 100) + '%' }} /></div>
@@ -91,4 +86,4 @@ export default function Dashboard() {
 }
 const Preview = ({ title, sub, to, action, pad, calendar, children }) => (
   <section className="preview" aria-label={title}><div className="pv-head"><div className="pv-title"><h2>{title}</h2>{sub && <p className="muted small">{sub}</p>}</div>
-    <Link to={to} className="pv-link">{action}<ChevronRight size={16} aria-hidden="true" /></Link></div><div className={'pv-body' + (pad ? ' pad' : '') + (calendar ? ' cal' : '')}>{children}</div></section>)
+    <Link to={to} className="pv-link" aria-label={`${action}: ${title}`}>{action}<ChevronRight size={16} aria-hidden="true" /></Link></div><div className={'pv-body' + (pad ? ' pad' : '') + (calendar ? ' cal' : '')}>{children}</div></section>)

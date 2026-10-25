@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useCallback, useRef, useState, useId, isValidElement, cloneElement } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, MoreVertical, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, X } from 'lucide-react'
+import { Eye, EyeOff, MoreVertical, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, X, Info } from 'lucide-react'
 import { initials } from '../utils/format.js'
 import { iconComponent } from '../utils/icons.js'
 // Shared dialog behaviour: focus moves in, Tab stays inside, Escape closes, page behind does not scroll, focus returns on close.
-function useDialog(ref, onClose, focusRef) {
+export function useDialog(ref, onClose, focusRef) {
   const close = useRef(onClose); close.current = onClose // latest handler without re-running the effect (which would steal focus on every re-render)
   useEffect(() => {
     const prev = document.activeElement, overflow = document.body.style.overflow
@@ -64,14 +64,47 @@ export const PageHeader = ({ title, subtitle, children }) => (
   <div className="page-header"><div><h1>{title}</h1>{subtitle && <p className="muted">{subtitle}</p>}</div>{children && <div className="actions">{children}</div>}</div>)
 // Moves keyboard/screen-reader focus to the first field with an error after a failed submit.
 export const focusFirstInvalid = () => requestAnimationFrame(() => document.querySelector('[aria-invalid="true"]')?.focus())
+// Small "i" button that opens a compact popover with an optional explanation. One reusable pattern for the whole app: a real <button> (keyboard and
+// touch), aria-expanded, closes on an outside tap/click, on Escape (without also closing a dialog it sits in) and on scroll/resize, and only one is open at a time.
+// The popover is drawn in a portal with fixed positioning, so no overflow-hidden parent can clip it. Only explanations go here, never controls.
+let closeOpenTip = null
+export function InfoTip({ children, label = 'More information', className = '' }) {
+  const [open, setOpen] = useState(false), [pos, setPos] = useState(null), btn = useRef(), pop = useRef(), id = useId()
+  const close = useCallback((focusButton) => { setOpen(false); if (focusButton) btn.current?.focus({ preventScroll: true }) }, [])
+  const toggle = () => {
+    if (open) return close()
+    if (closeOpenTip && closeOpenTip !== close) closeOpenTip()
+    setPos(null); setOpen(true)
+  }
+  useLayoutEffect(() => {
+    if (!open || !pop.current || !btn.current) return
+    const r = btn.current.getBoundingClientRect(), m = pop.current.getBoundingClientRect(), pad = 8
+    const left = Math.min(Math.max(pad, r.left + r.width / 2 - m.width / 2), window.innerWidth - m.width - pad)
+    let top = r.bottom + 6; if (top + m.height > window.innerHeight - pad) top = Math.max(pad, r.top - m.height - 6)
+    setPos({ top, left })
+  }, [open])
+  useEffect(() => {
+    if (!open) return
+    closeOpenTip = close
+    const esc = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true) } } // capture phase: a dialog behind it stays open
+    const away = (e) => { if (!pop.current?.contains(e.target) && !btn.current?.contains(e.target)) setOpen(false) }, shut = () => setOpen(false)
+    window.addEventListener('keydown', esc, true); document.addEventListener('pointerdown', away); window.addEventListener('resize', shut); window.addEventListener('scroll', shut, true)
+    return () => { if (closeOpenTip === close) closeOpenTip = null; window.removeEventListener('keydown', esc, true); document.removeEventListener('pointerdown', away); window.removeEventListener('resize', shut); window.removeEventListener('scroll', shut, true) }
+  }, [open, close])
+  return (<>
+    <button ref={btn} type="button" className={'info-btn ' + className} aria-label={label} aria-expanded={open} aria-controls={open ? id : undefined} onClick={toggle}><Info size={15} strokeWidth={2} aria-hidden="true" /></button>
+    {open && createPortal(<div ref={pop} id={id} role="status" className="info-pop" style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: 'hidden' }}>{children}</div>, document.body)}</>)
+}
 // Label, control, hint and error. The control is linked to its label and to the hint/error text, and the error is not part of the label.
 // A button group (Segmented) has its own aria-label, so it gets a plain caption instead of a <label>.
-export function Field({ label, error, hint, children, className = '' }) {
+export function Field({ label, error, hint, info, children, className = '' }) {
   const id = useId(), hintId = id + '-hint', errId = id + '-err'
   const describedBy = [error && errId, hint && !error && hintId].filter(Boolean).join(' ') || undefined
   const group = isValidElement(children) && children.type === Segmented
   const control = isValidElement(children) && !group ? cloneElement(children, { id, 'aria-describedby': describedBy }) : children
-  return (<div className={'field ' + className}>{group ? <span className="field-label">{label}</span> : <label className="field-label" htmlFor={id}>{label}</label>}{control}
+  const caption = group ? <span className="field-label">{label}</span> : <label className="field-label" htmlFor={id}>{label}</label>
+  // `info` is optional explanation that does not need to be on screen all the time; `hint` stays visible (use it only for guidance needed to fill the field in).
+  return (<div className={'field ' + className}>{info ? <span className="field-head">{caption}<InfoTip>{info}</InfoTip></span> : caption}{control}
     {hint && !error && <span id={hintId} className="muted small">{hint}</span>}{error && <span id={errId} className="field-error" role="alert"><AlertTriangle size={14} aria-hidden="true" />{error}</span>}</div>)
 }
 export const Segmented = ({ label, value, onChange, options, disabled }) => (

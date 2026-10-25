@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { monthCalendar, daysInMonth, startWeekday, cellAmount, WEEKDAYS } from './calendar.js'
+import { monthCalendar, daysInMonth, startWeekday, cellAmount, calendarMonthFor, WEEKDAYS } from './calendar.js'
 const tx = (date, type, amount, balance = 'current') => ({ id: Math.random().toString(36), date, type, amount, balance })
 const days = (cal) => cal.weeks.flat().filter(Boolean)
 
@@ -50,4 +50,17 @@ test('the totals equal the sum of the days, which equals the Dashboard monthly f
 test('cellAmount: short, but exact below 1,000 and for whole amounts', () => {
   assert.equal(cellAmount(0, '₱'), '₱0'); assert.equal(cellAmount(250, '₱'), '₱250'); assert.equal(cellAmount(12.5, '₱'), '₱12.50'); assert.equal(cellAmount(999.99, '₱'), '₱999.99')
   assert.equal(cellAmount(1250.5, '₱'), '₱1,251'); assert.equal(cellAmount(40100, '$'), '$40,100'); assert.equal(cellAmount(123456, ''), '123.5k'); assert.equal(cellAmount(2500000, '₱'), '₱2.5M'); assert.equal(cellAmount(-30, '₱'), '₱30')
+})
+
+test('Reports calendar month follows the selected period', () => {
+  const today = '2026-10-25'
+  assert.equal(calendarMonthFor({ kind: 'month', month: '2026-03' }, today), '2026-03')
+  assert.equal(calendarMonthFor({ kind: 'day', day: '2026-08-31' }, today), '2026-08')
+  assert.equal(calendarMonthFor({ kind: 'week', day: '2026-09-02' }, today), '2026-09')
+  assert.equal(calendarMonthFor({ kind: 'year', year: '2026' }, today), '2026-10')
+  assert.equal(calendarMonthFor({ kind: 'year', year: '2025' }, today), '2025-12')
+  assert.equal(calendarMonthFor({ kind: 'year', year: '2027' }, today), '2027-01')
+  assert.equal(calendarMonthFor({ kind: 'all' }, today), '2026-10')
+  assert.equal(calendarMonthFor({ kind: 'month', month: 'bad' }, today), '2026-10')
+  assert.equal(calendarMonthFor(null, today), '2026-10')
 })

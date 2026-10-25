@@ -38,3 +38,15 @@ export function cellAmount(n, prefix = '', { short = false } = {}) {
   if (v >= 1e3) return prefix + Math.round(v).toLocaleString('en-US')
   return prefix + (Number.isInteger(v) ? String(v) : v.toFixed(2))
 }
+
+// The month a calendar should show for a Reports period (YYYY-MM). A month shows itself; a day or week shows the month of its day; a year shows the current month
+// when it is the current year, otherwise its first month (future years) or last month (past years); All time shows the current month. `today` is YYYY-MM-DD.
+export function calendarMonthFor(period, today) {
+  const cur = String(today).slice(0, 7), year = String(today).slice(0, 4)
+  switch (period?.kind) {
+    case 'month': return /^\d{4}-\d{2}$/.test(period.month) ? period.month : cur
+    case 'day': case 'week': return /^\d{4}-\d{2}-\d{2}$/.test(period.day) ? period.day.slice(0, 7) : cur
+    case 'year': return !/^\d{4}$/.test(period.year) || period.year === year ? cur : `${period.year}-${period.year > year ? '01' : '12'}`
+    default: return cur
+  }
+}

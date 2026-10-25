@@ -1,0 +1,79 @@
+/* TrackMyKita 1.3.6: simpler forms, phone profile drawer. Loaded last. Presentation only: no data, calculation or route changes. */
+
+/* 1) Phone profile tab (replaces "More"): the avatar sits in the same soft pill the other tab icons use */
+@media (max-width:700px){
+  .profile-tab{background:none;border:0;font-family:var(--font);cursor:pointer}
+  .profile-tab .tab-avatar{display:grid;place-items:center;width:56px;height:30px;border-radius:15px}
+  .profile-tab.active .tab-avatar,.profile-tab[aria-expanded=true] .tab-avatar{background:var(--color-primary-soft)}
+  .profile-tab.active,.profile-tab[aria-expanded=true]{color:var(--color-on-soft)}
+}
+
+/* 2) Right-side drawer. Only ever rendered on phones (see AppShell), so no breakpoint is needed here. */
+.drawer-scrim{position:fixed;inset:0;z-index:30;background:var(--scrim);animation:fadein .18s ease-out}
+.drawer-scrim[data-state=closed]{animation:fade-out .14s ease-in forwards}
+.drawer{position:absolute;top:0;right:0;bottom:0;display:flex;flex-direction:column;width:min(320px,86vw);max-width:100%;background:var(--color-field);border-left:1px solid var(--color-border);box-shadow:var(--shadow-pop);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) var(--safe-b) 0;animation:drawer-in .2s ease-out}
+.drawer[data-state=closed]{animation:drawer-out .14s ease-in forwards}
+.drawer:focus{outline:none}
+.drawer-head{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4);border-bottom:1px solid var(--color-border)}
+.drawer-who{display:grid;min-width:0;flex:1}
+.drawer-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drawer-email{font-size:12.5px;line-height:18px;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drawer-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--space-2) var(--space-3) var(--space-4)}
+.drawer-group{display:grid;gap:2px;padding:var(--space-2) 0}
+.drawer-group+.drawer-group{border-top:1px solid var(--color-border)}
+.drawer-link{display:flex;align-items:center;gap:14px;width:100%;min-height:48px;padding:0 var(--space-3);border:0;border-radius:var(--radius-md);background:none;color:var(--color-text);font:600 14.5px var(--font);text-align:left;cursor:pointer}
+.drawer-link:hover{background:var(--color-surface);text-decoration:none}
+.drawer-link.active{background:var(--color-primary-soft);color:var(--color-on-soft)}
+.drawer-logout{color:var(--color-negative)}
+@keyframes drawer-in{from{transform:translateX(100%)}to{transform:none}}
+@keyframes drawer-out{from{transform:none}to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.drawer-scrim,.drawer{animation:none!important}}
+
+/* 3) Transaction form: related fields side by side on wider screens, one column on phones. Replaces the row-by-row placement of earlier versions. */
+.tx-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-5) var(--space-4)}
+.tx-form>*{grid-column:1/-1}
+.tx-form>.f-half{grid-column:auto;align-self:start}
+.tx-more{justify-self:start}
+@media (max-width:700px){
+  .tx-form{grid-template-columns:minmax(0,1fr);gap:var(--space-4)}
+  .tx-form>.f-half{grid-column:1/-1}
+}
+
+/* 4) Information icon + popover (InfoTip in components/ui.jsx): optional explanations live behind a small "i" instead of permanent text. */
+.info-btn{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;margin:-4px 0 -4px 2px;padding:0;border:0;border-radius:50%;background:none;color:var(--color-muted);font:inherit;cursor:pointer;vertical-align:middle}
+.info-btn:hover{color:var(--color-text);background:var(--color-surface)}
+.info-btn:focus-visible{outline:3px solid var(--brand);outline-offset:1px}
+.info-btn[aria-expanded=true]{color:var(--color-on-soft);background:var(--color-primary-soft)}
+@media (pointer:coarse){.info-btn{width:32px;height:32px;margin:-6px 0}}
+.info-pop{position:fixed;z-index:40;width:max-content;max-width:min(280px,calc(100vw - 16px));padding:10px 12px;background:var(--color-field);color:var(--color-text);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-pop);font:400 13px/19px var(--font);text-align:left;text-wrap:pretty;animation:fadein .12s ease-out}
+.info-line{display:block}.info-line+.info-line{margin-top:6px}
+@media (prefers-reduced-motion:reduce){.info-pop{animation:none}}
+.field-head{display:flex;align-items:center;gap:2px}
+.seg-row{display:flex;align-items:center;gap:6px}.seg-row .seg{flex:1;min-width:0}
+.sv-lbl,.setting-label{display:flex;align-items:center;gap:2px}
+
+/* 5) Reports: overview + calendar, paired sections, Income and Expenses pies side by side on wide screens. One column on phones. */
+.rpt-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-4);margin-bottom:var(--space-4)}
+.rpt-hero>*{min-width:0}
+.rpt-sec h2{display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+.rpt-sec h2 .rpt-period{margin-left:var(--space-2)}
+.rpt-hero .rpt-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rpt-cal .pv-head{min-height:0;padding:12px 16px}
+@media (max-width:640px){.rpt-hero .rpt-kpis{grid-template-columns:minmax(0,1fr)}}
+@media (min-width:1101px){
+  .rpt-hero{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:stretch}
+  .rpt-hero .rpt-over{align-content:space-between}
+  .rpt-hero .rpt-kpis{grid-template-columns:minmax(0,1fr)}
+}
+.rpt-pair{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-4);align-items:start}
+.rpt-pair>*{min-width:0}
+@media (min-width:1101px){.rpt-pair{grid-template-columns:repeat(2,minmax(0,1fr))}.rpt-pair .share-mini{display:none}}
+.rpt-pies{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-6) var(--space-8)}
+.rpt-pie{display:grid;align-content:start;gap:var(--space-3);min-width:0}
+.rpt-pie h3{display:flex;align-items:baseline;gap:var(--space-2);margin:0;font-size:14px;line-height:20px;font-weight:600}
+.rpt-pie h3 .rpt-period{margin-left:0;font-weight:400}
+@media (min-width:900px){
+  .rpt-pies{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rpt-pies .pie{grid-template-columns:minmax(0,1fr);gap:var(--space-4)}
+  .rpt-pies .pie-box{max-width:220px}
+}

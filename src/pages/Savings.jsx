@@ -4,8 +4,8 @@ import { Coins, Plus, Pencil, Trash2, ArrowDownLeft, ArrowUpRight, ArrowLeftRigh
 import { useApp } from '../context/AppContext.jsx'
 import { money, formatDate, txLabel } from '../utils/format.js'
 import { bucketAmount, goalProgress, pctText, isSavings } from '../utils/ledger.js'
-import { PageHeader, EmptyState, RowMenu } from '../components/ui.jsx'
-import { TransferDialog, WithdrawDialog, GoalDialog, DeleteGoalDialog, UndoDialog } from '../components/SavingsDialogs.jsx'
+import { PageHeader, EmptyState, RowMenu, InfoTip } from '../components/ui.jsx'
+import { TransferDialog, GoalDialog, DeleteGoalDialog, UndoDialog } from '../components/SavingsDialogs.jsx'
 
 const PAGE = 10
 export default function Savings() {
@@ -19,16 +19,16 @@ export default function Savings() {
     ...contributions.map((k) => ({ kind: 'contribution', id: k.id, date: k.date, createdAt: k.createdAt, k })),
     ...transactions.filter(isSavings).map((t) => ({ kind: 'tx', id: t.id, date: t.date, createdAt: t.createdAt, t })),
   ].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || '')), [transfers, reallocations, contributions, transactions])
-  if (!savingsReady) return (<><PageHeader title="Savings" /><EmptyState icon={Coins} title="Savings is not set up yet" text="The latest database update has not been applied to this project. Apply it with supabase db push, then reload this page. Everything else keeps working." /></>)
+  if (!savingsReady) return (<><PageHeader title="Savings" /><EmptyState icon={Coins} title="Savings is not set up yet" text="Apply the latest database update (supabase db push), then reload. Everything else keeps working." /></>)
 
   const open = (kind, extra) => setDlg({ kind, ...extra })
   const hasGoals = activeGoals.length > 0
-  // Add money (one form for every transfer) opens with this place as the destination. Withdrawing needs money in that place.
-  const rowMenu = (id) => { const held = bucketAmount(ledger, id) > 0; return [
+  // The page header has ONE entry point (Add to Savings). Its dialog has a switch between New money and Move existing money, so moving money needs no
+  // second header button. The per-place menus below open the same dialog already set to one of those two choices, with that place as the destination.
+  const rowMenu = (id) => [
     { label: 'Add money', icon: Plus, onSelect: () => open('add', { goalId: id, mode: 'new' }) },
     { label: 'Move money', icon: ArrowLeftRight, onSelect: () => open('add', { goalId: id, mode: 'move' }) },
-    ...(held ? [{ label: 'Withdraw to Current Balance', icon: ArrowUpRight, onSelect: () => open('withdraw', { goalId: id }) }] : []),
-  ] }
+  ]
   const describe = (e) => e.kind === 'contribution'
     ? { Icon: ArrowDownLeft, title: 'Added to Savings', kind: 'Contribution', meta: `New money → ${name(e.k.goalId)}`, amount: '+' + money(e.k.amount), cls: '', note: e.k.note, dir: 'in' }
     : e.kind === 'transfer'
@@ -42,32 +42,31 @@ export default function Savings() {
 
   return (<>
     <PageHeader title="Savings">
-      <button className="btn btn-primary" onClick={() => open('add', { goalId: '', mode: 'new' })} aria-label="Add to Savings"><span className="lbl-full">Add to Savings</span><span className="lbl-short" aria-hidden="true">Add</span></button>
-      <button className="btn" onClick={() => open('withdraw', { goalId: '' })} disabled={ledger.savings <= 0}>Withdraw</button></PageHeader>
+      <button className="btn btn-primary" onClick={() => open('add', { goalId: '', mode: 'new' })} aria-label="Add to Savings"><span className="lbl-full">Add to Savings</span><span className="lbl-short" aria-hidden="true">Add</span></button></PageHeader>
 
     <section className="card sv-overview" aria-label="Savings overview">
       <div><div className="balance-label">Savings balance</div><div className="sv-big">{money(ledger.savings)}</div></div>
-      <div><div className="muted">Set aside for goals</div><div className="sv-fig">{money(ledger.allocated)}</div><div className="muted small">Part of your Savings, not extra money</div></div>
-      <div><div className="muted">Unassigned</div><div className="sv-fig">{money(ledger.unassigned)}</div><div className="muted small">Not set aside for any goal</div></div></section>
+      <div><div className="muted sv-lbl">Set aside for goals<InfoTip>This money is part of your Savings, assigned to your goals.</InfoTip></div><div className="sv-fig">{money(ledger.allocated)}</div></div>
+      <div><div className="muted">Unassigned</div><div className="sv-fig">{money(ledger.unassigned)}</div></div></section>
 
     <section className="card sv-section" aria-labelledby="sv-goals-h">
-      <div className="sv-head"><h2 id="sv-goals-h">Goals</h2>{hasGoals && <button className="btn-link" onClick={() => open('goal')}>New goal</button>}</div>
+      <div className="sv-head"><h2 id="sv-goals-h">Goals</h2>{hasGoals && <button className="btn-link" onClick={() => open('goal')}>Add goal</button>}</div>
       <ul className="sv-list">
         <li className="sv-item sv-general"><div className="sv-top"><div className="sv-id"><span className="sv-name">General Savings</span><span className="sv-amt">{money(ledger.unassigned)}</span></div>
           <RowMenu label="Options for General Savings" items={rowMenu('')} /></div>
-          <div className="muted small">Unassigned. Not set aside for a particular goal.</div></li>
+          </li>
         {activeGoals.map((g) => { const p = goalProgress(g, bucketAmount(ledger, g.id)); return (
           <li key={g.id} className="sv-item"><div className="sv-top"><div className="sv-id"><span className="sv-name">{g.name}</span><span className="muted small sv-amt">{money(p.saved)} of {money(p.target)}</span></div>
             <RowMenu label={`Options for ${g.name}`} items={[...rowMenu(g.id), { label: 'Edit goal', icon: Pencil, onSelect: () => open('goal', { id: g.id }) }, { label: 'Delete goal', icon: Trash2, danger: true, onSelect: () => open('delete', { id: g.id }) }]} /></div>
             <div className="bar" role="progressbar" aria-valuenow={Math.round(p.pct)} aria-valuemin="0" aria-valuemax="100" aria-label={`${g.name} progress`}><div className="bar-fill ok" style={{ width: p.pct + '%' }} /></div>
             <div className="small muted bp-note">{p.reached ? 'Goal reached' : `${money(p.remaining)} to go`} · {pctText(p.pct)} saved</div></li>) })}</ul>
       {!hasGoals && <div className="empty compact"><span className="empty-icon" aria-hidden="true"><Coins size={28} strokeWidth={1.5} /></span><h2>No savings goals yet</h2>
-        <p className="muted empty-text">You can save without a goal. Create one when you want to set money aside for something, like a phone or an emergency fund.</p>
-        <button className="btn btn-primary" onClick={() => open('goal')}>Create a goal</button></div>}</section>
+        <p className="muted empty-text">Set money aside for something specific.</p>
+        <button className="btn btn-primary" onClick={() => open('goal')}>Add goal</button></div>}</section>
 
     <section className="card sv-section" aria-labelledby="sv-act-h">
       <div className="sv-head"><h2 id="sv-act-h">Savings activity</h2></div>
-      {activity.length === 0 ? <div className="empty compact"><h2>No savings activity yet</h2><p className="muted empty-text">Use Add to Savings to record money you set aside, or record income straight into Savings from <Link to="/transactions/new">a new transaction</Link>.</p></div> : <>
+      {activity.length === 0 ? <div className="empty compact"><h2>No savings activity yet</h2><p className="muted empty-text">Use Add to Savings, or <Link to="/transactions/new">record income into Savings</Link>.</p></div> : <>
         <ul className="sv-act" aria-label="Savings activity">{activity.slice(0, shown).map((e) => { const d = describe(e); return (
           <li key={e.kind + e.id} className="tx-li"><div className={'tx-row' + (d.note?.trim() ? ' has-note' : '')}>
             <span className={'dir-icon ' + (d.dir === 'in' ? 'in' : d.dir === 'out' ? 'out' : '')} aria-hidden="true"><d.Icon size={16} strokeWidth={2} /></span>
@@ -77,7 +76,6 @@ export default function Savings() {
         {activity.length > shown && <div className="sv-more"><button className="btn" onClick={() => setShown(shown + PAGE)}>Show more</button></div>}</>}</section>
 
     {dlg?.kind === 'add' && <TransferDialog goalId={dlg.goalId || ''} mode={dlg.mode || 'new'} onClose={() => setDlg(null)} />}
-    {dlg?.kind === 'withdraw' && <WithdrawDialog goalId={dlg.goalId || ''} onClose={() => setDlg(null)} />}
     {dlg?.kind === 'goal' && <GoalDialog goal={dlg.id ? goals.find((g) => g.id === dlg.id) : null} onClose={() => setDlg(null)} />}
     {delGoal && <DeleteGoalDialog goal={delGoal} onClose={() => setDlg(null)} />}
     {dlg?.kind === 'undo' && <UndoDialog entry={dlg.entry} summary={summary(dlg.entry)} onClose={() => setDlg(null)} />}

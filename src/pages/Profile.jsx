@@ -31,7 +31,7 @@ export default function Profile() {
       <RowMenu sheet title="Profile picture" label="Profile picture options" icon={Pencil} buttonClassName="avatar-menu-btn" disabled={photoBusy} note="JPG, PNG or WebP. Cropped to a square and not shown to other users."
         items={[{ label: user.avatarUrl ? 'Change profile picture' : 'Add profile picture', icon: Upload, onSelect: () => fileRef.current?.click() }, ...(user.avatarUrl ? [{ label: 'Delete profile picture', icon: Trash2, danger: true, onSelect: () => setRmOpen(true) }] : [])]} /></div>
       <div className="avatar-side"><h2>{user.fullName}</h2><p className="muted">Member since {formatDateLong(user.memberSince)}</p>
-        {photo && <><p className="small muted">Preview. Save to use this photo.</p><div className="form-actions"><button className="btn btn-primary" disabled={photoBusy} onClick={savePhoto}>{photoBusy ? 'Saving...' : 'Save photo'}</button><button className="btn" disabled={photoBusy} onClick={() => { setPhoto(null); setPhotoErr('') }}>Cancel</button></div></>}
+        {photo && <><p className="small muted">Preview. Save to use this photo.</p><div className="form-actions"><button className="btn btn-primary" disabled={photoBusy} onClick={savePhoto}>{photoBusy ? 'Saving...' : 'Save'}</button><button className="btn" disabled={photoBusy} onClick={() => { setPhoto(null); setPhotoErr('') }}>Cancel</button></div></>}
         {photoErr && <p className="field-error" role="alert">{photoErr}</p>}</div></section>
     <section className="card details" aria-labelledby="p-details"><h2 id="p-details">Details</h2>
     <dl className="dl"><dt>Name</dt><dd>{user.fullName}</dd><dt>Email</dt><dd>{user.email}</dd><dt>Account created</dt><dd>{formatDateLong(user.memberSince)}</dd></dl>
@@ -40,13 +40,13 @@ export default function Profile() {
       <Field label="Name" error={err.fullName}><input className="input" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} aria-invalid={!!err.fullName} autoComplete="name" autoFocus /></Field>
       <Field label="Email" error={err.email}><input className="input" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} aria-invalid={!!err.email} autoComplete="email" /></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
-      <div className="form-actions"><button className="btn btn-primary" disabled={busy}>Save changes</button><button type="button" className="btn" onClick={() => setMode(null)}>Cancel</button></div></form>}
+      <div className="form-actions"><button className="btn btn-primary" disabled={busy}>Save</button><button type="button" className="btn" onClick={() => setMode(null)}>Cancel</button></div></form>}
     {mode === 'password' && <form className="form" style={{ marginTop: 16 }} onSubmit={savePassword} noValidate><h2>Change password</h2>
       <Field label="Current password" error={err.current}><PasswordInput className="input" autoComplete="current-password" value={p.current} onChange={(e) => setP({ ...p, current: e.target.value })} aria-invalid={!!err.current} autoFocus /></Field>
       <Field label="New password" error={err.next} hint="At least 8 characters."><PasswordInput className="input" autoComplete="new-password" value={p.next} onChange={(e) => setP({ ...p, next: e.target.value })} aria-invalid={!!err.next} /></Field>
       <Field label="Confirm new password" error={err.confirm}><PasswordInput className="input" autoComplete="new-password" value={p.confirm} onChange={(e) => setP({ ...p, confirm: e.target.value })} aria-invalid={!!err.confirm} /></Field>
       {err.form && <p className="field-error" role="alert">{err.form}</p>}
-      <div className="form-actions"><button className="btn btn-primary" disabled={busy}>Update password</button><button type="button" className="btn" onClick={() => setMode(null)}>Cancel</button></div></form>}
+      <div className="form-actions"><button className="btn btn-primary" disabled={busy}>Save</button><button type="button" className="btn" onClick={() => setMode(null)}>Cancel</button></div></form>}
     <section className="danger-zone profile-danger" aria-labelledby="p-danger"><h2 id="p-danger"><AlertTriangle size={18} aria-hidden="true" />Delete account</h2>
       <p>Deleting your account permanently removes your profile, transactions, budgets, categories and savings. This cannot be undone. To clear your data but keep your account, use Delete All Data in Settings.</p>
       <button className="btn btn-danger-outline" onClick={() => setDelAcct(true)}>Delete account…</button></section>

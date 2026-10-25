@@ -34,9 +34,9 @@ const FAQ = [
   ['Where can I read about privacy?', 'The Privacy Policy and Terms of Service are linked at the bottom of this page.'],
 ]
 const FEATURES = [
-  { id: 'transactions', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds, give each a clear title and category, and find it again later in a tidy, dated list.', Visual: TransactionsPreview },
-  { id: 'budgets', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and watch the bar fill as you spend. You see what is left, and when a budget is going over.', Visual: BudgetsPreview, flip: true },
-  { id: 'reports', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month to see whether you are staying below what you earn.', Visual: ReportsPreview },
+  { id: 'transactions', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds and find them later in a tidy, dated list.', Visual: TransactionsPreview },
+  { id: 'budgets', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and see what is left as you spend.', Visual: BudgetsPreview, flip: true },
+  { id: 'reports', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month.', Visual: ReportsPreview },
 ]
 const BENEFITS = [
   { icon: Tags, t: 'Categories your way', d: 'Create categories with your own names and colours, even while adding a transaction.' },
@@ -74,7 +74,7 @@ export default function LandingPage() {
         </section>
 
         <section id="everyday" className="lp-band">
-          <div className="lp-head"><R as="h2">Designed for your everyday life</R><R as="p" kind="fade" delay={80} className="lp-sub">Simple tools that help you spend thoughtfully and stay in control, without the clutter.</R></div>
+          <div className="lp-head"><R as="h2">Designed for your everyday life</R></div>
           <div className="lp-benefits">
             <div className="lp-b-col">{BENEFITS.slice(0, 2).map(({ icon: I, t, d }, i) => <R key={t} delay={i * 80} className="lp-card"><I size={22} aria-hidden="true" /><h3>{t}</h3><p>{d}</p></R>)}</div>
             <R kind="zoom" delay={80} className="lp-b-visual"><div className="lp-phone-stage"><div className="lp-phone-tilt"><PhoneMockup /></div></div></R>
@@ -83,7 +83,7 @@ export default function LandingPage() {
         </section>
 
         <section id="features" className="lp-features">
-          <div className="lp-head"><R as="h2">Powerful features for your finances</R><R as="p" kind="fade" delay={80} className="lp-sub">Everything you need to understand your income and spending, built into one tidy app.</R></div>
+          <div className="lp-head"><R as="h2">Powerful features for your finances</R></div>
           {FEATURES.map(({ id, icon: I, title, text, Visual, flip }) => (
             <R key={id} as="article" kind="rise" className={`lp-feature f-${id}${flip ? ' flip' : ''}`}>
               <div className="lp-f-text"><I size={24} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></div>
@@ -91,7 +91,7 @@ export default function LandingPage() {
         </section>
 
         <section id="faq" className="lp-faq">
-          <div className="lp-head"><R as="h2">Your questions answered</R><R as="p" kind="fade" delay={80} className="lp-sub">Quick answers about using TrackMyKita.</R></div>
+          <div className="lp-head"><R as="h2">Your questions answered</R></div>
           <R kind="fade" className="lp-faq-list">{FAQ.map(([q, a], i) => (
             <div key={q} className={'lp-qa' + (faq === i ? ' open' : '')}>
               <h3><button aria-expanded={faq === i} aria-controls={`qa-${i}`} id={`qb-${i}`} onClick={() => setFaq(faq === i ? -1 : i)}>{q}<ChevronDown size={18} aria-hidden="true" /></button></h3>
@@ -108,7 +108,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="lp-footer"><div className="lp-footer-in">
-        <div className="lp-foot-top"><Logo size={30} /><p>A simple personal finance tracker for your transactions, categories, budgets and reports.</p></div>
+        <div className="lp-foot-top"><Logo size={30} /><p>A simple personal finance tracker.</p></div>
         <nav className="lp-foot-links" aria-label="Footer">
           <div><h4>Product</h4><a href="#features">Features</a><a href="#faq">FAQ</a></div>
           <div className="lp-foot-account"><h4>Account</h4>{loggedIn ? <Link to="/dashboard">Dashboard</Link> : <><Link to="/login">Log In</Link><Link to="/signup">Sign Up</Link></>}</div>

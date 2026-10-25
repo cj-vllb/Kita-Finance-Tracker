@@ -46,14 +46,14 @@ export default function Help() {
   const isOpen = (id) => open[id] ?? !!query
   const toggle = (id) => setOpen((o) => ({ ...o, [id]: !isOpen(id) }))
   return (<>
-    <PageHeader title="Help Center" subtitle="Answers about using TrackMyKita, from adding your first transaction to managing your account." />
+    <PageHeader title="Help Center" />
     <div className="help">
       <div className="search help-search"><Search size={16} aria-hidden="true" />
         <input className="input" type="search" placeholder="Search help topics" aria-label="Search help topics" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" spellCheck={false} />
         {q && <button type="button" className="help-clear" aria-label="Clear search" onClick={() => setQ('')}><X size={16} aria-hidden="true" /></button>}</div>
       {!query && <nav className="help-topics" aria-label="Help topics">{HELP.map((g) => <a key={g.id} href={`#topic-${g.id}`}>{g.title}</a>)}</nav>}
       <p className="sr-only" role="status" aria-live="polite">{query ? (count ? `${count} help topic${count === 1 ? '' : 's'} found.` : 'No help topics found.') : ''}</p>
-      {count === 0 ? <div className="empty help-empty"><h2>No help topics found</h2><p className="muted">Nothing matches \u201c{q.trim()}\u201d. Try a different word, such as budget, category or password.</p>
+      {count === 0 ? <div className="empty help-empty"><h2>No help topics found</h2><p className="muted">No topics match \u201c{q.trim()}\u201d.</p>
         <button type="button" className="btn" onClick={() => setQ('')}>Clear search</button></div>
         : groups.map((g) => (<section key={g.id} id={`topic-${g.id}`} className="help-group" aria-labelledby={`hg-${g.id}`}>
           <h2 id={`hg-${g.id}`}>{g.title}</h2>

@@ -6,8 +6,8 @@ const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.ur
 const lock = JSON.parse(readFileSync(new URL('../../package-lock.json', import.meta.url), 'utf8'))
 const semver = (v) => { const p = v.split('.').map(Number); while (p.length < 3) p.push(0); return p } // '1.3' means 1.3.0
 test('the newest entry is the current package version, once', () => {
-  assert.equal(CHANGELOG[0].version, '1.3.6'); assert.equal(pkg.version, '1.3.6'); assert.equal(lock.version, '1.3.6'); assert.equal(lock.packages[''].version, '1.3.6')
-  assert.equal(CHANGELOG.filter((r) => r.version === '1.3.6').length, 1)
+  assert.equal(CHANGELOG[0].version, '1.3.7'); assert.equal(pkg.version, '1.3.7'); assert.equal(lock.version, '1.3.7'); assert.equal(lock.packages[''].version, '1.3.7')
+  assert.equal(CHANGELOG.filter((r) => r.version === '1.3.7').length, 1)
   assert.equal(new Set(CHANGELOG.map((r) => r.version)).size, CHANGELOG.length)
 })
 test('versions are newest first and each has 2 to 5 short bullets', () => {

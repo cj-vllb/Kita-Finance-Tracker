@@ -5,12 +5,13 @@ import { useApp } from '../context/AppContext.jsx'
 import { money, formatDate, txLabel } from '../utils/format.js'
 import { bucketAmount, goalProgress, pctText, isSavings } from '../utils/ledger.js'
 import { PageHeader, EmptyState, RowMenu, InfoTip } from '../components/ui.jsx'
+import { useMedia } from '../components/SidebarSearch.jsx'
 import { TransferDialog, GoalDialog, DeleteGoalDialog, UndoDialog } from '../components/SavingsDialogs.jsx'
 
 const PAGE = 10
 export default function Savings() {
   const { savingsReady, ledger, goals, activeGoals, transactions, transfers, reallocations, contributions, categories } = useApp()
-  const [dlg, setDlg] = useState(null), [shown, setShown] = useState(PAGE)
+  const [dlg, setDlg] = useState(null), [shown, setShown] = useState(PAGE), compact = useMedia('(max-width:1100px)')
   const name = (id) => { if (!id) return 'General Savings'; const g = goals.find((x) => x.id === id); return g ? g.name + (g.archived ? ' (deleted)' : '') : 'a goal' }
   // Everything that touched Savings, newest first: transfers and moves (undoable here) and income/expenses that used Savings (opened in Transactions).
   const activity = useMemo(() => [
@@ -42,12 +43,13 @@ export default function Savings() {
 
   return (<>
     <PageHeader title="Savings">
-      <button className="btn btn-primary" onClick={() => open('add', { goalId: '', mode: 'new' })} aria-label="Add to Savings"><span className="lbl-full">Add to Savings</span><span className="lbl-short" aria-hidden="true">Add</span></button></PageHeader>
+      <button className="btn btn-primary hide-compact" onClick={() => open('add', { goalId: '', mode: 'new' })} aria-label="Add to Savings"><span className="lbl-full">Add to Savings</span><span className="lbl-short" aria-hidden="true">Add</span></button></PageHeader>
 
     <section className="card sv-overview" aria-label="Savings overview">
-      <div><div className="balance-label">Savings balance</div><div className="sv-big">{money(ledger.savings)}</div></div>
-      <div><div className="muted sv-lbl">Set aside for goals<InfoTip>This money is part of your Savings, assigned to your goals.</InfoTip></div><div className="sv-fig">{money(ledger.allocated)}</div></div>
-      <div><div className="muted">Unassigned</div><div className="sv-fig">{money(ledger.unassigned)}</div></div></section>
+      <div className="sv-main"><div className="balance-label">Savings balance</div><div className="sv-big">{money(ledger.savings)}</div></div>
+      <div className="sv-sub">
+        <div><div className="muted sv-lbl">Set aside for goals<InfoTip>This money is part of your Savings, assigned to your goals.</InfoTip></div><div className="sv-fig">{money(ledger.allocated)}</div></div>
+        <div><div className="muted">Unassigned</div><div className="sv-fig">{money(ledger.unassigned)}</div></div></div></section>
 
     <section className="card sv-section" aria-labelledby="sv-goals-h">
       <div className="sv-head"><h2 id="sv-goals-h">Goals</h2>{hasGoals && <button className="btn-link" onClick={() => open('goal')}>Add goal</button>}</div>
@@ -66,7 +68,7 @@ export default function Savings() {
 
     <section className="card sv-section" aria-labelledby="sv-act-h">
       <div className="sv-head"><h2 id="sv-act-h">Savings activity</h2></div>
-      {activity.length === 0 ? <div className="empty compact"><h2>No savings activity yet</h2><p className="muted empty-text">Use Add to Savings, or <Link to="/transactions/new">record income into Savings</Link>.</p></div> : <>
+      {activity.length === 0 ? <div className="empty compact"><h2>No savings activity yet</h2><p className="muted empty-text">{compact ? 'Tap the + button and choose Add Savings.' : <>Use Add to Savings, or <Link to="/transactions/new">record income into Savings</Link>.</>}</p></div> : <>
         <ul className="sv-act" aria-label="Savings activity">{activity.slice(0, shown).map((e) => { const d = describe(e); return (
           <li key={e.kind + e.id} className="tx-li"><div className={'tx-row' + (d.note?.trim() ? ' has-note' : '')}>
             <span className={'dir-icon ' + (d.dir === 'in' ? 'in' : d.dir === 'out' ? 'out' : '')} aria-hidden="true"><d.Icon size={16} strokeWidth={2} /></span>

@@ -188,13 +188,39 @@ export function RowMenu({ label = 'Options', items, icon: TriggerIcon = MoreVert
         {note && <p className="row-menu-note">{note}</p>}</div></>)}</Presence>, document.body)}</>)
 }
 
+// While a dialog is open on a touch device, tracks how much of the screen the on-screen keyboard covers (window.visualViewport) and publishes it on the
+// scrim as --kb (pixels covered) and --vvh (pixels still visible). The phone/tablet CSS (styles/v137.css) shrinks the dialog to that visible area, so the
+// whole form, including a long icon grid, stays scrollable ABOVE the keyboard instead of ending underneath it. A focused field is also scrolled into view
+// after the keyboard has finished opening. With no keyboard (desktop, or nothing focused) --kb is 0 and nothing changes. Presentation only.
+function useKeyboardInset(scrim, dialog) {
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null, el = scrim.current; if (!vv || !el) return
+    let raf = 0
+    const apply = () => {
+      raf = 0
+      const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)), open = kb > 80 // small differences are browser toolbars, not a keyboard
+      el.style.setProperty('--kb', (open ? kb : 0) + 'px'); el.style.setProperty('--vvh', Math.round(vv.height) + 'px')
+      if (open) el.setAttribute('data-kb', 'open'); else el.removeAttribute('data-kb')
+    }
+    const queue = () => { if (!raf) raf = requestAnimationFrame(apply) }
+    const focusIn = (e) => {
+      const t = e.target; if (!(t instanceof HTMLElement) || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return
+      setTimeout(() => { if (document.activeElement === t) t.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' }) }, 320)
+    }
+    vv.addEventListener('resize', queue); vv.addEventListener('scroll', queue); dialog.current?.addEventListener('focusin', focusIn); apply()
+    const d = dialog.current
+    return () => { vv.removeEventListener('resize', queue); vv.removeEventListener('scroll', queue); d?.removeEventListener('focusin', focusIn); if (raf) cancelAnimationFrame(raf) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+}
 // Generic dialog for forms (category, budget, backup...). Same focus handling, Escape, scrim and exit animation as ConfirmDialog.
-// `footer` is rendered in the usual action row; `initialFocus` is a ref to the field that should receive focus first.
-export function Modal({ title, onClose, children, footer, initialFocus, wide = false, labelledBy = 'modal-title' }) {
-  const ref = useRef(), [state, dismiss] = useExit(onClose)
+// `footer` is rendered in the usual action row; `initialFocus` is a ref to the field that should receive focus first. `className` adds a variant class
+// (the phone/tablet quick-add sheets use it); the body is the ONLY scrolling region of the dialog.
+export function Modal({ title, onClose, children, footer, initialFocus, wide = false, labelledBy = 'modal-title', className = '' }) {
+  const ref = useRef(), scrim = useRef(), [state, dismiss] = useExit(onClose)
   useDialog(ref, dismiss, initialFocus)
-  return (<div className="scrim" data-state={state} onMouseDown={(e) => e.target === e.currentTarget && dismiss()}>
-    <div className={'dialog modal' + (wide ? ' modal-wide' : '')} data-state={state} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} ref={ref}>
+  useKeyboardInset(scrim, ref)
+  return (<div className={'scrim' + (className ? ' ' + className + '-scrim' : '')} ref={scrim} data-state={state} onMouseDown={(e) => e.target === e.currentTarget && dismiss()}>
+    <div className={'dialog modal' + (wide ? ' modal-wide' : '') + (className ? ' ' + className : '')} data-state={state} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} ref={ref}>
       <div className="dialog-head"><h2 id={labelledBy}>{title}</h2><button type="button" className="icon-btn dialog-x" aria-label="Close dialog" onClick={dismiss}><X size={18} aria-hidden="true" /></button></div>
       <div className="dialog-body modal-body">{children}</div>
       {footer && <div className="dialog-actions">{typeof footer === 'function' ? footer(dismiss) : footer}</div>}</div></div>)

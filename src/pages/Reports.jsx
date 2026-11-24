@@ -8,6 +8,8 @@ import { calendarMonthFor } from '../utils/calendar.js'
 import { PageHeader, EmptyState, Segmented, CategoryIcon, InfoTip } from '../components/ui.jsx'
 import MonthCalendar from '../components/MonthCalendar.jsx'
 import DateFilter from '../components/DateFilter.jsx'
+import PeriodFilter from '../components/PeriodFilter.jsx'
+import { useMedia } from '../components/SidebarSearch.jsx'
 import { PieChart, FlowBars, TrendLines, BudgetBars, pct1 } from '../components/reportCharts.jsx'
 import { localToday, periodFor, periodLabel, previousPeriod, previousWord } from '../utils/dateRange.js'
 import * as rs from '../utils/reportStats.js'
@@ -17,7 +19,7 @@ const signedMoney = (n) => (n < 0 ? '−' : n > 0 ? '+' : '') + money(Math.abs(n
 // One selected period and one set of calculations feed BOTH views, so Stats and Charts can never disagree, and switching views keeps the period.
 export default function Reports() {
   const { transactions, categories, budgets, transfers, reallocations, contributions, goals, ledger, savingsReady } = useApp()
-  const today = localToday(), [view, setView] = useState('stats'), [period, setPeriod] = useState(() => periodFor('month', today)) // default: the current month
+  const compact = useMedia('(max-width:1100px)'), today = localToday(), [view, setView] = useState('stats'), [period, setPeriod] = useState(() => periodFor('month', today)) // default: the current month
   const R = useMemo(() => {
     const txs = rs.filterByPeriod(transactions, period), prevP = previousPeriod(period), prevTxs = prevP ? rs.filterByPeriod(transactions, prevP) : []
     const totals = rs.totalsOf(txs)
@@ -29,14 +31,15 @@ export default function Reports() {
   }, [period, transactions, categories, budgets, transfers, reallocations, contributions])
   const firstYear = transactions.reduce((m, t) => Math.min(m, +t.date.slice(0, 4)), +today.slice(0, 4))
   const hasAnything = transactions.length > 0 || budgets.length > 0 || goals.length > 0
-  if (!hasAnything) return <><PageHeader title="Reports" /><EmptyState icon={BarChart3} title="No report data available" text="Add a transaction to see reports." to="/transactions/new" action="Add transaction" /></>
+  if (!hasAnything) return <><PageHeader title="Reports" /><EmptyState icon={BarChart3} title="No report data available" text={compact ? 'Tap the + button to add a transaction and see reports.' : 'Add a transaction to see reports.'} to={compact ? undefined : '/transactions/new'} action="Add transaction" /></>
   return (<>
     <PageHeader title="Reports" />
     <div className="rpt-top">
-      <DateFilter idPrefix="rp" period={period} onChange={setPeriod} today={today} firstYear={firstYear} kinds={KINDS} allLabel="All time" pills />
+      {compact ? <PeriodFilter period={period} onChange={setPeriod} today={today} firstYear={firstYear} kinds={KINDS} /> : <DateFilter idPrefix="rp" period={period} onChange={setPeriod} today={today} firstYear={firstYear} kinds={KINDS} allLabel="All time" pills />}
       <Segmented label="Report view" value={view} onChange={setView} options={[['stats', 'Stats'], ['charts', 'Charts']]} />
     </div>
-    <Overview R={R} period={period} transactions={transactions} />
+    {/* Phones and tablets: Overview and Calendar belong to Stats only. Desktop keeps them above both views, as before. */}
+    {(!compact || view === 'stats') && <Overview R={R} period={period} transactions={transactions} />}
     {view === 'stats' ? <Stats R={R} period={period} goals={goals} ledger={ledger} savingsReady={savingsReady} /> : <Charts R={R} />}
   </>)
 }

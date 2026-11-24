@@ -35,7 +35,7 @@ export default function Categories() {
     </section>)
   }
   return (<>
-    <PageHeader title="Categories"><button type="button" className="btn btn-primary" onClick={() => setModal({ mode: 'create', type: sideBySide ? undefined : type })} aria-label="Add category">Add</button></PageHeader>
+    <PageHeader title="Categories"><button type="button" className="btn btn-primary hide-compact" onClick={() => setModal({ mode: 'create', type: sideBySide ? undefined : type })} aria-label="Add category">Add</button></PageHeader>
     {!sideBySide && <div className="cat-type-seg"><Segmented label="Category type" value={type} onChange={setType} options={[['income', 'Income'], ['expense', 'Expense']]} /></div>}
     {activeCategories.length === 0 && !dataToolsReady
       ? <EmptyState icon={Tags} title="No categories found" text="Add a category to get started." />

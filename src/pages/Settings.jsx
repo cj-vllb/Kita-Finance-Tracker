@@ -6,12 +6,14 @@ import { CURRENCY_CODES, currencyLabel } from '../utils/currency.js'
 import { buildCsv, csvFilename, downloadCsv } from '../utils/csv.js'
 import { APP_VERSION } from '../version.js'
 import { PageHeader, Avatar, InfoTip } from '../components/ui.jsx'
+import { useMedia } from '../components/SidebarSearch.jsx'
 import { RestoreDialog, DeleteAllDialog, downloadJson } from '../components/DataDialogs.jsx'
 import { backupToText } from '../utils/backup.js'
 // `info` is an optional explanation behind an info icon; `children` is only for text that must stay visible (for example a "needs update" notice).
-const Row = ({ label, children, action, id, info }) => <div className="setting-row"><div className="setting-text"><div className="setting-label"><span id={id}>{label}</span>{info && <InfoTip>{info}</InfoTip>}</div>{children && <div className="muted small">{children}</div>}</div>{action}</div>
+// Phones and tablets show no info icons: the explanation (when a setting needs one) is plain text under the name instead. Desktop keeps the icon.
+const Row = ({ label, children, action, id, info, compact, plain }) => <div className="setting-row"><div className="setting-text"><div className="setting-label"><span id={id}>{label}</span>{info && !compact && <InfoTip>{info}</InfoTip>}</div>{info && compact && plain && <div className="muted small">{info}</div>}{children && <div className="muted small">{children}</div>}</div>{action}</div>
 export default function Settings() {
-  const { user, settings, updateSettings, transactions, categories, logout, notify, backupData, dataToolsReady } = useApp(), nav = useNavigate(), [out, setOut] = useState(false), [dialog, setDialog] = useState(null), [backing, setBacking] = useState(false)
+  const { user, settings, updateSettings, transactions, categories, logout, notify, backupData, dataToolsReady } = useApp(), nav = useNavigate(), compact = useMedia('(max-width:1100px)'), [out, setOut] = useState(false), [dialog, setDialog] = useState(null), [backing, setBacking] = useState(false)
   // Export is read-only: it turns the transactions already on screen into a file. Nothing is saved or changed.
   const exportCsv = () => {
     if (!transactions.length) return notify('There are no transactions to export yet.')
@@ -31,15 +33,15 @@ export default function Settings() {
       <div className="settings-col">
       <section className="card" aria-labelledby="s-account"><h2 id="s-account">Account</h2>
         <div className="setting-row setting-id"><Avatar user={user} size={48} /><div className="setting-text"><div>{user.fullName}</div><div className="muted small">{user.email}</div></div><Link className="btn" to="/profile" aria-label="Edit profile">Edit</Link></div>
-        <Row label="Password" action={<Link className="btn" to="/profile?password=1" aria-label="Change password">Change</Link>} /></section>
+        <Row compact={compact} label="Password" action={<Link className="btn" to="/profile?password=1" aria-label="Change password">Change</Link>} /></section>
       <section className="card" aria-labelledby="s-pref"><h2 id="s-pref">Preferences</h2>
-        <Row id="lbl-currency" label="Currency" info="Only the symbol changes. Nothing is converted." action={<select className="input" aria-labelledby="lbl-currency" value={settings.currency} onChange={async (e) => notify((await updateSettings({ currency: e.target.value })) || 'Currency updated.')}>{CURRENCY_CODES.map((k) => <option key={k} value={k}>{currencyLabel(k)}</option>)}</select>} />
-        <Row id="lbl-theme" label="Theme" action={<select className="input" aria-labelledby="lbl-theme" value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value })}><option value="light">Light</option><option value="dark">Dark</option></select>} /></section>
+        <Row compact={compact} plain id="lbl-currency" label="Currency" info="Only the symbol changes. Nothing is converted." action={<select className="input" aria-labelledby="lbl-currency" value={settings.currency} onChange={async (e) => notify((await updateSettings({ currency: e.target.value })) || 'Currency updated.')}>{CURRENCY_CODES.map((k) => <option key={k} value={k}>{currencyLabel(k)}</option>)}</select>} />
+        <Row compact={compact} id="lbl-theme" label="Theme" action={<select className="input" aria-labelledby="lbl-theme" value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value })}><option value="light">Light</option><option value="dark">Dark</option></select>} /></section>
       <section className="card" aria-labelledby="s-data"><h2 id="s-data">Data</h2>
-        <Row label="Export transactions" info="Saves your transactions as a CSV file." action={<button className="btn" onClick={exportCsv} aria-label="Export transactions as CSV"><Download size={16} aria-hidden="true" />Export</button>} />
-        <Row label="Back up data" info="Saved to this device only. Keep the file private." action={<button className="btn" onClick={backUp} disabled={backing || !dataToolsReady} aria-label="Back up data"><DatabaseBackup size={16} aria-hidden="true" />{backing ? 'Preparing...' : 'Export'}</button>}>{needsUpdate}</Row>
-        <Row label="Restore backup" info="Replaces your data with a backup you saved earlier." action={<button className="btn" onClick={() => setDialog('restore')} disabled={!dataToolsReady} aria-label="Restore backup"><Upload size={16} aria-hidden="true" />Restore</button>}>{needsUpdate}</Row>
-        <Row label="Delete all data" info="Erases your records so you can start fresh. Your account stays." action={<button className="btn btn-danger-outline" onClick={() => setDialog('delete')} disabled={!dataToolsReady} aria-label="Delete all data"><Trash2 size={16} aria-hidden="true" />Delete</button>}>{needsUpdate}</Row></section>
+        <Row compact={compact} label="Export transactions" info="Saves your transactions as a CSV file." action={<button className="btn" onClick={exportCsv} aria-label="Export transactions as CSV"><Download size={16} aria-hidden="true" />Export</button>} />
+        <Row compact={compact} plain label="Back up data" info="Saved to this device only. Keep the file private." action={<button className="btn" onClick={backUp} disabled={backing || !dataToolsReady} aria-label="Back up data"><DatabaseBackup size={16} aria-hidden="true" />{backing ? 'Preparing...' : 'Export'}</button>}>{needsUpdate}</Row>
+        <Row compact={compact} plain label="Restore backup" info="Replaces your data with a backup you saved earlier." action={<button className="btn" onClick={() => setDialog('restore')} disabled={!dataToolsReady} aria-label="Restore backup"><Upload size={16} aria-hidden="true" />Restore</button>}>{needsUpdate}</Row>
+        <Row compact={compact} plain label="Delete all data" info="Erases your records so you can start fresh. Your account stays." action={<button className="btn btn-danger-outline" onClick={() => setDialog('delete')} disabled={!dataToolsReady} aria-label="Delete all data"><Trash2 size={16} aria-hidden="true" />Delete</button>}>{needsUpdate}</Row></section>
       </div>
       <div className="settings-col">
       <section className="card" aria-labelledby="s-help"><h2 id="s-help">Help</h2>

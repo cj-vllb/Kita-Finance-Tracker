@@ -29,7 +29,7 @@ export default function Budgets() {
   const editing = modal?.mode === 'edit' ? budgets.find((b) => b.id === modal.id) : null
   const open = (m) => setModal(m)
   return (<>
-    <PageHeader title="Budget"><button type="button" className="btn btn-primary" onClick={() => open({ mode: 'create' })} aria-label="Add budget">Add</button></PageHeader>
+    <PageHeader title="Budget"><button type="button" className="btn btn-primary hide-compact" onClick={() => open({ mode: 'create' })} aria-label="Add budget">Add</button></PageHeader>
     {rows.length > 0 && <section className="card budget-summary" aria-label="Budget summary"><div className="bs-remaining"><div className="muted small">Remaining</div><div className={'bs-big' + (total('remaining') < 0 ? ' neg' : '')}>{total('remaining') < 0 ? '−' : ''}{money(Math.abs(total('remaining')))}</div></div>
       <div className="bs-totals muted"><span>Budgeted <strong>{money(total('b'))}</strong></span><span>Spent <strong>{money(total('spent'))}</strong></span></div></section>}
     {warn.length > 0 && <div className="alert-strip" role="status"><AlertTriangle size={18} aria-hidden="true" /><div>{warn.map((r) => <p key={r.b.id} className={r.pct > 100 ? 'neg' : 'warnline'}>{nameOf(r.b)} {r.pct > 100 ? `is over budget by ${money(-r.remaining)}.` : `has used ${r.pct}% of its budget.`}</p>)}</div></div>}

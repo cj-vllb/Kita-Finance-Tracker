@@ -16,8 +16,8 @@
 
 /* ---------- Savings page ---------- */
 .shell .sv-overview{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(2,minmax(0,1fr));gap:0;padding:0;overflow:hidden}
-.shell .sv-overview>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:24px 28px}
-.shell .sv-overview>div+div{border-left:1px solid var(--color-border)}
+.shell .sv-overview>.sv-main,.shell .sv-sub>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:24px 28px}
+.shell .sv-main+.sv-sub>div,.shell .sv-sub>div+div{border-left:1px solid var(--color-border)}
 .shell .sv-big{margin-top:4px;font:600 clamp(32px,5vw,44px)/1.08 var(--font-display);letter-spacing:-.01em;color:var(--color-text);overflow-wrap:anywhere}
 .shell .sv-fig{font:600 20px/28px var(--font-display);color:var(--color-text);overflow-wrap:anywhere}
 .shell .sv-section{margin-top:16px;padding:0;overflow:hidden}
@@ -39,8 +39,8 @@
 .shell .sv-section>.empty.compact{border-top:0;padding:var(--space-8) var(--space-5)}
 .shell .sv-dialog{display:grid;gap:var(--space-3);min-width:0}
 @media (max-width:760px){
-  .shell .sv-overview{grid-template-columns:minmax(0,1fr)}
-  .shell .sv-overview>div{padding:var(--space-5)}
-  .shell .sv-overview>div+div{border-left:0;border-top:1px solid var(--color-border)}
   .shell .sv-top{flex-wrap:wrap}.shell .sv-name{flex:1 1 60%}
 }
+/* 1.3.7: .sv-main / .sv-sub wrap the same three figures. On desktop the wrapper around the two secondary figures disappears (display:contents), so the three columns are exactly as before. */
+.shell .sv-sub{display:contents}
+.shell .sv-main{display:flex;flex-direction:column;gap:4px;min-width:0}

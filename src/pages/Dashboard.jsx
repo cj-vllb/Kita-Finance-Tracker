@@ -9,6 +9,7 @@ import { CashFlowChart } from '../components/charts.jsx'
 import MonthCalendar from '../components/MonthCalendar.jsx'
 import { CategoryLabel, CatLabel, TxIcon, PageHeader } from '../components/ui.jsx'
 import { useMedia } from '../components/SidebarSearch.jsx'
+import { openQuickAdd } from '../utils/quickOpen.js'
 import { VISIBILITY_KEYS, MASK, readVisibility, writeVisibility } from '../utils/balanceVisibility.js'
 // One independent show/hide preference per balance, remembered in this browser (see utils/balanceVisibility.js).
 function useVisibility(key) {
@@ -70,7 +71,7 @@ export default function Dashboard() {
           <MonthCalendar transactions={transactions} month={CURRENT_MONTH} today={TODAY} /></Preview></div>
       <div className="previews cards">
         <Preview title="Recent transactions" to="/transactions" action="View all">
-          {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. <Link to="/transactions/new">Add your first transaction</Link></p> :
+          {recent.length === 0 ? <p className="muted pv-empty">No transactions yet. {compact ? <button type="button" className="btn-link" onClick={() => openQuickAdd('transaction')}>Add your first transaction</button> : <Link to="/transactions/new">Add your first transaction</Link>}</p> :
             <ul className="tx-list">{recent.map((t) => <li key={t.id}><Link to={`/transactions/${t.id}`} className="tx-item"><TxIcon type={t.type} category={categories.find((c) => c.id === t.categoryId)} /><span className="tx-main"><span className="tx-title">{txLabel(t, categories)}</span><span className="muted small meta"><CatLabel id={t.categoryId} categories={categories} /><span className="meta-date"> · {formatDate(t.date)}</span></span></span><span className="tx-amt"><span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>{signed(t.amount, t.type)}</span><span className="small muted tx-kind">{txKind(t)}</span></span></Link></li>)}</ul>}</Preview>
         <Preview title="Budgets" sub={monthLabel(CURRENT_MONTH)} to="/budgets" action="View all">
           {budgetTop.length === 0 ? <p className="muted pv-empty">No budgets set for this month. <Link to="/budgets/new">Create a budget</Link></p> :

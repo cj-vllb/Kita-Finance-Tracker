@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, ArrowRight, ChevronDown, ListChecks, Tags, PiggyBank, BarChart3, Download, Smartphone, SlidersHorizontal } from 'lucide-react'
+import { ArrowUpRight, ArrowRight, ChevronDown } from 'lucide-react'
 import { Logo } from '../components/Logo.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { CreatorCredit } from '../components/CreatorCredit.jsx'
@@ -34,15 +34,15 @@ const FAQ = [
   ['Where can I read about privacy?', 'The Privacy Policy and Terms of Service are linked at the bottom of this page.'],
 ]
 const FEATURES = [
-  { id: 'transactions', icon: ListChecks, title: 'Every transaction in one place', text: 'Log income and expenses in seconds and find them later in a tidy, dated list.', Visual: TransactionsPreview },
-  { id: 'budgets', icon: PiggyBank, title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and see what is left as you spend.', Visual: BudgetsPreview, flip: true },
-  { id: 'reports', icon: BarChart3, title: 'Reports that make patterns clear', text: 'Compare income and spending month by month.', Visual: ReportsPreview },
+  { id: 'transactions', title: 'Every transaction in one place', text: 'Log income and expenses in seconds and find them later in a tidy, dated list.', Visual: TransactionsPreview },
+  { id: 'budgets', title: 'Budgets that show where you stand', text: 'Set a monthly amount per category and see what is left as you spend.', Visual: BudgetsPreview, flip: true },
+  { id: 'reports', title: 'Reports that make patterns clear', text: 'Compare income and spending month by month.', Visual: ReportsPreview },
 ]
 const BENEFITS = [
-  { icon: Tags, t: 'Categories your way', d: 'Create categories with your own names and colours, even while adding a transaction.' },
-  { icon: SlidersHorizontal, t: 'Settings you control', d: 'Choose your currency and a light or dark theme.' },
-  { icon: Download, t: 'Export when you need', d: 'Download your transactions as a CSV file from Settings.' },
-  { icon: Smartphone, t: 'Made for phones too', d: 'Compact lists and a bottom tab bar keep it easy to use on a small screen.' },
+  { t: 'Categories your way', d: 'Create categories with your own names and colours, even while adding a transaction.' },
+  { t: 'Settings you control', d: 'Choose your currency and a light or dark theme.' },
+  { t: 'Export when you need', d: 'Download your transactions as a CSV file from Settings.' },
+  { t: 'Made for phones too', d: 'Compact lists and a bottom tab bar keep it easy to use on a small screen.' },
 ]
 
 export default function LandingPage() {
@@ -54,7 +54,7 @@ export default function LandingPage() {
   const primary = loggedIn ? { to: '/dashboard', label: 'Go to Dashboard' } : { to: '/signup', label: 'Get Started' }
   return (
     <div className="landing-page" data-theme="dark" ref={ref}>
-      <div className="lp-ambient" aria-hidden="true"><div className="lp-glow" /></div>
+      <div className="lp-texture" aria-hidden="true"><i className="lp-tx-grid" /><i className="lp-tx-lines" /></div>
       <a className="lp-skip" href="#main">Skip to content</a>
       <header className={'lp-header' + (scrolled ? ' scrolled' : '')}><div className="lp-header-in">
         <Link to="/" className="lp-brand" aria-label="TrackMyKita home"><Logo size={28} /></Link>
@@ -76,17 +76,17 @@ export default function LandingPage() {
         <section id="everyday" className="lp-band">
           <div className="lp-head"><R as="h2">Designed for your everyday life</R></div>
           <div className="lp-benefits">
-            <div className="lp-b-col">{BENEFITS.slice(0, 2).map(({ icon: I, t, d }, i) => <R key={t} delay={i * 80} className="lp-card"><I size={22} aria-hidden="true" /><h3>{t}</h3><p>{d}</p></R>)}</div>
+            <div className="lp-b-col">{BENEFITS.slice(0, 2).map(({ t, d }, i) => <R key={t} delay={i * 80} className="lp-card"><h3>{t}</h3><p>{d}</p></R>)}</div>
             <R kind="zoom" delay={80} className="lp-b-visual"><div className="lp-phone-stage"><div className="lp-phone-tilt"><PhoneMockup /></div></div></R>
-            <div className="lp-b-col">{BENEFITS.slice(2).map(({ icon: I, t, d }, i) => <R key={t} delay={i * 80 + 80} className="lp-card"><I size={22} aria-hidden="true" /><h3>{t}</h3><p>{d}</p></R>)}</div>
+            <div className="lp-b-col">{BENEFITS.slice(2).map(({ t, d }, i) => <R key={t} delay={i * 80 + 80} className="lp-card"><h3>{t}</h3><p>{d}</p></R>)}</div>
           </div>
         </section>
 
         <section id="features" className="lp-features">
           <div className="lp-head"><R as="h2">Powerful features for your finances</R></div>
-          {FEATURES.map(({ id, icon: I, title, text, Visual, flip }) => (
+          {FEATURES.map(({ id, title, text, Visual, flip }) => (
             <R key={id} as="article" kind="rise" className={`lp-feature f-${id}${flip ? ' flip' : ''}`}>
-              <div className="lp-f-text"><I size={24} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></div>
+              <div className="lp-f-text"><h3>{title}</h3><p>{text}</p></div>
               <div className="lp-f-visual"><div className="lp-persp"><div className="lp-tilt"><Visual /></div></div></div></R>))}
         </section>
 

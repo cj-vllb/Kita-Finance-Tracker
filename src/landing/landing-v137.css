@@ -1,0 +1,164 @@
+/* TrackMyKita 1.3.7: landing page. Loaded last. It keeps the original composition (copy left / angled dashboard right, the 3D phone, the three angled
+   feature screens) and changes only what 1.3.7 asks for: current app screens inside the frames, no glow or gradient lighting, a quiet animated
+   texture behind the page, flat-colour device edges, and no decorative icons. Everything is scoped under .landing-page. */
+
+/* the app paints the page behind any .shell; the landing page keeps its own dark surface */
+html:has(.landing-page),html[data-theme] body:has(.landing-page){background:#0B0C0E}
+
+/* ---------- no lighting effects, no gradient fades ---------- */
+.lp-ambient,.lp-glow{display:none!important}
+.landing-page .lp-persp,.landing-page .lp-hero-visual,.landing-page .lp-hero-visual .lp-persp,.landing-page .lp-b-visual,.landing-page .lp-final-visual,.landing-page .lp-phone-body,.landing-page .lp-f-visual .lp-persp,
+.f-transactions .lp-persp,.f-budgets .lp-persp,.f-reports .lp-persp{-webkit-mask-image:none!important;mask-image:none!important}
+.landing-page .lp-phone-glare{display:none}
+.landing-page .lp-phone{background:#1A1B1E}
+.landing-page .lp-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:#0B0C0E}
+.landing-page .lp-final{background-image:none;background-color:#111214;border-top:1px solid #1F2023}
+.landing-page .lp-hero-visual{max-height:none;overflow:visible}
+
+/* ---------- quiet background texture: a fine grid and faint chart lines, drifting very slowly ---------- */
+.landing-page{position:relative;isolation:isolate}
+.lp-texture{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.lp-texture i{position:absolute;display:block;inset:-80px;opacity:.5}
+.lp-tx-grid{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cpath d='M72 0H0V72' fill='none' stroke='%23ffffff' stroke-opacity='.045' stroke-width='1'/%3E%3Cpath d='M0 36h4M36 0v4' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1'/%3E%3C/svg%3E");background-size:72px 72px}
+.lp-tx-lines{opacity:.5!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='260'%3E%3Cpolyline fill='none' stroke='%23ffffff' stroke-opacity='.04' stroke-width='1.2' stroke-linejoin='round' points='0,200 60,176 120,188 180,138 240,152 300,102 360,120 420,70 480,92 540,48 600,64 640,40'/%3E%3Cg fill='%23ffffff' fill-opacity='.06'%3E%3Ccircle cx='180' cy='138' r='2.4'/%3E%3Ccircle cx='300' cy='102' r='2.4'/%3E%3Ccircle cx='420' cy='70' r='2.4'/%3E%3Ccircle cx='540' cy='48' r='2.4'/%3E%3C/g%3E%3C/svg%3E");background-size:640px 260px;background-repeat:repeat}
+@media (prefers-reduced-motion:no-preference){
+  .lp-tx-grid{animation:lp-grid 90s linear infinite}
+  .lp-tx-lines{animation:lp-lines 140s linear infinite}
+}
+@keyframes lp-grid{to{transform:translate3d(72px,72px,0)}}
+@keyframes lp-lines{to{transform:translate3d(-640px,60px,0)}}
+
+/* ---------- the app inside the angled frames ---------- */
+.landing-page .lp-app.shell{display:block;min-height:0;margin:0;padding:0!important;background:transparent;color:var(--color-text);border:0}
+.landing-page .lp-app .page-header{display:none}
+.landing-page .lp-frame{border-radius:18px}
+.landing-page .lp-frame-body{display:block;padding:14px}
+.landing-page .lp-frame .lp-app .previews,.landing-page .lp-frame .lp-pair{margin-top:14px}
+.landing-page .lp-frame .lp-app .balances{margin:0}
+.landing-page .lp-pair{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+.landing-page .lp-pair .preview{margin:0;min-width:0}
+.landing-page .lp-frame .eye-btn{display:inline-grid;place-items:center;width:30px;height:30px;margin:-6px 0 -6px 4px;color:var(--color-muted)}
+/* layered, realistic shadows (replace the old glow): a tight contact shadow, a wider soft one, and a hairline light edge */
+.landing-page .lp-tilt .lp-frame{box-shadow:0 2px 3px rgba(0,0,0,.5),0 22px 40px -14px rgba(0,0,0,.7),0 54px 80px -40px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06)}
+@media (max-width:700px){.landing-page .lp-pair{grid-template-columns:minmax(0,1fr)}.landing-page .lp-pair>:last-child{display:none}.landing-page .lp-frame-body{padding:10px}}
+
+/* ---------- no decorative icons beside feature and benefit text ---------- */
+.landing-page .lp-f-text>svg,.landing-page .lp-card>svg{display:none}
+.landing-page .lp-card h3{margin-top:0}
+
+/* ---------- the phone: solid frame, depth from stacked plates, the mobile dashboard inside ---------- */
+.landing-page .lp-phone{width:min(300px,78vw);aspect-ratio:9/19;padding:10px;border-radius:50px;box-shadow:inset 0 0 0 1.5px #5A675F,inset 0 0 0 3.5px #080B09}
+.landing-page .lp-phone-slice{border-radius:48px;background:color-mix(in srgb,#46524B,#0A0D0B calc(var(--i) * 8%))}
+.landing-page .lp-phone-cast{background:rgba(0,0,0,.7);filter:blur(24px);opacity:.7}
+.landing-page .lp-phone-screen{border-radius:40px;background:#0A0A0B;--color-background:#0A0A0B;--color-field:#0E0E10;--color-surface:#1A1B1E;--color-border:#26272B}
+.lp-m{flex:1;min-height:0;display:grid;align-content:start;gap:10px;padding:4px 12px 0;overflow:hidden}
+.lp-m-top{display:flex;align-items:center;gap:7px;color:var(--color-primary)}
+.lp-m-top svg:nth-of-type(2){color:var(--color-text);margin-left:auto}
+.lp-m-title{flex:1;min-width:0;font:600 13px/18px var(--font-display);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-m-top .lp-m-title+svg{margin-left:auto}
+.lp-m-av{display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);font:600 9.5px var(--font)}
+.lp-m-card{padding:12px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-field);min-width:0}
+.lp-m-card h4{margin:0 0 8px;font:600 12.5px/16px var(--font-display);color:var(--color-text)}
+.lp-m-k{display:block;font:500 10.5px/14px var(--font);color:var(--color-muted)}
+.lp-m-v{font:600 27px/34px var(--font-display);letter-spacing:-.02em;color:var(--color-text);margin:2px 0 8px}
+.lp-m-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:8px;border-top:1px solid var(--color-border)}
+.lp-m-pair b{display:block;font:600 12.5px/18px var(--font)}
+.lp-m .pos,.lp-m-pair .pos{color:var(--color-positive)}.lp-m .neg{color:var(--color-negative)}
+.lp-m-legend{display:flex;flex-wrap:wrap;gap:2px 10px;margin:-2px 0 4px;font:500 9.5px/14px var(--font);color:var(--color-muted)}
+.lp-m-legend i{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%}.lp-m-legend .in{background:var(--color-positive)}.lp-m-legend .ex{background:var(--color-negative)}
+.lp-m-svg{display:block}
+.lp-m-tx{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--color-border)}
+.lp-m-tx:first-of-type{border-top:0;padding-top:0}
+.lp-m-ic{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%}
+.lp-m-ic.income{background:var(--color-primary-soft);color:var(--color-on-soft)}.lp-m-ic.expense{background:var(--color-negative-soft);color:var(--color-negative)}
+.lp-m-tt{display:grid;flex:1;min-width:0}.lp-m-tt b{font:600 11.5px/15px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-text)}.lp-m-tt i{font:500 10px/13px var(--font);font-style:normal;color:var(--color-muted)}
+.lp-m-amt{flex:none;font:600 11.5px var(--font)}
+.lp-m-bar{position:absolute;left:0;right:0;bottom:0;height:60px;display:flex;align-items:center;padding:0 4px 8px;border-top:1px solid var(--color-border);background:var(--color-field)}
+.lp-m-tab{flex:1;display:grid;justify-items:center;gap:1px;font:600 8px/10px var(--font);color:var(--color-muted)}.lp-m-tab.on{color:var(--color-on-soft)}
+.lp-m-plus{flex:none;display:grid;place-items:center;width:38px;height:38px;margin:0 3px;border-radius:50%;background:var(--color-primary);color:#05160E}
+.landing-page .lp-phone-home{bottom:5px;background:rgba(255,255,255,.5)}
+.landing-page .lp-phone-body{display:none}
+
+/* the closing preview sits in a narrower column: draw the desktop dashboard at its natural width and shrink it as a whole (the factor follows the column width) */
+@media (min-width:821px){
+  .landing-page .lp-final-in{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+  .landing-page .lp-final-visual{max-height:360px}
+  .landing-page .lp-final-visual .lp-frame{width:860px;max-width:none;zoom:.6}
+}
+@media (min-width:821px) and (max-width:1179px){.landing-page .lp-final-visual .lp-frame{zoom:.5}}
+@media (min-width:821px) and (max-width:960px){.landing-page .lp-final-visual .lp-frame{zoom:.43}}
+
+/* ======================================================================================================================================
+   1.3.7 refinements: calm neutral palette (green is an accent only), no gradients or glow, correct showcase proportions
+   ====================================================================================================================================== */
+
+/* neutral surfaces for the whole landing page (overrides the green-tinted values set in landing-refine.css) */
+.landing-page{--color-background:#0B0C0E;--color-field:#131416;--color-surface:#18191C;--color-border:#25272B;--lp-line:#25272B}
+.landing-page .lp-band{background:#0E0F11;border-block:1px solid var(--lp-line)}
+.landing-page .lp-card{background:#141517;border-color:var(--lp-line)}
+.landing-page .lp-feature{border-color:var(--lp-line)}
+.landing-page .lp-qa{background:#131416}
+.landing-page .lp-qa.open{background:#17181B;border-color:#2E3034}
+.landing-page .lp-footer{background:var(--color-background)}
+.landing-page .lp-frame{--color-background:#0E0F11;--color-field:#141517;--color-surface:#1A1B1E;--color-border:#26282C;border-color:#2A2C30}
+.landing-page .lp-frame-bar{background:#131416}
+.landing-page .lp-frame-bar i{background:#2E3034}
+.landing-page .lp-phone-screen{--color-border:#26272B}
+/* solid, neutral device edges (no tinted gradient) */
+.landing-page .lp-phone{box-shadow:inset 0 0 0 1.5px #4A4C52,inset 0 0 0 3.5px #08090A}
+.landing-page .lp-phone-slice{background:color-mix(in srgb,#3C3E43,#0A0A0B calc(var(--i) * 8%))}
+.landing-page .lp-phone::before,.landing-page .lp-phone::after{background:#25272B}
+/* the chart inside the previews: flat fill, no fading gradient */
+.landing-page .lp-frame defs stop{stop-opacity:.1!important}
+.landing-page .lp-m-card,.landing-page .lp-m-bar{background:#0E0E10}
+/* buttons: green only where it matters */
+.landing-page .btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#04120B}
+.landing-page .btn-primary:hover:not(:disabled){background:color-mix(in srgb,var(--color-primary) 88%,#fff);border-color:transparent}
+.landing-page .lp-cta-light{color:#0B0C0E}
+.landing-page .lp-cta-light:hover{background:#E9ECEA;border-color:#E9ECEA}
+.landing-page .lp-final-text p{color:var(--color-muted)}
+.landing-page .lp-ghost{border-color:#34363B}
+.landing-page .lp-feature+.lp-feature{border-top-color:var(--lp-line)}
+/* hairline-only shadows: the layered shadow stays tight and neutral, nothing glows */
+.landing-page .lp-tilt .lp-frame{box-shadow:0 2px 3px rgba(0,0,0,.45),0 24px 40px -18px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.04)}
+
+/* ---------- hero showcase: correct proportions ----------
+   The app's own rule (.balances: two columns from 1101px) keys off the browser width, so inside this ~650px frame it squeezed the balance card into a
+   narrow, very tall column and stretched the whole screen. Inside the frame the balances are laid out for the frame's own width instead. */
+.landing-page .lp-frame .lp-app .balances{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.landing-page .lp-frame .hero-balance{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.landing-page .lp-frame .hero-balance .hero-main{padding:20px 22px}
+.landing-page .lp-frame .hero-balance .balance{font-size:clamp(28px,3vw,40px);white-space:nowrap}
+.landing-page .lp-frame .hero-balance .mfig{padding:8px 20px}
+.landing-page .lp-frame .hero-balance .mfig>div{padding:7px 0}
+.landing-page .lp-frame .savings-balance{flex-direction:row;align-items:center;justify-content:space-between;padding:16px 22px}
+.landing-page .lp-frame .savings-balance .sb-amount{font-size:26px;margin:4px 0 2px}
+.landing-page .lp-frame .savings-balance .pv-link{align-self:center}
+.landing-page .lp-frame .preview .pv-body{padding:14px 16px}
+.landing-page .lp-frame .tx-item{padding-block:8px}
+/* the hero plane: fixed width-to-height proportion of a real display; nothing stretches it vertically */
+.landing-page .lp-hero-visual .lp-frame{width:100%;max-width:760px}
+@media (min-width:861px){
+  .landing-page .lp-hero{align-items:center}
+  .landing-page .lp-hero-visual .lp-persp{--pt:40px;--pb:70px}
+}
+/* tablet: same angled screen, stacked under the text and kept to a sensible size */
+@media (min-width:701px) and (max-width:860px){
+  .landing-page .lp-hero-visual{max-width:640px;margin-inline:auto;width:100%}
+  .landing-page .lp-hero-visual .lp-persp{--pt:20px;--pb:40px}
+}
+
+/* ---------- mobile: no angled showcase in the hero ---------- */
+@media (max-width:700px){
+  .landing-page .lp-hero-visual{display:none}
+  .landing-page .lp-hero{display:block;padding:clamp(40px,12vw,64px) var(--lp-gut) clamp(44px,12vw,64px);text-align:center}
+  .landing-page .lp-hero h1{font-size:clamp(34px,10vw,44px)}
+  .landing-page .lp-hero .lp-sub{margin:16px auto 0;max-width:420px}
+  .landing-page .lp-hero .lp-hero-actions{justify-content:center;margin-top:28px;flex-direction:column;align-items:stretch;max-width:360px;margin-inline:auto}
+  .landing-page .lp-hero .lp-hero-actions .btn{flex:none;width:100%}
+  .landing-page .lp-band{padding-top:clamp(44px,10vw,64px)}
+}
+
+/* narrower desktops: draw the screen at its natural width and scale it as a whole, so its proportions never change with the column width */
+@media (min-width:861px) and (max-width:1220px){.landing-page .lp-hero-visual .lp-frame{width:760px;max-width:none;zoom:.84}}
+@media (min-width:861px) and (max-width:1020px){.landing-page .lp-hero-visual .lp-frame{zoom:.66}}
